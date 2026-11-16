@@ -2,11 +2,12 @@
 import { DurableObject } from 'cloudflare:workers';
 import { ClientMessage, MAX_MESSAGE_BYTES, RATE_LIMIT_PER_SEC, type ServerMessage } from '../engine/protocol';
 import { reduce } from '../engine/reducer';
+import { loadCatalog } from '../engine/catalog';
 import { makeRng, randomSeed } from '../engine/rng';
 import { createRoom, nextTimerAt } from '../engine/state';
 import { IntentError, type Fx, type GameState, type Intent } from '../engine/types';
 import { viewFor } from '../engine/viewFor';
-import { botJoinIntents } from './bots';
+import { botDecide, botJoinIntents } from './bots';
 import type { Env } from './worker';
 
 interface Attachment {
@@ -61,7 +62,7 @@ export class RoomDO extends DurableObject<Env> {
       this.ctx.acceptWebSocket(server);
       server.serializeAttachment({ pid: null } satisfies Attachment);
       // Katılmadan önce izleyici görünümü gönder (giriş ekranı için)
-      this.send(server, { t: 'snapshot', view: viewFor(this.game, null), rev: this.game.rev });
+      this.send(server, { t: 'snapshot', view: viewFor(this.game, null, loadCatalog()), rev: this.game.rev });
       return new Response(null, { status: 101, webSocket: client });
     }
 
@@ -141,7 +142,16 @@ export class RoomDO extends DurableObject<Env> {
 
   async alarm() {
     if (!this.game) return;
-    const fx = await this.dispatch({ t: 'tick' }, null, true);
+    const fx = await this.dispatch({ t: 'tick' }, null, false);
+    // Sırası gelen botlar karar verir
+    for (const f of fx ?? []) {
+      if (f.kind !== 'botDue' || !this.game) continue;
+      const botId = (f.payload as { playerId: string }).playerId;
+      const rng = makeRng(this.game.rngState ^ 0x9e3779b9);
+      const intent = botDecide(this.game, botId, rng, loadCatalog());
+      if (intent) await this.dispatch({ ...intent, by: botId } as Intent, null, false);
+    }
+    await this.flush();
     if (fx && fx.some((f) => f.kind === 'expired')) {
       // 12 saat işlem görmeyen oda tamamen silinir (anonim cevaplar dahil)
       for (const s of this.ctx.getWebSockets()) {
@@ -169,9 +179,9 @@ export class RoomDO extends DurableObject<Env> {
     if (!this.game) return null;
     const rng = makeRng(this.game.rngState);
     try {
-      const { state, fx } = reduce(this.game, intent, { now: Date.now(), rng });
+      const { state, fx } = reduce(this.game, intent, { now: Date.now(), rng, catalog: loadCatalog() });
       this.game = state;
-      this.pendingFx.push(...fx.filter((f) => f.kind !== 'expired'));
+      this.pendingFx.push(...fx.filter((f) => f.kind !== 'expired' && f.kind !== 'botDue'));
       if (flush) await this.flush();
       return fx;
     } catch (e) {
@@ -194,7 +204,7 @@ export class RoomDO extends DurableObject<Env> {
     const sockets = this.ctx.getWebSockets();
     for (const ws of sockets) {
       const att = ws.deserializeAttachment() as Attachment | null;
-      this.send(ws, { t: 'snapshot', view: viewFor(this.game, att?.pid ?? null), rev: this.game.rev });
+      this.send(ws, { t: 'snapshot', view: viewFor(this.game, att?.pid ?? null, loadCatalog()), rev: this.game.rev });
     }
     for (const f of this.pendingFx) {
       for (const ws of sockets) {

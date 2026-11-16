@@ -46,7 +46,7 @@ assert(true, 'ayar değişikliği canlı yayıldı');
 
 // Başlat
 await frame(2).getByRole('button', { name: 'Başlat' }).click();
-await frame(3).getByText('Perde 1: Isınma').waitFor({ timeout: 5000 });
+await frame(3).getByText('Perde 1').first().waitFor({ timeout: 5000 });
 assert(true, 'oyun başladı, herkes perdeyi görüyor');
 if (SHOTS) await page.screenshot({ path: `${SHOTS}/devtable-started.png` });
 

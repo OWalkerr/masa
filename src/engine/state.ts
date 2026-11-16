@@ -18,6 +18,8 @@ export function createRoom(code: string, now: number, seed: number, bots = 0): G
     rngState: seed >>> 0,
     seq: 0,
     startedAt: null,
+    game: null,
+    stats: {},
   };
 }
 

@@ -1,4 +1,5 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
+import { ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, startGame, submitInput } from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
 import {
@@ -43,6 +44,7 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       s.players.push(p);
       s.order.push(p.id); // oyun başladıysa da sıranın sonuna eklenir
       if (!s.hostId && !p.isBot) s.hostId = p.id;
+      if (s.game) ensureStats(s, p.id);
       fx.push({ kind: 'joined', payload: { playerId: p.id, name: p.name } });
       break;
     }
@@ -53,6 +55,7 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       p.lastSeen = ctx.now;
       // Host geri geldiyse devir zamanlayıcısını iptal et
       s.timers = s.timers.filter((t) => !(t.kind === 'hostGrace' && t.playerId === p.id));
+      if (s.stats[p.id]) s.stats[p.id]!.missedTurns = 0;
       break;
     }
 
@@ -75,6 +78,11 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
         if (t.kind === 'hostGrace') {
           const host = s.hostId ? getPlayer(s, s.hostId) : undefined;
           if (host && !host.connected) transferHost(s, fx, host.id);
+        } else if (t.kind === 'phase') {
+          onPhaseTimeout(s, ctx, fx);
+        } else if (t.kind === 'bot') {
+          // Bot kararını sunucu verir (src/server/bots.ts)
+          if (t.playerId) fx.push({ kind: 'botDue', payload: { playerId: t.playerId }, to: [] });
         } else if (t.kind === 'expire') {
           // Odanın silinmesini sunucu yapar; motor yalnızca işaret verir
           fx.push({ kind: 'expired' });
@@ -82,6 +90,8 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
         }
       }
       // tick bir eylem değildir; lastActivity'yi güncellemez
+      scheduleBots(s, ctx);
+      s.rngState = rng.state();
       s.rev = prev.rev + 1;
       return { state: s, fx };
     }
@@ -125,13 +135,44 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       requireHost(s, intent.by);
       requirePhase(s, 'lobby');
       if (activePlayers(s).length < MIN_PLAYERS) throw new IntentError('NOT_ENOUGH', 'Başlamak için en az 3 oyuncu gerek.');
-      s.phase = 'actIntro';
       s.startedAt = ctx.now;
       // Oturma düzeni: katılım sırası; ilk okuyucu rastgele (M1'de kullanılacak)
       s.order = activePlayers(s).sort((a, b) => a.joinSeq - b.joinSeq).map((p) => p.id);
       const firstReader = rng.int(s.order.length);
       s.order = [...s.order.slice(firstReader), ...s.order.slice(0, firstReader)];
       fx.push({ kind: 'gameStarted' });
+      startGame(s, ctx, fx);
+      break;
+    }
+
+    case 'playCard':
+      playCard(s, ctx, fx, intent.by, intent.cardId);
+      break;
+    case 'pickTarget':
+      pickTarget(s, ctx, fx, intent.by, intent.playerIds);
+      break;
+    case 'vote':
+      submitInput(s, ctx, fx, intent.by, { k: 'vote', playerId: intent.playerId });
+      break;
+    case 'answer':
+      submitInput(s, ctx, fx, intent.by, { k: 'yesNo', yes: intent.yes });
+      break;
+    case 'judge':
+      judge(s, ctx, fx, intent.by, intent.done, intent.payers);
+      break;
+
+    case 'restart': {
+      requireHost(s, intent.by);
+      requirePhase(s, 'summary');
+      // Aynı masa, yeni oyun: lobiye dön, kalkanları çıkar
+      s.players = s.players.filter((p) => !p.left);
+      s.order = s.order.filter((id) => s.players.some((p) => p.id === id));
+      s.phase = 'lobby';
+      s.game = null;
+      s.stats = {};
+      s.startedAt = null;
+      s.timers = s.timers.filter((t) => t.kind === 'expire' || t.kind === 'hostGrace');
+      fx.push({ kind: 'restarted' });
       break;
     }
 
@@ -155,6 +196,7 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
     }
   }
 
+  scheduleBots(s, ctx);
   s.rngState = rng.state();
   s.lastActivity = ctx.now;
   // Oda 12 saat işlem görmezse silinir: her eylemde süre uzar
@@ -165,6 +207,24 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
 }
 
 // --- yardımcılar ---
+
+// Eylem bekleyen botlara 1–4 sn sonrası için zamanlayıcı kur; artık beklenmeyenlerinkini kaldır
+function scheduleBots(s: GameState, ctx: Ctx) {
+  const pending = new Set(
+    pendingActors(s, ctx).filter((id) => s.players.some((p) => p.id === id && p.isBot && !p.left)),
+  );
+  s.timers = s.timers.filter((t) => t.kind !== 'bot' || (t.playerId && pending.has(t.playerId) && (t.payload as { k?: string })?.k === botKey(s)));
+  for (const id of pending) {
+    if (s.timers.some((t) => t.kind === 'bot' && t.playerId === id)) continue;
+    s.timers.push({ id: `bot-${s.seq++}`, kind: 'bot', at: ctx.now + 1000 + ctx.rng.int(3000), playerId: id, payload: { k: botKey(s) } });
+  }
+}
+
+// Botun hangi adım için zamanlandığı (adım değişince zamanlayıcı yenilenir)
+function botKey(s: GameState): string {
+  const t = s.game?.turn;
+  return `${s.phase}:${s.game?.turnNo ?? -1}:${t?.step ?? ''}`;
+}
 
 function clampAvatar(a: number): number {
   return Number.isInteger(a) && a >= 0 && a < AVATAR_COUNT ? a : 0;

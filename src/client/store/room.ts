@@ -5,6 +5,12 @@ import type { View } from '../../engine/viewFor';
 import { loadSeat } from '../net/identity';
 import { RoomConnection, type ConnStatus } from '../net/socket';
 
+export interface FxEvent {
+  seq: number;
+  kind: string;
+  payload?: unknown;
+}
+
 export interface Toast {
   id: number;
   text: string;
@@ -17,6 +23,8 @@ interface RoomStore {
   view: View | null;
   toasts: Toast[];
   conn: RoomConnection | null;
+  fx: FxEvent[]; // son efekt olayları
+  serverNow(): number;
   resuming: boolean; // kayıtlı koltuğa dönülüyor
   you: string | null;
   open(code: string): void;
@@ -26,6 +34,7 @@ interface RoomStore {
 }
 
 let toastSeq = 0;
+let fxSeq = 0;
 
 export const useRoom = create<RoomStore>((set, get) => ({
   code: null,
@@ -35,6 +44,10 @@ export const useRoom = create<RoomStore>((set, get) => ({
   conn: null,
   resuming: false,
   you: null,
+  fx: [],
+  serverNow() {
+    return Date.now() + (get().conn?.clockOffset ?? 0);
+  },
 
   open(code) {
     if (get().code === code && get().conn) return;
@@ -52,6 +65,7 @@ export const useRoom = create<RoomStore>((set, get) => ({
           if (msg.code === 'NO_SEAT') set({ resuming: false, you: null });
           else get().toast(msg.message, 'error');
         } else if (msg.t === 'fx') {
+          set({ fx: [...get().fx.slice(-19), { seq: ++fxSeq, kind: msg.kind, payload: msg.payload }] });
           if (msg.kind === 'hostChanged') {
             const p = msg.payload as { name: string };
             get().toast(`Masanın yeni sahibi: ${p.name}`);

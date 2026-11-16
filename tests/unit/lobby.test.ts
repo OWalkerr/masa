@@ -1,6 +1,9 @@
 // M0 motor testleri: lobi, yeniden bağlanma, host devri, ayarlar, görünüm gizliliği, tohumlu tekrar
 import { describe, expect, it } from 'vitest';
 import { lintCard, type Card } from '../../src/engine/cards';
+import { loadCatalog } from '../../src/engine/catalog';
+
+const catalog = loadCatalog();
 import { cleanName, uniqueName } from '../../src/engine/names';
 import { reduce } from '../../src/engine/reducer';
 import { makeRng } from '../../src/engine/rng';
@@ -11,7 +14,7 @@ import { viewFor } from '../../src/engine/viewFor';
 function run(s: GameState, intents: Intent[], start = 1000, step = 100) {
   let now = start;
   for (const it of intents) {
-    s = reduce(s, it, { now, rng: makeRng(s.rngState) }).state;
+    s = reduce(s, it, { now, catalog, rng: makeRng(s.rngState) }).state;
     now += step;
   }
   return s;
@@ -42,26 +45,27 @@ describe('lobi', () => {
   it('en fazla 12 oyuncu', () => {
     let s = createRoom('ABCD', 0, 1);
     s = run(s, Array.from({ length: 12 }, (_, i) => join(`p${i}`)));
-    expect(() => reduce(s, join('p13'), { now: 1, rng: makeRng(1) })).toThrow(/dolu/);
+    expect(() => reduce(s, join('p13'), { now: 1, catalog, rng: makeRng(1) })).toThrow(/dolu/);
   });
 
   it('ayarları yalnızca host değiştirir; geçersiz niyet durumu değiştirmez', () => {
     let s = run(createRoom('ABCD', 0, 1), [join('a'), join('b')]);
     const before = JSON.stringify(s);
-    expect(() => reduce(s, { t: 'updateSettings', by: 'b', patch: { drinking: false } }, { now: 5, rng: makeRng(1) })).toThrow();
+    expect(() => reduce(s, { t: 'updateSettings', by: 'b', patch: { drinking: false } }, { now: 5, catalog, rng: makeRng(1) })).toThrow();
     expect(JSON.stringify(s)).toBe(before);
     s = run(s, [{ t: 'updateSettings', by: 'a', patch: { deck: 'clean' } }]);
     expect(s.settings.drinking).toBe(false); // Temiz deste alkolsüz sabit
     s = run(s, [{ t: 'updateSettings', by: 'a', patch: { deck: 'spicy' } }]);
     expect(s.settings.adult).toBe(true);
-    expect(() => reduce(s, { t: 'updateSettings', by: 'a', patch: { deck: 'duel' } }, { now: 5, rng: makeRng(1) })).toThrow();
+    expect(() => reduce(s, { t: 'updateSettings', by: 'a', patch: { deck: 'duel' } }, { now: 5, catalog, rng: makeRng(1) })).toThrow();
   });
 
   it('başlatmak için en az 3 oyuncu gerekir; geç katılan sıranın sonuna eklenir', () => {
     let s = run(createRoom('ABCD', 0, 7), [join('a'), join('b')]);
-    expect(() => reduce(s, { t: 'start', by: 'a' }, { now: 5, rng: makeRng(1) })).toThrow(/3/);
+    expect(() => reduce(s, { t: 'start', by: 'a' }, { now: 5, catalog, rng: makeRng(1) })).toThrow(/3/);
     s = run(s, [join('c'), { t: 'start', by: 'a' }, join('d')]);
     expect(s.phase).toBe('actIntro');
+    expect(s.game?.act).toBe(1);
     expect(s.order.at(-1)).toBe('d');
     expect(new Set(s.order)).toEqual(new Set(['a', 'b', 'c', 'd']));
   });
@@ -81,16 +85,16 @@ describe('kopma, yeniden bağlanma, host devri', () => {
     const at = s.timers.find((t) => t.kind === 'hostGrace')!.at;
     expect(at).toBe(1300 + HOST_GRACE_MS);
     // süre dolmadan tick: değişmez
-    s = reduce(s, { t: 'tick' }, { now: at - 1, rng: makeRng(1) }).state;
+    s = reduce(s, { t: 'tick' }, { now: at - 1, catalog, rng: makeRng(1) }).state;
     expect(s.hostId).toBe('a');
-    const r = reduce(s, { t: 'tick' }, { now: at, rng: makeRng(1) });
+    const r = reduce(s, { t: 'tick' }, { now: at, catalog, rng: makeRng(1) });
     expect(r.state.hostId).toBe('b');
     expect(r.fx.some((f) => f.kind === 'hostChanged')).toBe(true);
   });
 
   it('host süre dolmadan dönerse hostluk kalır', () => {
     let s = run(createRoom('ABCD', 0, 1), [join('a'), join('b'), { t: 'disconnect', playerId: 'a' }, { t: 'connect', playerId: 'a' }]);
-    s = reduce(s, { t: 'tick' }, { now: 10_000_000, rng: makeRng(1) }).state;
+    s = reduce(s, { t: 'tick' }, { now: 10_000_000, catalog, rng: makeRng(1) }).state;
     expect(s.hostId).toBe('a');
   });
 
@@ -104,7 +108,7 @@ describe('kopma, yeniden bağlanma, host devri', () => {
   it('12 saat işlem görmeyen oda için expire sinyali üretilir', () => {
     let s = run(createRoom('ABCD', 0, 1), [join('a')], 1000);
     expect(nextTimerAt(s)).toBe(1000 + ROOM_TTL_MS);
-    const r = reduce(s, { t: 'tick' }, { now: 1000 + ROOM_TTL_MS, rng: makeRng(1) });
+    const r = reduce(s, { t: 'tick' }, { now: 1000 + ROOM_TTL_MS, catalog, rng: makeRng(1) });
     expect(r.fx.some((f) => f.kind === 'expired')).toBe(true);
   });
 });
