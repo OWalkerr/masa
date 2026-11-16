@@ -47,7 +47,7 @@ export interface Player {
   lastSeen: number;
 }
 
-export type TimerKind = 'hostGrace' | 'expire' | 'bot' | 'phase';
+export type TimerKind = 'hostGrace' | 'expire' | 'bot' | 'phase' | 'catch';
 
 export interface Timer {
   id: string;
@@ -83,7 +83,11 @@ export type TokenKey = 'okuyucu' | 'secilen' | 'ikinci' | 'sag' | 'sol' | 'rastg
 
 export type InputValue =
   | { k: 'vote'; playerId: string }
-  | { k: 'yesNo'; yes: boolean };
+  | { k: 'yesNo'; yes: boolean }
+  | { k: 'choice'; index: number }; // ayna: hedefin gizli seçimi ya da diğerlerinin tahmini
+
+export type PowerKind = 'shield' | 'mirror' | 'swap' | 'sabotage';
+export const MAX_POCKET = 2;
 
 export interface Payment {
   id: string;
@@ -100,6 +104,39 @@ export interface TurnResult {
   done?: boolean; // judge: yaptı mı
   mini: { id: string; text: string }[]; // alkolsüzde her 3 cezada mini ceza
   waterBreak: string[]; // içki sınırını aşanlar
+  vetoed?: boolean; // anonim veto ile iptal
+  passed?: string[]; // Pas kullananlar
+  winner?: string; // düello kazananı
+  secret?: number; // ayna: hedefin seçimi
+  correct?: string[]; // ayna/itiraf: bilenler
+  author?: string; // itiraf: spot ışığındaki cevabın yazarı (sonuçta açılır)
+  spotlight?: string; // itiraf: spot ışığındaki cevap
+  effect?: string; // kural/lanet/olay masaya kondu (etki id)
+  note?: string; // TIK'in kısa açıklaması
+  shielded?: string[]; // Kalkan ile iptal edilen bedeller
+  reflected?: { from: string; to: string }[]; // Ayna ile yansıtılanlar
+}
+
+// Masadaki aktif kural/lanet/olay
+export interface ActiveEffect {
+  id: string;
+  cardId: string;
+  kind: 'rule' | 'curse' | 'event' | 'decree';
+  text: string; // jetonları çözülmüş metin
+  targetId?: string; // lanetli oyuncu
+  turnsLeft: number | 'act';
+  penalty: number;
+  ownerId?: string; // kuralı koyan
+}
+
+// "Yakala!" sonrası 5 sn'lik masa oylaması
+export interface CatchVote {
+  id: string;
+  accuser: string;
+  accused: string;
+  effectId: string;
+  endsAt: number;
+  votes: Record<string, boolean>;
 }
 
 export interface Turn {
@@ -114,6 +151,29 @@ export interface Turn {
   judgedPayers: string[] | null; // okuyucunun hükmü (ödeyenler)
   result: TurnResult | null;
   pickedTop: boolean; // eldeki en yoğun kart seçildi mi
+  rest: string[]; // seçilmeyen kartlar (miras adayları)
+  swapped: boolean; // Takas kullanıldı
+  sabotagedBy: string | null;
+  passed: string[]; // bu kartta Pas kullananlar
+  vetoed: boolean;
+  stage: 'main' | 'write' | 'guess'; // itiraf aşaması
+  texts: Record<string, string>; // itiraf cevapları (tur bitince silinir)
+  spotlightAuthor: string | null;
+  shuffled: string[]; // itiraf: karışık cevap sırası (yazar id'leri)
+  system: boolean; // okuyucusuz sistem kartı (masa olayı, Su Molası, final)
+  blind: boolean; // Hayalet Saati: okuyucu kartları kapalı görür
+  options: string[]; // ayna seçenekleri (etiketler ya da oyuncu id'leri)
+  optionPlayers: boolean;
+}
+
+export interface CatchResult extends CatchVote {
+  guilty: boolean;
+  yes: number;
+  no: number;
+  payments: Payment[];
+  mini: { id: string; text: string }[];
+  waterBreak: string[];
+  at: number;
 }
 
 export interface TurnLog {
@@ -138,6 +198,12 @@ export interface GameRun {
   recentTypes: CardType[];
   log: TurnLog[];
   endedAt: number | null;
+  direction: 1 | -1; // sıra yönü (masa olayı ters çevirebilir)
+  effects: ActiveEffect[];
+  catchVote: CatchVote | null;
+  blindTurns: number; // Hayalet Saati: kalan kör tur
+  pendingEvent: 'table' | 'water' | null;
+  lastCatch?: CatchResult;
 }
 
 export interface PlayerStats {
@@ -151,6 +217,14 @@ export interface PlayerStats {
   failed: number;
   readerTurns: number;
   missedTurns: number; // bağlı değilken gelen okuyuculuk
+  powers: PowerKind[]; // cep (en fazla 2)
+  powersEarned: number; // kazanılan güç kartı sayısı (her 3 cesarette 1)
+  passAct: number; // Pas'ın kullanıldığı perde (0 = kullanılmadı)
+  vetoUsed: boolean;
+  paidHistory: number[]; // son bedeller (Mezardan Dönüş için)
+  lastCatchAt: number;
+  catches: number; // doğru yakalamalar
+  decree: boolean; // Sultan Kedi: perde sonuna kadar kural koyabilir
 }
 
 export type Catalog = ReadonlyMap<string, Card>;
@@ -171,6 +245,14 @@ export type ClientIntent =
   | { t: 'vote'; playerId: string }
   | { t: 'answer'; yes: boolean }
   | { t: 'judge'; done?: boolean; payers?: string[] }
+  | { t: 'choose'; index: number }
+  | { t: 'answerText'; text: string }
+  | { t: 'catch'; effectId: string; accused: string }
+  | { t: 'catchVote'; yes: boolean }
+  | { t: 'usePower'; power: PowerKind; targetId?: string; cardId?: string }
+  | { t: 'decree'; text: string }
+  | { t: 'pass' }
+  | { t: 'veto' }
   | { t: 'restart' };
 
 export type SystemIntent =
@@ -219,6 +301,17 @@ export const DUR = {
   yesNo: 20_000,
   judge: 45_000,
   resolve: 5000,
+  resolvePower: 9000, // cebinde Kalkan/Ayna olan ödeyen varsa
+  ruleResolve: 4500,
+  tableEvent: 7000,
+  finale: 9000,
+  write: 45_000,
+  guess: 30_000,
+  mirror: 30_000,
+  catchVote: 5000,
+  catchCooldown: 8000,
 } as const;
+export const MAX_RULES = 3;
+export const MAX_CONFESSION = 80;
 export const DRINK_LIMIT_UNITS = 12; // 1 saatte
 export const DRINK_WINDOW_MS = 60 * 60 * 1000;

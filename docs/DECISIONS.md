@@ -30,3 +30,22 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
 21. **Ödüller (Gecenin Özeti) istemcide hesaplanır**; aynı oyuncu iki mezar taşı almaz. Final kartı ("Son Kadeh / Son Çay") M2'de.
 22. **Bağlı insan kalmayınca masa bekler**: faz zamanlayıcısı 30 sn ertelenir, botlar boşuna tur döndürmez.
 23. **Bot kararları sunucuda, motorun dışında** (`src/server/bots.ts`), ama saf fonksiyon; motor yalnızca "botun sırası geldi" sinyali verir. Testler aynı fonksiyonu kullanır.
+
+## 2026-11-16 — M2
+
+24. **Altın kartların ve masa olaylarının özel etkileri etiketle tanımlanır, kart id'siyle değil.** Kart yazarları yeni kart eklerken bu etiketleri kullanabilir:
+    - `ferman` (altın): perde sonuna kadar bir kez kendi kuralını yazma hakkı (Sultan Kedi).
+    - `cep` (altın): cebe bir Kalkan ve bir Ayna (Kemik Bilet).
+    - `devir` (altın, `input: votePlayer`): okuyucunun son 3 bedeli seçtiği kişiye geçer (Mezardan Dönüş).
+    - `yon` (olay): sıra yönü ters döner. `hayalet` (olay): sonraki 2 tur okuyucu kartları kapalı görür. `tutulma` (olay): en çok ödeyene Ayna.
+    - Etiketsiz altın kartlar: `input: catch` → perde boyu kural; `input: judge` → okuyucu hükmü; `none` → yalnızca metin. Her altın kart okuyucuya +3 cesaret verir.
+    - Etiketsiz masa olayı: `input: catch` → süreli kural; `none` + `penalty > 0` → herkes öder; aksi hâlde yalnızca metin (onur sistemi).
+25. **Yakala! oylaması:** suçlayan ve suçlanan oy vermez. Verilen oyların yarısından fazlası "bozdu" derse suçlanan kuralın bedelini öder; aksi hâlde (eşitlik ya da hiç oy yoksa) suçlayan 1 öder. Aynı kişi 8 sn'de bir fener yakabilir. Aynı anda tek oylama.
+26. **Kural sınırı:** en fazla 3 aktif kural (fermanlar ve olay kuralları dahil). Sınır doluyken kural kartı ele gelmez; ferman ya da olay gelirse en eski kural kalkar. Lanetler ayrı sayılır (oyuncu başına 1).
+27. **Düelloda eşitlik:** iki düellocu da öder (hiç oy yoksa kimse ödemez).
+28. **İtiraf:** en az 2 cevap gelmezse spot ışığı yanmaz, kimse ödemez. Spot ışığındaki cevabın yazarı tahminden muaftır, ekranında "Belli etme!" görür. Cevaplar tur sonunda durumdan silinir; yalnızca spot ışığındaki cevap o turun sonucunda kalır.
+29. **Kalkan/Ayna bedel anında kullanılır:** cebinde Kalkan ya da Ayna olan bir ödeyen varsa sonuç ekranı 9 sn kalır. Ayna tutulan kişinin Kalkanı varsa süre 5 sn uzar.
+30. **Pas:** kartın hedefi olan kullanabilir (herkese gelen kartlarda herkes). Kural, lanet ve altın kartlara pas geçilmez. **Veto** okuyucu dahil herkes, kart açıkken kullanabilir. Daha önce verilen cevaplar silinir ve kimin veto ettiği hiçbir mesajda yer almaz.
+31. **Masa olayları okuyucu turu sayılmaz:** perde ilerlemesini ve sırayı değiştirmez. Her 8 turda bir Su Molası gelir (1. perde dahil). Aynı tura masa olayı da denk gelirse Su Molası öncelikli.
+32. **Final kartı sistem kartıdır** (Son Kadeh / Son Çay). Kapanış sözünü en çok cesaret puanı olan söyler.
+33. **Güç kartı kazanımı:** her 3 cesarette rastgele bir güç kartı. Cep doluysa o hak yanar, birikmez. Altın kart ve olaylarla gelen güçler cep doluysa en eskisinin yerine geçer.

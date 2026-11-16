@@ -13,11 +13,39 @@ export function ActionPanel({ view }: { view: View }) {
   const card = g.card!;
   const reader = view.players.find((p) => p.id === g.readerId);
   const isReader = me === g.readerId;
-  const total = g.input === 'votePlayer' ? DUR.vote : g.input === 'yesNo' ? DUR.yesNo : DUR.judge + (card.timer ?? 0) * 1000;
+  const total =
+    g.input === 'votePlayer' ? DUR.vote : g.input === 'yesNo' ? DUR.yesNo : g.input === 'choice' ? DUR.mirror
+      : g.input === 'text' ? (g.stage === 'guess' ? DUR.guess : DUR.write) : DUR.judge + (card.timer ?? 0) * 1000;
   const waiting = g.expected.filter((id) => !g.submitted.includes(id)).length;
+  const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
+  const passed = g.passed.includes(me);
 
   let body;
-  if (g.input === 'judge') {
+  if (passed) {
+    body = <Info>Pas geçtin. Bu kart sana bedelsiz.</Info>;
+  } else if (card.type === 'duel') {
+    const voter = g.expected.includes(me);
+    body = !voter ? (
+      <Info>{g.targets.includes(me) ? 'Düellodasın! Masa kazananı seçecek.' : 'Masa oyluyor…'}</Info>
+    ) : g.myInput ? (
+      <Info>Oyun gizli. {waiting > 0 ? `${waiting} kişi bekleniyor…` : 'Sayılıyor…'}</Info>
+    ) : (
+      <DuelVote view={view} />
+    );
+  } else if (g.input === 'choice') {
+    const isTarget = g.targets[0] === me;
+    body = g.myInput ? (
+      <Info>{isTarget ? 'Gizli seçimin kaydedildi.' : 'Tahminin gizli.'} {waiting > 0 ? `${waiting} kişi bekleniyor…` : ''}</Info>
+    ) : (
+      <ChoiceGrid view={view} prompt={isTarget ? 'Gizlice seç. Kimse görmeyecek.' : `${name(g.targets[0] ?? '')} ne seçti? Tahmin et.`} />
+    );
+  } else if (g.input === 'text') {
+    if (g.stage === 'write') {
+      body = g.myText !== null ? <Info>Cevabın anonim olarak kaydedildi. {waiting > 0 ? `${waiting} kişi yazıyor…` : ''}</Info> : <ConfessionWrite />;
+    } else {
+      body = <ConfessionGuess view={view} waiting={waiting} />;
+    }
+  } else if (g.input === 'judge') {
     body = isReader ? (
       card.target === 'all' ? <JudgeAll view={view} /> : <JudgeOne view={view} />
     ) : (
@@ -28,7 +56,13 @@ export function ActionPanel({ view }: { view: View }) {
       </Info>
     );
   } else if (g.input === 'votePlayer') {
-    body = g.myInput ? <Info>Oyun gizli. {waiting > 0 ? `${waiting} kişi bekleniyor…` : 'Sayılıyor…'}</Info> : <VoteGrid view={view} />;
+    body = !g.expected.includes(me) ? (
+      <Info>{reader?.name} seçiyor…</Info>
+    ) : g.myInput ? (
+      <Info>Oyun gizli. {waiting > 0 ? `${waiting} kişi bekleniyor…` : 'Sayılıyor…'}</Info>
+    ) : (
+      <VoteGrid view={view} />
+    );
   } else {
     const mine = g.expected.includes(me);
     body = !mine ? (
@@ -43,8 +77,167 @@ export function ActionPanel({ view }: { view: View }) {
   return (
     <div className="flex w-full max-w-sm flex-col gap-3">
       <CandleTimer endsAt={g.phaseEndsAt} total={total} />
-      {card.timer && isReader && g.input === 'judge' && <DareTimer seconds={card.timer} />}
+      {card.timer && isReader && (g.input === 'judge' || card.type === 'duel') && <DareTimer seconds={card.timer} />}
       {body}
+      <PassVeto view={view} />
+    </div>
+  );
+}
+
+// Pas (perde başına 1, kendine gelen karta) ve anonim Veto (oyun boyunca 1)
+export function PassVeto({ view }: { view: View }) {
+  const send = useRoom((s) => s.send);
+  const g = view.game!;
+  const you = view.you!;
+  const [confirmVeto, setConfirmVeto] = useState(false);
+  const card = g.card;
+  if (!card || g.system || card.type === 'rule' || card.type === 'curse') return null;
+  const canPass = you.canPass && g.targets.includes(you.id) && !g.passed.includes(you.id) && card.type !== 'golden';
+  if (!canPass && !you.canVeto) return null;
+  return (
+    <div className="flex gap-2">
+      {canPass && (
+        <button type="button" onClick={() => send({ t: 'pass' })} className="min-h-[48px] flex-1 rounded-[12px] bg-ink-800 text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)]">
+          Pas geç <span className="text-bone-dim">(perdede 1)</span>
+        </button>
+      )}
+      {you.canVeto &&
+        (confirmVeto ? (
+          <button type="button" onClick={() => { send({ t: 'veto' }); setConfirmVeto(false); }} className="min-h-[48px] flex-1 rounded-[12px] bg-[#5A1218] text-[16px]">
+            Eminim, veto et
+          </button>
+        ) : (
+          <button type="button" onClick={() => setConfirmVeto(true)} className="min-h-[48px] flex-1 rounded-[12px] bg-ink-800 text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)]">
+            Anonim veto <span className="text-bone-dim">(oyunda 1)</span>
+          </button>
+        ))}
+    </div>
+  );
+}
+
+function DuelVote({ view }: { view: View }) {
+  const send = useRoom((s) => s.send);
+  const g = view.game!;
+  const [a, b] = g.targets.map((id) => view.players.find((p) => p.id === id));
+  if (!a || !b) return null;
+  const side = (p: typeof a) => (
+    <button
+      type="button"
+      onClick={() => send({ t: 'vote', playerId: p!.id })}
+      className="flex min-h-[140px] flex-1 flex-col items-center justify-center gap-2 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+    >
+      <Avatar index={p!.avatar} size={64} />
+      <span className="max-w-full truncate px-2 text-[18px]">{p!.name}</span>
+    </button>
+  );
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-center text-[18px]">Kazanan kim?</p>
+      <div className="relative flex items-stretch gap-6">
+        {side(a)}
+        {/* ortada çatlayan şimşek */}
+        <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" width="28" height="120" viewBox="0 0 28 120" aria-hidden>
+          <path d="M18,0 L6,48 L18,52 L4,120 L24,44 L12,40 Z" fill="var(--accent)" stroke="var(--bone-100)" strokeWidth="1.5" />
+        </svg>
+        {side(b)}
+      </div>
+    </div>
+  );
+}
+
+function ChoiceGrid({ view, prompt }: { view: View; prompt: string }) {
+  const send = useRoom((s) => s.send);
+  const g = view.game!;
+  const label = (o: string) => (g.optionPlayers ? view.players.find((p) => p.id === o)?.name ?? '?' : o);
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-center text-[18px]">{prompt}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {g.options.map((o, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => send({ t: 'choose', index: i })}
+            className="flex min-h-[64px] items-center justify-center gap-2 rounded-[12px] bg-ink-800 px-2 text-[17px] shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+          >
+            {g.optionPlayers && <Avatar index={view.players.find((p) => p.id === o)?.avatar ?? 0} size={32} />}
+            <span className="truncate">{label(o)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConfessionWrite() {
+  const send = useRoom((s) => s.send);
+  const [text, setText] = useState('');
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim()) send({ t: 'answerText', text });
+      }}
+    >
+      <label htmlFor="confess" className="text-center text-[18px]">Anonim yaz. Kimse senin yazdığını bilmeyecek.</label>
+      <textarea
+        id="confess"
+        maxLength={80}
+        rows={3}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="rounded-[12px] bg-ink-950 p-3 text-[18px] shadow-[inset_0_0_0_2px_var(--ash-500)] outline-none focus:shadow-[inset_0_0_0_2px_var(--accent)]"
+      />
+      <span className="text-right text-[14px] text-bone-dim">{[...text].length}/80</span>
+      <InkButton type="submit" disabled={!text.trim()}>
+        Gönder
+      </InkButton>
+    </form>
+  );
+}
+
+function ConfessionGuess({ view, waiting }: { view: View; waiting: number }) {
+  const g = view.game!;
+  const send = useRoom((s) => s.send);
+  const me = view.you!.id;
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-2" aria-label="Anonim cevaplar">
+        {g.answers.map((a, i) => (
+          <li
+            key={i}
+            className={`rounded-[12px] p-3 text-[17px] ${i === g.spotlight ? 'bg-parchment-200 text-ink-text shadow-[0_0_24px_#EDE6D655]' : 'bg-ink-800 text-bone-dim'}`}
+          >
+            {i === g.spotlight && <span className="block font-gothic text-[18px]">Spot ışığında</span>}
+            {a}
+          </li>
+        ))}
+      </ul>
+      {g.amAuthor ? (
+        <Info>Spot ışığındaki cevap senin. Belli etme!</Info>
+      ) : g.myInput ? (
+        <Info>Tahminin gizli. {waiting > 0 ? `${waiting} kişi bekleniyor…` : ''}</Info>
+      ) : (
+        <>
+          <p className="text-center text-[18px]">Spot ışığındakini kim yazdı?</p>
+          <div className="grid grid-cols-3 gap-2">
+            {view.players
+              .filter((p) => !p.left && p.id !== me)
+              .map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => send({ t: 'vote', playerId: p.id })}
+                  className="flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+                >
+                  <Avatar index={p.avatar} size={42} />
+                  <span className="max-w-full truncate px-1 text-[15px]">{p.name}</span>
+                </button>
+              ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -113,6 +306,21 @@ function VoteGrid({ view }: { view: View }) {
   const send = useRoom((s) => s.send);
   const me = view.you!.id;
   const choices = view.players.filter((p) => !p.left && p.id !== me);
+  if (view.game!.card?.type === 'golden') {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-center text-[18px]">Kimi seçiyorsun?</p>
+        <div className="grid grid-cols-3 gap-2">
+          {choices.map((p) => (
+            <button key={p.id} type="button" onClick={() => send({ t: 'vote', playerId: p.id })} className="flex min-h-[92px] flex-col items-center justify-center gap-1 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
+              <Avatar index={p.avatar} size={46} />
+              <span className="max-w-full truncate px-1 text-[15px]">{p.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-2">
       <p className="text-center text-[18px]">Gizlice birini seç.</p>

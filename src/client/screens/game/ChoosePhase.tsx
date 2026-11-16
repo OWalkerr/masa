@@ -21,10 +21,13 @@ export function ChoosePhase({ view }: { view: View }) {
   const isReader = view.you?.id === g.readerId;
   if (isReader && g.step === 'target' && g.card) return <TargetPicker view={view} card={g.card} />;
   if (isReader && g.hand) return <Hand view={view} hand={g.hand} />;
+
   return <Waiting view={view} readerName={reader?.name ?? '?'} readerAvatar={reader?.avatar ?? 0} />;
 }
 
-function Hand({ view, hand }: { view: View; hand: Card[] }) {
+type HandItem = Card | { id: string; hidden: true };
+
+function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
   const g = view.game!;
   const send = useRoom((s) => s.send);
   const names = useNames(view);
@@ -41,7 +44,7 @@ function Hand({ view, hand }: { view: View; hand: Card[] }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="text-center text-[18px]" aria-live="polite">
-        Sıra sende. Bir kart seç, yüksek sesle oku.
+        {g.blind ? 'Hayalet Saati: kartlar kapalı. Körlemesine seç.' : 'Sıra sende. Bir kart seç, yüksek sesle oku.'}
       </p>
       <div className="w-full max-w-[360px] px-2">
         <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" />
@@ -49,7 +52,7 @@ function Hand({ view, hand }: { view: View; hand: Card[] }) {
       <div className="relative w-full" style={{ height: w * 1.4 + 30 }}>
         {hand.map((c, i) => (
           <FanCard
-            key={c.id}
+            key={c.id + (g.turnNo ?? 0)}
             card={c}
             index={i}
             offset={i - focus}
@@ -65,6 +68,15 @@ function Hand({ view, hand }: { view: View; hand: Card[] }) {
         ))}
       </div>
       <p className="text-[14px] text-bone-dim">Yana dokun: diğer kart · Yukarı kaydır: oyna</p>
+      {view.you?.powers.includes('swap') && !played && !g.blind && (
+        <button
+          type="button"
+          onClick={() => send({ t: 'usePower', power: 'swap' })}
+          className="min-h-[48px] rounded-[12px] bg-ink-800 px-4 text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)]"
+        >
+          Takas kullan: eli yeniden çek
+        </button>
+      )}
       <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-4 safe-bottom">
         <InkButton className="mx-auto w-full max-w-sm" disabled={!!played} onClick={() => play(focused.id)} seed={51}>
           Oyna
@@ -75,7 +87,7 @@ function Hand({ view, hand }: { view: View; hand: Card[] }) {
 }
 
 function FanCard(props: {
-  card: Card; index: number; offset: number; width: number; names: Record<string, string>; sober: boolean;
+  card: HandItem; index: number; offset: number; width: number; names: Record<string, string>; sober: boolean;
   inherited: boolean; played: string | null; reduce: boolean; onFocus(): void; onPlay(): void;
 }) {
   const { card, index, offset, width, played, reduce } = props;
@@ -120,7 +132,11 @@ function FanCard(props: {
         if (e.key === 'Enter' || e.key === ' ') (isFocus ? props.onPlay() : props.onFocus());
       }}
     >
-      <GameCard card={card} width={width} names={props.names} sober={props.sober} inherited={props.inherited} />
+      {'hidden' in card ? (
+        <CardBack width={width} />
+      ) : (
+        <GameCard card={card} width={width} names={props.names} sober={props.sober} inherited={props.inherited} />
+      )}
     </motion.div>
   );
 }

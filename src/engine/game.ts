@@ -1,12 +1,21 @@
-// Tur döngüsü: actIntro → choose → reveal → action → resolve → (sonraki tur / perde) → summary
+// Tur döngüsü:
+// actIntro → choose → reveal → action → resolve → (tableEvent) → sonraki tur … → finale → summary
+// Kurallar/lanetler masada kalır; "Yakala!" oylaması herhangi bir fazda paralel çalışır.
 import type { Card } from './cards';
-import { consents, dealHand, hasToken, isSensitive, needsPick, neighbor, pickInherit, targetPool, weightedRandomPlayer } from './deck';
-import { applyPayment, emptyStats } from './penalties';
-import { activePlayers, getPlayer } from './state';
 import {
-  DUR, IntentError, ROUNDS_PER_ACT,
-  type Ctx, type Fx, type GameState, type InputValue, type Phase, type Turn, type TurnResult,
+  consents, dealHand, hasToken, isSensitive, modePool, needsPick, neighbor, pickInherit, targetPool, weightedRandomPlayer,
+} from './deck';
+import { applyPayment, emptyStats, revertPayment } from './penalties';
+import { activePlayers, getPlayer } from './state';
+import { getCard, TAG } from './systemCards';
+import {
+  DUR, IntentError, MAX_CONFESSION, MAX_POCKET, MAX_RULES, ROUNDS_PER_ACT,
+  type ActiveEffect, type Ctx, type Fx, type GameState, type InputValue, type Phase, type PowerKind, type TokenKey,
+  type Turn, type TurnResult,
 } from './types';
+
+const POWERS: PowerKind[] = ['shield', 'mirror', 'swap', 'sabotage'];
+export const POWER_NAMES: Record<PowerKind, string> = { shield: 'Kalkan', mirror: 'Ayna', swap: 'Takas', sabotage: 'Sabotaj' };
 
 export function startGame(s: GameState, ctx: Ctx, fx: Fx[]) {
   s.stats = {};
@@ -14,6 +23,7 @@ export function startGame(s: GameState, ctx: Ctx, fx: Fx[]) {
   s.game = {
     act: 1, actTurn: 0, actTurns: 0, turnNo: 0, readerIdx: 0, phaseEndsAt: null, turn: null,
     nextInherit: null, used: [], recentTypes: [], log: [], endedAt: null,
+    direction: 1, effects: [], catchVote: null, blindTurns: 0, pendingEvent: null,
   };
   beginAct(s, ctx, fx, 1);
 }
@@ -34,8 +44,30 @@ function setPhase(s: GameState, ctx: Ctx, phase: Phase, dur: number | null) {
   s.timers.push({ id: `ph-${s.seq++}`, kind: 'phase', at });
 }
 
+function card(ctx: Pick<Ctx, 'catalog'>, id: string): Card {
+  const c = getCard(ctx.catalog, id);
+  if (!c) throw new IntentError('BAD_CARD', 'Kart bulunamadı.');
+  return c;
+}
+
+function newTurn(readerId: string, over: Partial<Turn> = {}): Turn {
+  return {
+    readerId, hand: [], inherited: null, cardId: null, step: 'choose', targets: [], tokens: {}, inputs: {},
+    judgedPayers: null, result: null, pickedTop: false, rest: [], swapped: false, sabotagedBy: null, passed: [],
+    vetoed: false, stage: 'main', texts: {}, spotlightAuthor: null, shuffled: [], system: false, blind: false,
+    options: [], optionPlayers: false, ...over,
+  };
+}
+
+function emptyResult(): TurnResult {
+  return { payments: [], courage: [], mini: [], waterBreak: [] };
+}
+
+// --- perde ---
+
 function beginAct(s: GameState, ctx: Ctx, fx: Fx[], act: 1 | 2 | 3) {
   const g = s.game!;
+  if (act > 1) endActEffects(s, fx);
   g.act = act;
   g.actTurn = 0;
   // Her perde en az 1 tam tur sürer: her oyuncu en az bir kez okuyucu olur
@@ -43,6 +75,15 @@ function beginAct(s: GameState, ctx: Ctx, fx: Fx[], act: 1 | 2 | 3) {
   g.turn = null;
   setPhase(s, ctx, 'actIntro', DUR.actIntro);
   fx.push({ kind: 'actIntro', payload: { act } });
+}
+
+// Perde sonu: "perde sonuna kadar" süren etkiler ve fermanlar biter
+function endActEffects(s: GameState, fx: Fx[]) {
+  const g = s.game!;
+  const gone = g.effects.filter((e) => e.turnsLeft === 'act');
+  g.effects = g.effects.filter((e) => e.turnsLeft !== 'act');
+  for (const st of Object.values(s.stats)) st.decree = false;
+  if (gone.length) fx.push({ kind: 'effectsEnded', payload: { ids: gone.map((e) => e.id) } });
 }
 
 function currentReaderOk(s: GameState, id: string | undefined): boolean {
@@ -54,12 +95,18 @@ function currentReaderOk(s: GameState, id: string | undefined): boolean {
   return true;
 }
 
+function stepReader(s: GameState) {
+  const g = s.game!;
+  const n = Math.max(1, s.order.length);
+  g.readerIdx = (((g.readerIdx + g.direction) % n) + n) % n;
+}
+
 function startTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
   const g = s.game!;
   const n = s.order.length;
   let tries = 0;
   while (tries < n && !currentReaderOk(s, s.order[g.readerIdx % n])) {
-    g.readerIdx = (g.readerIdx + 1) % n;
+    stepReader(s);
     tries++;
   }
   const readerId = s.order[g.readerIdx % n]!;
@@ -71,38 +118,40 @@ function startTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
   const inherit = g.nextInherit;
   g.nextInherit = null;
   const hand = dealHand(s, ctx.catalog, ctx.rng, readerId, inherit);
-  g.turn = {
-    readerId, hand, inherited: inherit && hand.includes(inherit) ? inherit : null,
-    cardId: null, step: 'choose', targets: [], tokens: {}, inputs: {}, judgedPayers: null, result: null, pickedTop: false,
-  };
+  const blind = g.blindTurns > 0;
+  if (blind) g.blindTurns--;
+  g.turn = newTurn(readerId, { hand, inherited: inherit && hand.includes(inherit) ? inherit : null, blind });
   setPhase(s, ctx, 'choose', DUR.deal + DUR.choose);
   fx.push({ kind: 'deal', payload: { readerId } });
 }
 
 // --- okuyucu eylemleri ---
 
-export function playCard(s: GameState, ctx: Ctx, fx: Fx[], by: string, cardId: string) {
+export function playCard(s: GameState, ctx: Ctx, fx: Fx[], by: string, rawId: string) {
   const t = requireTurn(s, 'choose');
-  if (t.readerId !== by) throw new IntentError('NOT_READER', 'Sıra sende değil.');
-  if (t.step !== 'choose') throw new IntentError('BAD_STEP', 'Kart zaten seçildi.');
-  if (!t.hand.includes(cardId)) throw new IntentError('BAD_CARD', 'Bu kart elinde yok.');
-  const card = ctx.catalog.get(cardId)!;
-  const handCards = t.hand.map((id) => ctx.catalog.get(id)!);
-  const maxI = Math.max(...handCards.map((c) => c.intensity));
-  const minI = Math.min(...handCards.map((c) => c.intensity));
+  if (t.system || t.readerId !== by) throw new IntentError('NOT_READER', 'Sıra sende değil.');
+  if (t.step !== 'choose' || t.cardId) throw new IntentError('BAD_STEP', 'Kart zaten seçildi.');
+  // Hayalet Saati: okuyucu kartları kapalı görür, sırayla "blind-0..2" ile seçer
+  const blindIdx = rawId.startsWith('blind-') ? Number(rawId.slice(6)) : -1;
+  const cardId = t.blind && blindIdx >= 0 ? t.hand[blindIdx] : rawId;
+  if (!cardId || !t.hand.includes(cardId)) throw new IntentError('BAD_CARD', 'Bu kart elinde yok.');
+  const c = card(ctx, cardId);
+  const handCards = t.hand.map((id) => card(ctx, id));
+  const maxI = Math.max(...handCards.map((x) => x.intensity));
+  const minI = Math.min(...handCards.map((x) => x.intensity));
   t.cardId = cardId;
-  t.pickedTop = card.intensity === maxI && maxI > minI;
+  t.pickedTop = c.intensity === maxI && maxI > minI;
+  t.rest = t.hand.filter((id) => id !== cardId);
   // Seçilmeyenlerden en yoğunu sonraki okuyucuya miras kalır
-  s.game!.nextInherit = pickInherit(ctx.catalog, t.hand.filter((id) => id !== cardId), ctx.rng);
+  s.game!.nextInherit = pickInherit(ctx.catalog, t.rest, ctx.rng);
   fx.push({ kind: 'cardPlayed', payload: { readerId: by } });
-  const need = needsPick(card);
+  const need = needsPick(c);
   // Hassas kartlarda (flört/temas) hedefi sistem seçer: okuyucu kimin katılımı açık olduğunu öğrenemez
-  if (need > 0 && !isSensitive(card) && targetPool(s, card, t.readerId).length > need) {
+  if (need > 0 && !isSensitive(c) && targetPool(s, c, t.readerId).length > need) {
     t.step = 'target';
     setPhase(s, ctx, 'choose', DUR.target);
   } else {
-    // Seçecek kadar aday yoksa hedefler kendiliğinden belirlenir
-    finalizeTargets(s, ctx, fx, card, null);
+    finalizeTargets(s, ctx, fx, c, null);
   }
 }
 
@@ -110,29 +159,29 @@ export function pickTarget(s: GameState, ctx: Ctx, fx: Fx[], by: string, ids: st
   const t = requireTurn(s, 'choose');
   if (t.readerId !== by) throw new IntentError('NOT_READER', 'Sıra sende değil.');
   if (t.step !== 'target' || !t.cardId) throw new IntentError('BAD_STEP', 'Önce bir kart seç.');
-  const card = ctx.catalog.get(t.cardId)!;
-  const need = needsPick(card);
+  const c = card(ctx, t.cardId);
+  const need = needsPick(c);
   const uniq = [...new Set(ids)];
-  const pool = new Set(targetPool(s, card, t.readerId).map((p) => p.id));
+  const pool = new Set(targetPool(s, c, t.readerId).map((p) => p.id));
   if (uniq.length !== need || !uniq.every((id) => pool.has(id))) throw new IntentError('BAD_TARGET', need === 2 ? 'İki kişi seç.' : 'Bir kişi seç.');
-  finalizeTargets(s, ctx, fx, card, uniq);
+  finalizeTargets(s, ctx, fx, c, uniq);
 }
 
-function finalizeTargets(s: GameState, ctx: Ctx, fx: Fx[], card: Card, picked: string[] | null) {
+function finalizeTargets(s: GameState, ctx: Ctx, fx: Fx[], c: Card, picked: string[] | null) {
   const t = s.game!.turn!;
   const rng = ctx.rng;
-  const pool = targetPool(s, card, t.readerId);
+  const pool = targetPool(s, c, t.readerId);
   let targets: string[] = [];
-  switch (card.target) {
+  switch (c.target) {
     case 'all':
-      targets = activePlayers(s).filter((p) => p.id === t.readerId ? feasibleSelf(s, card, p.id) : pool.some((x) => x.id === p.id)).map((p) => p.id);
+      targets = activePlayers(s).filter((p) => (p.id === t.readerId ? consents(p, c) : pool.some((x) => x.id === p.id))).map((p) => p.id);
       break;
     case 'reader':
       targets = [t.readerId];
       break;
     case 'picked':
     case 'twoPicked': {
-      const need = needsPick(card);
+      const need = needsPick(c);
       targets = picked ?? [];
       const rest = pool.filter((p) => !targets.includes(p.id));
       while (targets.length < need && rest.length) {
@@ -149,35 +198,47 @@ function finalizeTargets(s: GameState, ctx: Ctx, fx: Fx[], card: Card, picked: s
     }
     case 'right':
     case 'left': {
-      const n = neighbor(s, t.readerId, card.target === 'right' ? 1 : -1);
+      const n = neighbor(s, t.readerId, c.target === 'right' ? 1 : -1);
       if (n) targets = [n];
       break;
     }
   }
   t.targets = targets;
   t.step = 'choose';
-  const tokens: Turn['tokens'] = { okuyucu: t.readerId };
-  if (card.target === 'picked' || card.target === 'twoPicked') {
+  t.tokens = makeTokens(s, ctx, c, t.readerId, targets);
+  if (c.type === 'mirror') {
+    if (c.choices === '$players') {
+      t.options = activePlayers(s).map((p) => p.id);
+      t.optionPlayers = true;
+    } else t.options = [...(c.choices ?? [])];
+  }
+  for (const id of targets) if (c.target !== 'all') ensureAndBump(s, id);
+  setPhase(s, ctx, 'reveal', DUR.reveal);
+  fx.push({ kind: 'reveal', payload: { cardId: c.id, rarity: c.rarity } });
+}
+
+function makeTokens(s: GameState, ctx: Ctx, c: Card, readerId: string, targets: string[]): Turn['tokens'] {
+  const tokens: Turn['tokens'] = { okuyucu: readerId };
+  if (c.target === 'picked' || c.target === 'twoPicked') {
     tokens.secilen = targets[0];
     tokens.ikinci = targets[1];
   }
-  if (card.target === 'random') tokens.rastgele = targets[0];
-  else if (hasToken(card, 'rastgele')) {
-    const others = pool.filter((p) => !targets.includes(p.id));
-    const r = weightedRandomPlayer(s, rng, others);
+  if (c.target === 'random') tokens.rastgele = targets[0];
+  else if (hasToken(c, 'rastgele')) {
+    const others = targetPool(s, c, readerId).filter((p) => !targets.includes(p.id));
+    const r = weightedRandomPlayer(s, ctx.rng, others);
     if (r) tokens.rastgele = r.id;
   }
-  tokens.sag = neighbor(s, t.readerId, 1);
-  tokens.sol = neighbor(s, t.readerId, -1);
-  t.tokens = tokens;
-  for (const id of targets) if (card.target !== 'all') ensureAndBump(s, id);
-  setPhase(s, ctx, 'reveal', DUR.reveal);
-  fx.push({ kind: 'reveal', payload: { cardId: card.id, rarity: card.rarity } });
+  tokens.sag = neighbor(s, readerId, 1);
+  tokens.sol = neighbor(s, readerId, -1);
+  return tokens;
 }
 
-function feasibleSelf(s: GameState, card: Card, readerId: string): boolean {
-  const p = getPlayer(s, readerId);
-  return !!p && consents(p, card);
+export function resolveText(s: GameState, text: string, tokens: Partial<Record<TokenKey, string>>): string {
+  return text.replace(/\{([a-z]+)\}/g, (m, k: TokenKey) => {
+    const id = tokens[k];
+    return (id && getPlayer(s, id)?.name) || m;
+  });
 }
 
 function ensureAndBump(s: GameState, id: string) {
@@ -187,61 +248,149 @@ function ensureAndBump(s: GameState, id: string) {
 
 // --- eylem fazı ---
 
-export type ActionKind = 'judge' | 'votePlayer' | 'yesNo';
+export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'none';
 
-export function actionKind(card: Card): ActionKind {
-  if (card.input === 'votePlayer') return 'votePlayer';
-  if (card.input === 'yesNo') return 'yesNo';
-  return 'judge';
+export function actionKind(c: Card): ActionKind {
+  switch (c.type) {
+    case 'rule':
+    case 'curse':
+    case 'tableEvent':
+      return 'none';
+    case 'mirror':
+      return 'choice';
+    case 'confession':
+      return 'text';
+    case 'duel':
+    case 'mostLikely':
+      return 'votePlayer';
+    case 'neverHave':
+      return 'yesNo';
+    case 'golden':
+      return c.input === 'votePlayer' ? 'votePlayer' : c.input === 'judge' ? 'judge' : 'none';
+    default:
+      return c.input === 'votePlayer' ? 'votePlayer' : c.input === 'yesNo' ? 'yesNo' : 'judge';
+  }
 }
 
 // Bu fazda girdi vermesi beklenen oyuncular
 export function expectedInputs(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[] {
   const t = s.game?.turn;
-  if (!t || !t.cardId) return [];
-  const card = ctx.catalog.get(t.cardId)!;
-  const k = actionKind(card);
-  if (k === 'judge') return [t.readerId];
-  if (k === 'votePlayer') return activePlayers(s).map((p) => p.id);
-  return t.targets.filter((id) => getPlayer(s, id) && !getPlayer(s, id)!.left);
+  if (!t || !t.cardId || s.phase !== 'action') return [];
+  const c = getCard(ctx.catalog, t.cardId)!;
+  const active = activePlayers(s).map((p) => p.id);
+  let ids: string[];
+  switch (actionKind(c)) {
+    case 'judge':
+      ids = t.targets.every((id) => t.passed.includes(id)) ? [] : [t.readerId];
+      return ids;
+    case 'votePlayer':
+      if (c.type === 'duel') ids = active.filter((id) => !t.targets.includes(id));
+      else if (c.type === 'golden') ids = [t.readerId];
+      else ids = active;
+      break;
+    case 'yesNo':
+      ids = t.targets.filter((id) => active.includes(id));
+      break;
+    case 'choice':
+      ids = active;
+      break;
+    case 'text':
+      ids = t.stage === 'guess' ? active.filter((id) => id !== t.spotlightAuthor) : active;
+      break;
+    default:
+      return [];
+  }
+  return ids.filter((id) => !t.passed.includes(id));
 }
 
-function beginAction(s: GameState, ctx: Ctx) {
+function beginAction(s: GameState, ctx: Ctx, fx: Fx[]) {
   const t = s.game!.turn!;
-  const card = ctx.catalog.get(t.cardId!)!;
-  const k = actionKind(card);
-  const dur = k === 'votePlayer' ? DUR.vote : k === 'yesNo' ? DUR.yesNo : DUR.judge + (card.timer ?? 0) * 1000;
+  const c = card(ctx, t.cardId!);
+  const k = actionKind(c);
+  if (k === 'none') return resolveTurn(s, ctx, fx);
+  if (k === 'text') t.stage = 'write';
+  const dur =
+    k === 'votePlayer' ? DUR.vote : k === 'yesNo' ? DUR.yesNo : k === 'choice' ? DUR.mirror : k === 'text' ? DUR.write : DUR.judge + (c.timer ?? 0) * 1000;
   setPhase(s, ctx, 'action', dur);
 }
 
 export function submitInput(s: GameState, ctx: Ctx, fx: Fx[], by: string, value: InputValue) {
   const t = requireTurn(s, 'action');
-  const card = ctx.catalog.get(t.cardId!)!;
-  const k = actionKind(card);
+  const c = card(ctx, t.cardId!);
+  const k = actionKind(c);
   if (!expectedInputs(s, ctx).includes(by)) throw new IntentError('NOT_YOURS', 'Bu turda senden girdi beklenmiyor.');
   if (t.inputs[by]) throw new IntentError('ALREADY', 'Zaten verdin.');
   if (value.k === 'vote') {
-    if (k !== 'votePlayer') throw new IntentError('BAD_INPUT', 'Bu kartta oy yok.');
+    if (k !== 'votePlayer' && !(k === 'text' && t.stage === 'guess')) throw new IntentError('BAD_INPUT', 'Bu kartta oy yok.');
     if (value.playerId === by) throw new IntentError('BAD_TARGET', 'Kendine oy veremezsin.');
     const target = getPlayer(s, value.playerId);
     if (!target || target.left) throw new IntentError('BAD_TARGET', 'Böyle biri masada yok.');
-  } else if (k !== 'yesNo') throw new IntentError('BAD_INPUT', 'Bu kartta evet/hayır yok.');
+    if (c.type === 'duel' && !t.targets.includes(value.playerId)) throw new IntentError('BAD_TARGET', 'Düellocular arasından seç.');
+  } else if (value.k === 'yesNo') {
+    if (k !== 'yesNo') throw new IntentError('BAD_INPUT', 'Bu kartta evet/hayır yok.');
+  } else if (value.k === 'choice') {
+    if (k !== 'choice') throw new IntentError('BAD_INPUT', 'Bu kartta seçim yok.');
+    if (!Number.isInteger(value.index) || value.index < 0 || value.index >= t.options.length) throw new IntentError('BAD_INPUT', 'Geçersiz seçenek.');
+  }
   t.inputs[by] = value;
   fx.push({ kind: 'inputIn', payload: { playerId: by } });
-  const waiting = expectedInputs(s, ctx).filter((id) => !t.inputs[id]);
-  if (waiting.length === 0) resolveTurn(s, ctx, fx);
+  maybeComplete(s, ctx, fx);
+}
+
+// İtiraf: herkes anonim yazar (en fazla 80 karakter)
+export function answerText(s: GameState, ctx: Ctx, fx: Fx[], by: string, raw: string) {
+  const t = requireTurn(s, 'action');
+  const c = card(ctx, t.cardId!);
+  if (actionKind(c) !== 'text' || t.stage !== 'write') throw new IntentError('BAD_INPUT', 'Şu an yazı beklenmiyor.');
+  if (!expectedInputs(s, ctx).includes(by)) throw new IntentError('NOT_YOURS', 'Bu turda senden cevap beklenmiyor.');
+  if (t.texts[by] !== undefined) throw new IntentError('ALREADY', 'Zaten yazdın.');
+  const text = cleanText(raw, MAX_CONFESSION);
+  if (!text) throw new IntentError('EMPTY', 'Bir şey yaz.');
+  t.texts[by] = text;
+  fx.push({ kind: 'inputIn', payload: { playerId: by } });
+  maybeComplete(s, ctx, fx);
+}
+
+export function cleanText(raw: string, max: number): string {
+  const s = raw.replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮]/g, ' ').replace(/\s+/g, ' ').trim();
+  return [...s].slice(0, max).join('').trim();
+}
+
+function maybeComplete(s: GameState, ctx: Ctx, fx: Fx[]) {
+  const t = s.game!.turn!;
+  const waiting = expectedInputs(s, ctx).filter((id) => (t.stage === 'write' ? t.texts[id] === undefined : !t.inputs[id]));
+  if (waiting.length > 0) return;
+  if (t.stage === 'write') toGuessStage(s, ctx, fx);
+  else resolveTurn(s, ctx, fx);
+}
+
+// Cevaplar karışık gösterilir, biri spot ışığına alınır, masa yazarını tahmin eder
+function toGuessStage(s: GameState, ctx: Ctx, fx: Fx[]) {
+  const t = s.game!.turn!;
+  const authors = Object.keys(t.texts);
+  if (authors.length < 2) {
+    t.result = { ...emptyResult(), note: 'Yeterli itiraf yok. Sırlar mezarda kaldı.' };
+    return resolveTurn(s, ctx, fx);
+  }
+  t.shuffled = ctx.rng.shuffle([...authors]);
+  t.spotlightAuthor = ctx.rng.pick(authors);
+  t.stage = 'guess';
+  t.inputs = {};
+  setPhase(s, ctx, 'action', DUR.guess);
+  fx.push({ kind: 'spotlight' });
 }
 
 export function judge(s: GameState, ctx: Ctx, fx: Fx[], by: string, done: boolean | undefined, payers: string[] | undefined) {
   const t = requireTurn(s, 'action');
-  const card = ctx.catalog.get(t.cardId!)!;
-  if (actionKind(card) !== 'judge') throw new IntentError('BAD_INPUT', 'Bu kartta hüküm yok.');
+  const c = card(ctx, t.cardId!);
+  if (actionKind(c) !== 'judge') throw new IntentError('BAD_INPUT', 'Bu kartta hüküm yok.');
   if (t.readerId !== by) throw new IntentError('NOT_READER', 'Hükmü okuyucu verir.');
+  const live = t.targets.filter((id) => !t.passed.includes(id));
   if (payers) {
-    const valid = new Set(t.targets);
+    const valid = new Set(live);
     t.judgedPayers = [...new Set(payers)].filter((id) => valid.has(id));
   } else {
-    t.judgedPayers = done === false ? [...t.targets] : [];
+    t.judgedPayers = done === false ? [...live] : [];
   }
   resolveTurn(s, ctx, fx);
 }
@@ -249,66 +398,512 @@ export function judge(s: GameState, ctx: Ctx, fx: Fx[], by: string, done: boolea
 function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
   const g = s.game!;
   const t = g.turn!;
-  const card = ctx.catalog.get(t.cardId!)!;
-  const k = actionKind(card);
-  const result: TurnResult = { payments: [], courage: [], mini: [], waterBreak: [] };
+  const c = card(ctx, t.cardId!);
+  const k = actionKind(c);
+  const result: TurnResult = { ...emptyResult(), ...(t.result ?? {}) };
   let payers: string[] = [];
+  let units = c.penalty;
+  const tally = (): Record<string, number> => {
+    const r: Record<string, number> = {};
+    for (const v of Object.values(t.inputs)) if (v.k === 'vote') r[v.playerId] = (r[v.playerId] ?? 0) + 1;
+    return r;
+  };
 
-  if (k === 'judge') {
-    payers = t.judgedPayers ?? []; // hüküm gelmediyse kimse ödemez
-    result.done = payers.length === 0;
-    for (const id of t.targets) {
-      ensureStats(s, id);
-      if (payers.includes(id)) s.stats[id]!.failed++;
-      else {
-        s.stats[id]!.done++;
-        result.courage.push({ id, pts: 1, why: 'görevi yaptı' });
-      }
+  switch (c.type) {
+    case 'rule':
+    case 'curse': {
+      addEffect(s, ctx, c, t, result, fx);
+      break;
     }
-  } else if (k === 'votePlayer') {
-    const tally: Record<string, number> = {};
-    for (const v of Object.values(t.inputs)) if (v.k === 'vote') tally[v.playerId] = (tally[v.playerId] ?? 0) + 1;
-    result.tally = tally;
-    const max = Math.max(0, ...Object.values(tally));
-    // En çok oy alan öder, eşitlikte hepsi öder
-    if (max > 0) payers = Object.keys(tally).filter((id) => tally[id] === max);
-  } else {
-    result.yesIds = Object.entries(t.inputs).filter(([, v]) => v.k === 'yesNo' && v.yes).map(([id]) => id);
-    payers = result.yesIds;
+    case 'mostLikely': {
+      const r = tally();
+      result.tally = r;
+      const max = Math.max(0, ...Object.values(r));
+      // En çok oy alan öder, eşitlikte hepsi öder
+      if (max > 0) payers = Object.keys(r).filter((id) => r[id] === max);
+      break;
+    }
+    case 'duel': {
+      const r = tally();
+      result.tally = r;
+      const [a, b] = t.targets;
+      if (a && b) {
+        const va = r[a] ?? 0, vb = r[b] ?? 0;
+        if (va === vb) payers = va > 0 ? [a, b] : [];
+        else {
+          const winner = va > vb ? a : b;
+          result.winner = winner;
+          payers = [winner === a ? b : a];
+          result.courage.push({ id: winner, pts: 2, why: 'düelloyu kazandı' });
+        }
+      }
+      break;
+    }
+    case 'neverHave': {
+      result.yesIds = Object.entries(t.inputs).filter(([, v]) => v.k === 'yesNo' && v.yes).map(([id]) => id);
+      payers = result.yesIds;
+      break;
+    }
+    case 'mirror': {
+      const target = t.targets[0];
+      const secret = target ? t.inputs[target] : undefined;
+      if (!target || !secret || secret.k !== 'choice') {
+        result.note = 'Ayna sisli kaldı: gizli seçim yapılmadı.';
+        break;
+      }
+      result.secret = secret.index;
+      const guessers = Object.keys(t.inputs).filter((id) => id !== target);
+      const correct = guessers.filter((id) => (t.inputs[id] as { index?: number }).index === secret.index);
+      result.correct = correct;
+      // Bilemeyenler öder; kimse bilemezse hedef öder
+      payers = correct.length === 0 ? [target] : guessers.filter((id) => !correct.includes(id));
+      break;
+    }
+    case 'confession': {
+      if (t.stage !== 'guess' || !t.spotlightAuthor) break; // yetersiz itiraf
+      const author = t.spotlightAuthor;
+      result.author = author;
+      result.spotlight = t.texts[author];
+      const voters = Object.keys(t.inputs);
+      const correct = voters.filter((id) => (t.inputs[id] as { playerId?: string }).playerId === author);
+      result.correct = correct;
+      result.tally = tally();
+      // Çoğunluk bilirse yazar öder, bilemezse yanlış tahmin edenler öder
+      if (voters.length > 0) payers = correct.length * 2 > voters.length ? [author] : voters.filter((id) => !correct.includes(id));
+      break;
+    }
+    case 'golden': {
+      result.courage.push({ id: t.readerId, pts: 3, why: 'altın kart' });
+      const tags = c.tags ?? [];
+      if (tags.includes(TAG.decree)) {
+        ensureStats(s, t.readerId);
+        s.stats[t.readerId]!.decree = true;
+        result.note = 'Perde sonuna kadar istediğin an bir kural koyabilirsin.';
+      }
+      if (tags.includes(TAG.pocket)) {
+        givePower(s, fx, t.readerId, 'shield', true);
+        givePower(s, fx, t.readerId, 'mirror', true);
+        result.note = 'Cebine bir Kalkan ve bir Ayna girdi.';
+      }
+      if (c.input === 'catch') addEffect(s, ctx, c, t, result, fx);
+      if (actionKind(c) === 'judge') payers = judgedPayers(s, t, result);
+      if (tags.includes(TAG.transfer)) {
+        const v = t.inputs[t.readerId];
+        if (v?.k === 'vote') {
+          const st = s.stats[t.readerId]!;
+          units = st.paidHistory.slice(-3).reduce((a, b) => a + b, 0);
+          if (units > 0) {
+            payers = [v.playerId];
+            st.paidUnits = Math.max(0, st.paidUnits - units);
+            st.paidHistory = st.paidHistory.slice(0, -3);
+            result.note = 'Son bedeller mezardan kalkıp yeni sahibine gitti.';
+          } else result.note = 'Devredecek bedel yok. Temiz bir ruhsun.';
+        }
+      }
+      break;
+    }
+    default: {
+      // question, dare: okuyucunun hükmü
+      payers = judgedPayers(s, t, result);
+    }
   }
 
   if (t.pickedTop) result.courage.push({ id: t.readerId, pts: 1, why: 'en yoğun kartı seçti' });
-  for (const c of result.courage) {
-    ensureStats(s, c.id);
-    s.stats[c.id]!.courage += c.pts;
+  for (const cg of result.courage) {
+    ensureStats(s, cg.id);
+    s.stats[cg.id]!.courage += cg.pts;
+    grantPowers(s, ctx, fx, cg.id);
   }
-  // Ödeme sırası deterministik: oturma düzenine göre
-  const ordered = s.order.filter((id) => payers.includes(id));
+  // Pas kullanan bedelsiz geçer
+  if (t.passed.length) result.passed = [...t.passed];
+  const ordered = s.order.filter((id) => payers.includes(id) && !t.passed.includes(id));
   for (const id of ordered) {
     const p = getPlayer(s, id);
     if (!p) continue;
     ensureStats(s, id);
-    applyPayment(s, ctx.rng, ctx.now, p, card.penalty, result);
+    applyPayment(s, ctx.rng, ctx.now, p, units, result);
   }
   t.result = result;
-  g.used = g.used.filter((id) => id !== card.id);
-  g.used.push(card.id);
-  g.recentTypes = [...g.recentTypes, card.type].slice(-2);
-  g.log.push({ n: g.turnNo + 1, act: g.act, readerId: t.readerId, cardId: card.id, type: card.type, payers });
-  setPhase(s, ctx, 'resolve', DUR.resolve);
+  t.texts = {}; // anonim cevaplar tur bitince silinir (yalnızca spot ışığındaki sonuçta kalır)
+  finishTurn(s, ctx, fx, c, ordered);
+}
+
+function judgedPayers(s: GameState, t: Turn, result: TurnResult): string[] {
+  const payers = t.judgedPayers ?? []; // hüküm gelmediyse kimse ödemez
+  result.done = payers.length === 0;
+  for (const id of t.targets) {
+    if (t.passed.includes(id)) continue;
+    ensureStats(s, id);
+    if (payers.includes(id)) s.stats[id]!.failed++;
+    else {
+      s.stats[id]!.done++;
+      result.courage.push({ id, pts: 1, why: 'görevi yaptı' });
+    }
+  }
+  return payers;
+}
+
+function finishTurn(s: GameState, ctx: Ctx, fx: Fx[], c: Card, payers: string[]) {
+  const g = s.game!;
+  const t = g.turn!;
+  g.used = g.used.filter((id) => id !== c.id);
+  if (ctx.catalog.has(c.id)) g.used.push(c.id);
+  g.recentTypes = [...g.recentTypes, c.type].slice(-2);
+  g.log.push({ n: g.turnNo + 1, act: g.act, readerId: t.readerId, cardId: c.id, type: c.type, payers });
+  // Cebinde Kalkan/Ayna olan bir ödeyen varsa karar için süre uzar
+  const canReact = (t.result?.payments ?? []).some((p) => s.stats[p.id]?.powers.some((x) => x === 'shield' || x === 'mirror'));
+  setPhase(s, ctx, 'resolve', canReact ? DUR.resolvePower : c.type === 'rule' || c.type === 'curse' ? DUR.ruleResolve : DUR.resolve);
   fx.push({ kind: 'resolve', payload: { payers } });
+  for (const id of t.result?.waterBreak ?? []) fx.push({ kind: 'waterBreak', to: [id] });
+}
+
+// --- kural / lanet ---
+
+function addEffect(s: GameState, ctx: Ctx, c: Card, t: Turn, result: TurnResult, fx: Fx[]) {
+  const g = s.game!;
+  if (c.type === 'curse') {
+    const target = t.targets[0];
+    if (!target || g.effects.some((e) => e.kind === 'curse' && e.targetId === target)) {
+      result.note = 'Lanetin tutacağı kimse kalmadı.';
+      return;
+    }
+  } else if (rulesCount(s) >= MAX_RULES) {
+    // en eski kural kalkar
+    const oldest = g.effects.find((e) => e.kind !== 'curse');
+    if (oldest) g.effects = g.effects.filter((e) => e !== oldest);
+  }
+  const e: ActiveEffect = {
+    id: `ef-${s.seq++}`,
+    cardId: c.id,
+    kind: c.type === 'curse' ? 'curse' : c.type === 'tableEvent' ? 'event' : 'rule',
+    text: resolveText(s, c.text, t.tokens),
+    targetId: c.type === 'curse' ? t.targets[0] : undefined,
+    turnsLeft: c.duration ?? 'act',
+    penalty: Math.max(1, c.penalty),
+    ownerId: t.system ? undefined : t.readerId,
+  };
+  g.effects.push(e);
+  result.effect = e.id;
+  fx.push({ kind: e.kind === 'curse' ? 'curse' : 'rule', payload: { effectId: e.id } });
+}
+
+export function rulesCount(s: GameState): number {
+  return (s.game?.effects ?? []).filter((e) => e.kind !== 'curse').length;
+}
+
+// Sultan Kedi (ferman): perde sonuna kadar bir kez kendi kuralını koyar
+export function decree(s: GameState, ctx: Ctx, fx: Fx[], by: string, raw: string) {
+  const g = s.game;
+  if (!g || s.phase === 'summary' || s.phase === 'finale') throw new IntentError('BAD_PHASE', 'Şu an kural konamaz.');
+  const st = s.stats[by];
+  if (!st?.decree) throw new IntentError('NO_DECREE', 'Ferman hakkın yok.');
+  const text = cleanText(raw, MAX_CONFESSION);
+  if (text.length < 3) throw new IntentError('EMPTY', 'Kuralı yaz.');
+  if (rulesCount(s) >= MAX_RULES) {
+    const oldest = g.effects.find((e) => e.kind !== 'curse');
+    if (oldest) g.effects = g.effects.filter((e) => e !== oldest);
+  }
+  const e: ActiveEffect = { id: `ef-${s.seq++}`, cardId: 'decree', kind: 'decree', text: `Ferman: ${text}`, turnsLeft: 'act', penalty: 1, ownerId: by };
+  g.effects.push(e);
+  st.decree = false;
+  fx.push({ kind: 'rule', payload: { effectId: e.id } });
+}
+
+// --- Yakala! ---
+
+const CATCH_PHASES: Phase[] = ['choose', 'reveal', 'action', 'resolve', 'tableEvent'];
+
+export function startCatch(s: GameState, ctx: Ctx, fx: Fx[], by: string, effectId: string, accused: string) {
+  const g = s.game;
+  if (!g || !CATCH_PHASES.includes(s.phase)) throw new IntentError('BAD_PHASE', 'Şu an yakalanamaz.');
+  if (g.catchVote) throw new IntentError('BUSY', 'Masa zaten birini yargılıyor.');
+  const e = g.effects.find((x) => x.id === effectId);
+  if (!e) throw new IntentError('NO_EFFECT', 'Böyle bir kural yok.');
+  const accuser = getPlayer(s, by), target = getPlayer(s, accused);
+  if (!accuser || accuser.left || !target || target.left || by === accused) throw new IntentError('BAD_TARGET', 'Kimi yakaladın?');
+  if (e.kind === 'curse' && e.targetId !== accused) throw new IntentError('BAD_TARGET', 'Bu lanet yalnızca lanetliyi bağlar.');
+  ensureStats(s, by);
+  if (s.stats[by]!.lastCatchAt && ctx.now - s.stats[by]!.lastCatchAt < DUR.catchCooldown) throw new IntentError('COOLDOWN', 'Biraz bekle, fenerin daha sönmedi.');
+  s.stats[by]!.lastCatchAt = ctx.now;
+  const endsAt = ctx.now + DUR.catchVote;
+  g.catchVote = { id: `cv-${s.seq++}`, accuser: by, accused, effectId, endsAt, votes: {} };
+  s.timers.push({ id: g.catchVote.id, kind: 'catch', at: endsAt });
+  fx.push({ kind: 'catch', payload: { accuser: by, accused, effectId } });
+  if (catchVoters(s).length === 0) resolveCatch(s, ctx, fx);
+}
+
+export function catchVoters(s: GameState): string[] {
+  const cv = s.game?.catchVote;
+  if (!cv) return [];
+  return activePlayers(s).filter((p) => p.id !== cv.accuser && p.id !== cv.accused).map((p) => p.id);
+}
+
+export function voteCatch(s: GameState, ctx: Ctx, fx: Fx[], by: string, yes: boolean) {
+  const cv = s.game?.catchVote;
+  if (!cv) throw new IntentError('NO_CATCH', 'Oylanacak bir yakalama yok.');
+  if (!catchVoters(s).includes(by)) throw new IntentError('NOT_YOURS', 'Bu oylamada oyun yok.');
+  if (cv.votes[by] !== undefined) throw new IntentError('ALREADY', 'Zaten oyladın.');
+  cv.votes[by] = yes;
+  if (catchVoters(s).every((id) => cv.votes[id] !== undefined)) resolveCatch(s, ctx, fx);
+}
+
+export function resolveCatch(s: GameState, ctx: Ctx, fx: Fx[]) {
+  const g = s.game!;
+  const cv = g.catchVote;
+  if (!cv) return;
+  g.catchVote = null;
+  s.timers = s.timers.filter((t) => t.id !== cv.id);
+  const votes = Object.values(cv.votes);
+  const yes = votes.filter(Boolean).length;
+  const guilty = yes * 2 > votes.length; // çoğunluk evet derse suçlanan öder
+  const e = g.effects.find((x) => x.id === cv.effectId);
+  const result = emptyResult();
+  // Yanlış suçlama yapan 1 öder
+  const payer = getPlayer(s, guilty ? cv.accused : cv.accuser);
+  if (payer && !payer.left) {
+    ensureStats(s, payer.id);
+    applyPayment(s, ctx.rng, ctx.now, payer, guilty ? e?.penalty ?? 1 : 1, result);
+  }
+  if (guilty) {
+    ensureStats(s, cv.accuser);
+    s.stats[cv.accuser]!.catches++;
+  }
+  g.lastCatch = { ...cv, guilty, yes, no: votes.length - yes, payments: result.payments, mini: result.mini, waterBreak: result.waterBreak, at: ctx.now };
+  fx.push({ kind: 'catchResult', payload: { guilty, accused: cv.accused, accuser: cv.accuser } });
   for (const id of result.waterBreak) fx.push({ kind: 'waterBreak', to: [id] });
+}
+
+// --- güç kartları, Pas, Veto ---
+
+function givePower(s: GameState, fx: Fx[], id: string, kind: PowerKind, force = false) {
+  ensureStats(s, id);
+  const st = s.stats[id]!;
+  if (st.powers.length >= MAX_POCKET) {
+    if (!force) return;
+    st.powers.shift();
+  }
+  st.powers.push(kind);
+  fx.push({ kind: 'powerEarned', payload: { power: kind }, to: [id] });
+}
+
+// Her 3 cesaret puanında bir güç kartı; cepte en fazla 2 tane durur
+function grantPowers(s: GameState, ctx: Ctx, fx: Fx[], id: string) {
+  const st = s.stats[id]!;
+  while (st.powersEarned < Math.floor(st.courage / 3)) {
+    st.powersEarned++;
+    givePower(s, fx, id, ctx.rng.pick(POWERS));
+  }
+}
+
+function takePower(s: GameState, by: string, kind: PowerKind) {
+  const st = s.stats[by];
+  const i = st ? st.powers.indexOf(kind) : -1;
+  if (!st || i < 0) throw new IntentError('NO_POWER', `Cebinde ${POWER_NAMES[kind]} yok.`);
+  st.powers.splice(i, 1);
+}
+
+export function usePower(s: GameState, ctx: Ctx, fx: Fx[], by: string, power: PowerKind, targetId?: string, cardId?: string) {
+  const g = s.game;
+  const t = g?.turn;
+  if (!g || !t) throw new IntentError('BAD_PHASE', 'Şu an kullanılamaz.');
+  switch (power) {
+    case 'shield': {
+      // Kalkan: bir bedeli iptal eder
+      if (s.phase !== 'resolve' || !t.result) throw new IntentError('BAD_PHASE', 'Kalkan bedel anında kullanılır.');
+      const pay = t.result.payments.find((p) => p.id === by);
+      if (!pay) throw new IntentError('NO_PAYMENT', 'İptal edecek bedelin yok.');
+      takePower(s, by, 'shield');
+      revertPayment(s, pay);
+      t.result.payments = t.result.payments.filter((p) => p !== pay);
+      t.result.shielded = [...(t.result.shielded ?? []), by];
+      fx.push({ kind: 'power', payload: { power, by } });
+      break;
+    }
+    case 'mirror': {
+      // Ayna: bedeli başkasına yansıtır; hedef kendi Kalkan'ıyla karşılık verebilir
+      if (s.phase !== 'resolve' || !t.result) throw new IntentError('BAD_PHASE', 'Ayna bedel anında kullanılır.');
+      const pay = t.result.payments.find((p) => p.id === by);
+      const target = targetId ? getPlayer(s, targetId) : undefined;
+      if (!pay) throw new IntentError('NO_PAYMENT', 'Yansıtacak bedelin yok.');
+      if (!target || target.left || target.id === by) throw new IntentError('BAD_TARGET', 'Aynayı kime tutuyorsun?');
+      takePower(s, by, 'mirror');
+      revertPayment(s, pay);
+      t.result.payments = t.result.payments.filter((p) => p !== pay);
+      const existing = t.result.payments.find((p) => p.id === target.id);
+      if (existing) {
+        revertPayment(s, existing);
+        t.result.payments = t.result.payments.filter((p) => p !== existing);
+      }
+      ensureStats(s, target.id);
+      applyPayment(s, ctx.rng, ctx.now, target, pay.units + (existing?.units ?? 0), t.result);
+      t.result.reflected = [...(t.result.reflected ?? []), { from: by, to: target.id }];
+      // Hedefin Kalkan'la karşılık verebilmesi için süre uzar
+      if (s.stats[target.id]!.powers.includes('shield')) {
+        const at = Math.max(g.phaseEndsAt ?? ctx.now, ctx.now + 5000);
+        s.timers = s.timers.filter((x) => x.kind !== 'phase');
+        s.timers.push({ id: `ph-${s.seq++}`, kind: 'phase', at });
+        g.phaseEndsAt = at;
+      }
+      fx.push({ kind: 'power', payload: { power, by, to: target.id } });
+      break;
+    }
+    case 'swap': {
+      // Takas: okuyucuyken eli yeniden çeker
+      if (s.phase !== 'choose' || t.step !== 'choose' || t.readerId !== by || t.cardId) throw new IntentError('BAD_PHASE', 'Takas yalnızca kart seçerken kullanılır.');
+      if (t.swapped) throw new IntentError('ALREADY', 'Bu el zaten takaslandı.');
+      takePower(s, by, 'swap');
+      const old = new Set(t.hand);
+      const saved = g.used;
+      g.used = [...g.used, ...old]; // eski kartlar bu çekilişte gelmesin
+      t.hand = dealHand(s, ctx.catalog, ctx.rng, by, null);
+      g.used = saved;
+      t.inherited = null;
+      t.swapped = true;
+      setPhase(s, ctx, 'choose', DUR.deal + DUR.choose);
+      fx.push({ kind: 'deal', payload: { readerId: by, swap: true } });
+      break;
+    }
+    case 'sabotage': {
+      // Sabotaj: sonraki okuyucunun miras kartını sen seçersin
+      if (!['reveal', 'action', 'resolve'].includes(s.phase) || t.system) throw new IntentError('BAD_PHASE', 'Sabotaj kart oynandıktan sonra kullanılır.');
+      if (t.sabotagedBy) throw new IntentError('ALREADY', 'Bu miras zaten sabote edildi.');
+      if (!cardId || !t.rest.includes(cardId)) throw new IntentError('BAD_CARD', 'Seçilmeyen kartlardan birini seç.');
+      if (nextReaderId(s) === by) throw new IntentError('BAD_TARGET', 'Kendi mirasını sabote edemezsin.');
+      takePower(s, by, 'sabotage');
+      g.nextInherit = cardId;
+      t.sabotagedBy = by;
+      fx.push({ kind: 'power', payload: { power } });
+      break;
+    }
+  }
+}
+
+export function nextReaderId(s: GameState): string | undefined {
+  const g = s.game;
+  if (!g || !s.order.length) return undefined;
+  const n = s.order.length;
+  for (let k = 1; k <= n; k++) {
+    const id = s.order[(((g.readerIdx + g.direction * k) % n) + n) % n];
+    const p = id ? getPlayer(s, id) : undefined;
+    if (p && !p.left) return id;
+  }
+  return undefined;
+}
+
+// Pas: perde başına 1; kendine gelen kartı bedelsiz geçer
+export function usePass(s: GameState, ctx: Ctx, fx: Fx[], by: string) {
+  const t = s.game?.turn;
+  if (!t || t.system || (s.phase !== 'action' && s.phase !== 'reveal')) throw new IntentError('BAD_PHASE', 'Pas yalnızca kart açıkken kullanılır.');
+  if (!t.targets.includes(by)) throw new IntentError('NOT_YOURS', 'Bu kart sana gelmedi.');
+  if (t.passed.includes(by)) throw new IntentError('ALREADY', 'Zaten pas geçtin.');
+  const c = card(ctx, t.cardId!);
+  if (c.type === 'rule' || c.type === 'curse' || c.type === 'golden') throw new IntentError('BAD_CARD', 'Bu karta pas geçilmez.');
+  ensureStats(s, by);
+  const st = s.stats[by]!;
+  if (st.passAct === s.game!.act) throw new IntentError('USED', 'Bu perdede pas hakkını kullandın.');
+  st.passAct = s.game!.act;
+  t.passed.push(by);
+  delete t.inputs[by];
+  fx.push({ kind: 'pass', payload: { playerId: by } });
+  if (s.phase === 'action') maybeComplete(s, ctx, fx);
+}
+
+// Veto: oyun boyunca 1 anonim hak; kart herkes için iptal olur, kimin kullandığı gösterilmez
+export function useVeto(s: GameState, ctx: Ctx, fx: Fx[], by: string) {
+  const t = s.game?.turn;
+  if (!t || t.system || (s.phase !== 'action' && s.phase !== 'reveal')) throw new IntentError('BAD_PHASE', 'Veto yalnızca kart açıkken kullanılır.');
+  const p = getPlayer(s, by);
+  if (!p || p.left) throw new IntentError('NO_SEAT', 'Masada değilsin.');
+  ensureStats(s, by);
+  if (s.stats[by]!.vetoUsed) throw new IntentError('USED', 'Veto hakkını kullandın.');
+  s.stats[by]!.vetoUsed = true;
+  t.vetoed = true;
+  t.inputs = {};
+  t.texts = {};
+  t.result = { ...emptyResult(), vetoed: true };
+  finishTurn(s, ctx, fx, card(ctx, t.cardId!), []);
+  fx.push({ kind: 'veto' });
+}
+
+// --- masa olayları, Su Molası, final ---
+
+function startSystemEvent(s: GameState, ctx: Ctx, fx: Fx[], kind: 'water' | 'table'): boolean {
+  const g = s.game!;
+  let c: Card | undefined;
+  if (kind === 'water') c = getCard(ctx.catalog, 'sys-water');
+  else {
+    const used = new Set(g.used);
+    const pool = modePool(s, ctx.catalog).filter((x) => x.type === 'tableEvent' && x.intensity <= g.act);
+    const fresh = pool.filter((x) => !used.has(x.id));
+    const cands = fresh.length ? fresh : pool;
+    c = ctx.rng.weighted(cands, (x) => (x.rarity === 'rare' ? 0.4 : 1));
+  }
+  if (!c) return false;
+  const t = newTurn('', { system: true, cardId: c.id, targets: activePlayers(s).map((p) => p.id) });
+  g.turn = t;
+  const result = emptyResult();
+  const tags = c.tags ?? [];
+  if (c.input === 'catch') addEffect(s, ctx, c, t, result, fx);
+  if (tags.includes(TAG.reverse)) {
+    g.direction = g.direction === 1 ? -1 : 1;
+    result.note = 'Sıra artık öbür yönden dönüyor.';
+  }
+  if (tags.includes(TAG.ghost)) g.blindTurns = 2;
+  if (tags.includes(TAG.eclipse)) {
+    const top = activePlayers(s).sort((a, b) => (s.stats[b.id]?.paidUnits ?? 0) - (s.stats[a.id]?.paidUnits ?? 0))[0];
+    if (top) {
+      givePower(s, fx, top.id, 'mirror', true);
+      result.note = `${top.name} cebine bir Ayna aldı.`;
+    }
+  }
+  if (c.input === 'none' && c.penalty > 0) {
+    for (const p of activePlayers(s)) {
+      ensureStats(s, p.id);
+      applyPayment(s, ctx.rng, ctx.now, p, c.penalty, result);
+    }
+  }
+  t.result = result;
+  if (ctx.catalog.has(c.id)) {
+    g.used = g.used.filter((id) => id !== c.id);
+    g.used.push(c.id);
+  }
+  setPhase(s, ctx, 'tableEvent', DUR.tableEvent);
+  fx.push({ kind: 'tableEvent', payload: { cardId: c.id } });
+  return true;
+}
+
+function beginFinale(s: GameState, ctx: Ctx, fx: Fx[]) {
+  const g = s.game!;
+  endActEffects(s, fx);
+  g.effects = [];
+  const bravest = activePlayers(s).sort((a, b) => (s.stats[b.id]?.courage ?? 0) - (s.stats[a.id]?.courage ?? 0))[0];
+  const id = s.settings.drinking ? 'sys-final-drink' : 'sys-final-tea';
+  g.turn = newTurn(bravest?.id ?? '', { system: true, cardId: id, targets: activePlayers(s).map((p) => p.id), tokens: { okuyucu: bravest?.id } });
+  g.turn.result = emptyResult();
+  setPhase(s, ctx, 'finale', DUR.finale);
+  fx.push({ kind: 'finale' });
 }
 
 function nextTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
   const g = s.game!;
-  g.actTurn++;
-  g.turnNo++;
-  g.readerIdx = (g.readerIdx + 1) % Math.max(1, s.order.length);
-  if (g.actTurn >= g.actTurns) {
-    if (g.act < 3) beginAct(s, ctx, fx, (g.act + 1) as 2 | 3);
-    else endGame(s, ctx, fx);
-    return;
+  const wasSystem = g.turn?.system;
+  if (!wasSystem) {
+    g.actTurn++;
+    g.turnNo++;
+    // Kural ve lanet sayaçları düşer
+    for (const e of g.effects) if (typeof e.turnsLeft === 'number') e.turnsLeft--;
+    const ended = g.effects.filter((e) => typeof e.turnsLeft === 'number' && e.turnsLeft <= 0);
+    g.effects = g.effects.filter((e) => !ended.includes(e));
+    if (ended.length) fx.push({ kind: 'effectsEnded', payload: { ids: ended.map((e) => e.id) } });
+    stepReader(s);
+    if (g.actTurn >= g.actTurns) {
+      if (g.act < 3) beginAct(s, ctx, fx, (g.act + 1) as 2 | 3);
+      else beginFinale(s, ctx, fx);
+      return;
+    }
+    // Her 8 turda Su Molası; perde 2'den itibaren her 4 turda bir masa olayı
+    if (g.turnNo % 8 === 0 && startSystemEvent(s, ctx, fx, 'water')) return;
+    if (g.act >= 2 && g.turnNo % 4 === 0 && startSystemEvent(s, ctx, fx, 'table')) return;
   }
   startTurn(s, ctx, fx);
 }
@@ -316,7 +911,9 @@ function nextTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
 function endGame(s: GameState, ctx: Ctx, fx: Fx[]) {
   const g = s.game!;
   g.turn = null;
+  g.catchVote = null;
   g.endedAt = ctx.now;
+  s.timers = s.timers.filter((t) => t.kind !== 'catch');
   setPhase(s, ctx, 'summary', null);
   fx.push({ kind: 'summary' });
 }
@@ -339,23 +936,28 @@ export function onPhaseTimeout(s: GameState, ctx: Ctx, fx: Fx[]) {
       const t = g.turn!;
       if (t.step === 'choose') {
         // Süre dolarsa en düşük yoğunluklu kart oynanır
-        const cards = t.hand.map((id) => ctx.catalog.get(id)!);
+        const cards = t.hand.map((id) => card(ctx, id));
         const minI = Math.min(...cards.map((c) => c.intensity));
         playCard(s, ctx, fx, t.readerId, cards.find((c) => c.intensity === minI)!.id);
-        if (s.phase === 'choose' && (t.step as Turn['step']) === 'target') finalizeTargets(s, ctx, fx, ctx.catalog.get(t.cardId!)!, null);
+        if (s.phase === 'choose' && (t.step as Turn['step']) === 'target') finalizeTargets(s, ctx, fx, card(ctx, t.cardId!), null);
       } else {
-        finalizeTargets(s, ctx, fx, ctx.catalog.get(t.cardId!)!, null);
+        finalizeTargets(s, ctx, fx, card(ctx, t.cardId!), null);
       }
       break;
     }
     case 'reveal':
-      beginAction(s, ctx);
+      beginAction(s, ctx, fx);
       break;
     case 'action':
-      resolveTurn(s, ctx, fx);
+      if (g.turn!.stage === 'write') toGuessStage(s, ctx, fx);
+      else resolveTurn(s, ctx, fx);
       break;
     case 'resolve':
+    case 'tableEvent':
       nextTurn(s, ctx, fx);
+      break;
+    case 'finale':
+      endGame(s, ctx, fx);
       break;
   }
 }
@@ -367,9 +969,17 @@ function requireTurn(s: GameState, phase: Phase): Turn {
 
 // Şu an eylem bekleyen oyuncular (botlar için)
 export function pendingActors(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[] {
-  const t = s.game?.turn;
-  if (!t) return [];
-  if (s.phase === 'choose') return [t.readerId];
-  if (s.phase === 'action') return expectedInputs(s, ctx).filter((id) => !t.inputs[id]);
-  return [];
+  const g = s.game;
+  const t = g?.turn;
+  const out = new Set<string>();
+  if (g?.catchVote) for (const id of catchVoters(s)) if (g.catchVote.votes[id] === undefined) out.add(id);
+  if (!t) return [...out];
+  if (s.phase === 'choose' && !t.system) out.add(t.readerId);
+  if (s.phase === 'action') {
+    for (const id of expectedInputs(s, ctx)) {
+      const done = t.stage === 'write' ? t.texts[id] !== undefined : !!t.inputs[id];
+      if (!done) out.add(id);
+    }
+  }
+  return [...out];
 }

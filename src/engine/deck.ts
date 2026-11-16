@@ -14,7 +14,9 @@ export const ACT_TYPES: Record<1 | 2 | 3, CardType[]> = {
 };
 
 // Motorda çözümü yazılmış türler (M2/M3'te genişleyecek)
-export const IMPLEMENTED_TYPES: ReadonlySet<CardType> = new Set(['question', 'dare', 'mostLikely', 'neverHave']);
+export const IMPLEMENTED_TYPES: ReadonlySet<CardType> = new Set([
+  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden',
+]);
 
 const RARITY_W = { common: 1, rare: 0.35, legendary: 0.06 } as const;
 
@@ -42,7 +44,9 @@ export function isSensitive(card: Card): boolean {
 
 // Okuyucu dışında bu karta hedef olabilecek oyuncular
 export function targetPool(s: GameState, card: Card, readerId: string): Player[] {
-  return activePlayers(s).filter((p) => p.id !== readerId && consents(p, card));
+  // Oyuncu başına en fazla 1 aktif lanet
+  const cursed = new Set(card.type === 'curse' ? (s.game?.effects ?? []).filter((e) => e.kind === 'curse').map((e) => e.targetId) : []);
+  return activePlayers(s).filter((p) => p.id !== readerId && consents(p, card) && !cursed.has(p.id));
 }
 
 export function neighbor(s: GameState, readerId: string, dir: 1 | -1): string | undefined {
@@ -55,6 +59,9 @@ export function neighbor(s: GameState, readerId: string, dir: 1 | -1): string | 
 // Kart bu masada, bu okuyucuyla oynanabilir mi?
 export function feasible(s: GameState, card: Card, readerId: string): boolean {
   if (isSensitive(card) && !s.settings.adult) return false;
+  // En fazla 3 aktif kural: sınır doluysa kural kartı elde çıkmaz
+  if (card.type === 'rule' && (s.game?.effects ?? []).filter((e) => e.kind !== 'curse').length >= 3) return false;
+  if ((card.type === 'confession' || card.type === 'mirror' || card.type === 'duel') && activePlayers(s).length < 3) return false;
   const pool = targetPool(s, card, readerId);
   let need = 0;
   switch (card.target) {

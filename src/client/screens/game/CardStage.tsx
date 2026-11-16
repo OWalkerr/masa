@@ -13,7 +13,7 @@ export function CardStage({ view, card, width }: { view: View; card: Card; width
   const reduce = useReducedMotion();
   // Yalnızca açılış fazında bağlanan telefon çevirmeyi görür; sonradan gelen düz kartı görür
   const firstPhase = useRef(view.phase);
-  const flip = firstPhase.current === 'reveal' && !reduce;
+  const flip = ['reveal', 'tableEvent', 'finale'].includes(firstPhase.current) && !reduce;
   const [splash, setSplash] = useState(false);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function CardStage({ view, card, width }: { view: View; card: Card; width
       <motion.div
         className="relative h-full w-full"
         style={{ transformStyle: 'preserve-3d' }}
-        initial={flip ? { rotateY: 180 } : reduce && firstPhase.current === 'reveal' ? { opacity: 0 } : false}
+        initial={flip ? { rotateY: 180 } : reduce && ['reveal', 'tableEvent', 'finale'].includes(firstPhase.current) ? { opacity: 0 } : false}
         animate={{ rotateY: 0, opacity: 1 }}
         transition={{ duration: flip ? 0.6 : 0.3, ease: [0.3, 0.7, 0.3, 1] }}
       >

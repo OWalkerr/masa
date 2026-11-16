@@ -1,5 +1,8 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
-import { ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, startGame, submitInput } from './game';
+import {
+  answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
+  submitInput, useVeto, usePass, usePower, voteCatch,
+} from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
 import {
@@ -78,6 +81,8 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
         if (t.kind === 'hostGrace') {
           const host = s.hostId ? getPlayer(s, s.hostId) : undefined;
           if (host && !host.connected) transferHost(s, fx, host.id);
+        } else if (t.kind === 'catch') {
+          if (s.game?.catchVote?.id === t.id) resolveCatch(s, ctx, fx);
         } else if (t.kind === 'phase') {
           onPhaseTimeout(s, ctx, fx);
         } else if (t.kind === 'bot') {
@@ -160,6 +165,30 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
     case 'judge':
       judge(s, ctx, fx, intent.by, intent.done, intent.payers);
       break;
+    case 'choose':
+      submitInput(s, ctx, fx, intent.by, { k: 'choice', index: intent.index });
+      break;
+    case 'answerText':
+      answerText(s, ctx, fx, intent.by, intent.text);
+      break;
+    case 'catch':
+      startCatch(s, ctx, fx, intent.by, intent.effectId, intent.accused);
+      break;
+    case 'catchVote':
+      voteCatch(s, ctx, fx, intent.by, intent.yes);
+      break;
+    case 'usePower':
+      usePower(s, ctx, fx, intent.by, intent.power, intent.targetId, intent.cardId);
+      break;
+    case 'decree':
+      decree(s, ctx, fx, intent.by, intent.text);
+      break;
+    case 'pass':
+      usePass(s, ctx, fx, intent.by);
+      break;
+    case 'veto':
+      useVeto(s, ctx, fx, intent.by);
+      break;
 
     case 'restart': {
       requireHost(s, intent.by);
@@ -223,7 +252,7 @@ function scheduleBots(s: GameState, ctx: Ctx) {
 // Botun hangi adım için zamanlandığı (adım değişince zamanlayıcı yenilenir)
 function botKey(s: GameState): string {
   const t = s.game?.turn;
-  return `${s.phase}:${s.game?.turnNo ?? -1}:${t?.step ?? ''}`;
+  return `${s.phase}:${s.game?.turnNo ?? -1}:${t?.step ?? ''}:${t?.stage ?? ''}:${t?.cardId ?? ''}:${s.game?.catchVote?.id ?? ''}`;
 }
 
 function clampAvatar(a: number): number {

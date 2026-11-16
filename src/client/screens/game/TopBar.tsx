@@ -6,6 +6,8 @@ import { Toggle } from '../../components/Segmented';
 import { getReduceMotion, setReduceMotion } from '../../fx/motionPref';
 import { navigate } from '../../router';
 import { useRoom } from '../../store/room';
+import { EffectSigns } from './Effects';
+import { Pocket } from './Pocket';
 
 export const ACT_NAMES = ['', 'Isınma', 'Kızışma', 'Kaos'];
 
@@ -15,6 +17,7 @@ export function TopBar({ view }: { view: View }) {
   const order = view.order.map((id) => view.players.find((p) => p.id === id)).filter((p) => p && !p.left);
   const progress = g.actTurns ? g.actTurn / g.actTurns : 0;
   const paying = new Set(g.result?.payments.map((p) => p.id) ?? []);
+  const cursed = new Set(g.effects.filter((e) => e.kind === 'curse').map((e) => e.targetId));
   return (
     <header className="sticky top-0 z-30 bg-gradient-to-b from-ink-950 via-ink-950/90 to-transparent px-3 pb-3 pt-2">
       <div className="flex items-center gap-3">
@@ -37,23 +40,32 @@ export function TopBar({ view }: { view: View }) {
             const reader = p!.id === g.readerId;
             return (
               <li key={p!.id} className="relative flex shrink-0 flex-col items-center" aria-current={reader ? 'true' : undefined}>
-                <div className={`rounded-full ${reader ? 'shadow-[0_0_0_3px_var(--accent)]' : ''}`}>
+                <div className={`rounded-full ${reader ? 'shadow-[0_0_0_3px_var(--accent)]' : cursed.has(p!.id) ? 'shadow-[0_0_10px_4px_#8E6CD8]' : ''}`}>
                   <Avatar index={p!.avatar} size={reader ? 40 : 34} dim={!p!.connected} label={`${p!.name}${reader ? ', okuyucu' : ''}`} />
                 </div>
                 {paying.has(p!.id) && (
                   <span className="absolute -bottom-1 right-0 h-[14px] w-[14px] rounded-full bg-[#7A1E24] shadow-[0_0_0_2px_var(--ink-950)]" aria-hidden />
+                )}
+                {cursed.has(p!.id) && (
+                  <svg className="absolute -top-1 left-0" width="40" height="14" viewBox="0 0 40 14" aria-label="lanetli">
+                    <path d="M2,7 Q20,-2 38,7" stroke="var(--bone-100)" strokeWidth="2" fill="none" />
+                    <ellipse cx="14" cy="7" rx="6" ry="4" fill="var(--ink-950)" stroke="var(--bone-100)" strokeWidth="1.5" />
+                    <path d="M10,4 l8,6 M18,4 l-8,6" stroke="var(--bone-100)" strokeWidth="1" />
+                  </svg>
                 )}
                 <span className="sr-only">{p!.name}</span>
               </li>
             );
           })}
         </ol>
+        <Pocket view={view} />
         <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menü" className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
           <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
             <path d="M4,6 h14 M4,11 h14 M4,16 h14" stroke="var(--bone-100)" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
         </button>
       </div>
+      <EffectSigns view={view} />
       {menu && <Menu view={view} onClose={() => setMenu(false)} />}
     </header>
   );

@@ -27,7 +27,11 @@ export const PENALTY_DECK: string[] = [
 ];
 
 export function emptyStats(): PlayerStats {
-  return { courage: 0, paidUnits: 0, soberPenalties: 0, drinkLog: [], autoSober: false, targeted: 0, done: 0, failed: 0, readerTurns: 0, missedTurns: 0 };
+  return {
+    courage: 0, paidUnits: 0, soberPenalties: 0, drinkLog: [], autoSober: false, targeted: 0, done: 0, failed: 0,
+    readerTurns: 0, missedTurns: 0, powers: [], powersEarned: 0, passAct: 0, vetoUsed: false, paidHistory: [],
+    lastCatchAt: 0, catches: 0, decree: false,
+  };
 }
 
 export function isSober(s: GameState, p: Player): boolean {
@@ -63,10 +67,25 @@ export function applyPayment(s: GameState, rng: Rng, now: number, p: Player, uni
   const pay: Payment = { id: p.id, units, sober, label: unitLabel(s, units, sober) };
   result.payments.push(pay);
   st.paidUnits += units;
+  st.paidHistory = [...st.paidHistory, units].slice(-6);
   if (sober) {
     const before = Math.floor(st.soberPenalties / 3);
     st.soberPenalties += units;
     const after = Math.floor(st.soberPenalties / 3);
     for (let i = before; i < after; i++) result.mini.push({ id: p.id, text: rng.pick(PENALTY_DECK) });
+  }
+}
+
+// Kalkan/Ayna: ödenmiş bir bedeli geri al (mini ceza çekildiyse kalır)
+export function revertPayment(s: GameState, pay: Payment) {
+  const st = s.stats[pay.id];
+  if (!st) return;
+  st.paidUnits = Math.max(0, st.paidUnits - pay.units);
+  const i = st.paidHistory.lastIndexOf(pay.units);
+  if (i >= 0) st.paidHistory.splice(i, 1);
+  if (pay.sober) st.soberPenalties = Math.max(0, st.soberPenalties - pay.units);
+  else {
+    const j = st.drinkLog.map((d) => d.units).lastIndexOf(pay.units);
+    if (j >= 0) st.drinkLog.splice(j, 1);
   }
 }
