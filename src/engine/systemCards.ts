@@ -27,4 +27,6 @@ export const TAG = {
   reverse: 'yon', // olay: sıra yönü ters döner
   eclipse: 'tutulma', // olay: en çok ödeyene Ayna
   ghost: 'hayalet', // olay: sonraki 2 tur okuyucu kartları kapalı görür
+  lie: 'yalan', // ayna: Yalan Makinesi (2 doğru 1 yalan; bulamayan içer, herkes bulursa yalancı)
+  scale: 'olcek', // ayna: Ölçek (gizli 1–10; en uzak tahmin içer, tam bilen olursa hedef içer)
 } as const;

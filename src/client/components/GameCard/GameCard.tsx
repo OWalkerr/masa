@@ -8,7 +8,7 @@ import { spiral } from '../ink/wobble';
 import { keyItem, useManifest } from '../../art/manifest';
 import { CardArt } from './CardArt';
 import { CardText } from './CardText';
-import { TARGET_LABEL, TYPE_LABEL, hashId } from './labels';
+import { TARGET_LABEL, cardLabel, hashId } from './labels';
 import { Flames, TypeIcon } from './TypeIcon';
 
 export interface GameCardProps {
@@ -47,7 +47,7 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
         ...style,
       }}
       role="group"
-      aria-label={`${TYPE_LABEL[card.type]} kartı`}
+      aria-label={`${cardLabel(card)} kartı`}
     >
       {/* başlık bandı */}
       <div className="stripes relative flex items-center justify-between" style={{ height: 11 * u, padding: `0 ${2.5 * u}px` }}>
@@ -55,7 +55,7 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
           <TypeIcon type={card.type} size={6 * u} />
         </span>
         <span className="rounded-[6px] bg-ink-950 font-gothic leading-none text-bone-100" style={{ fontSize: 6.4 * u, padding: `${1.1 * u}px ${3 * u}px` }}>
-          {TYPE_LABEL[card.type]}
+          {cardLabel(card)}
         </span>
         <span className="flex items-center rounded-full bg-parchment-200" style={{ padding: `${0.8 * u}px ${1.6 * u}px` }}>
           <Flames n={card.intensity} />
@@ -91,7 +91,7 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
       >
         <p className="flex flex-1 items-center justify-center text-center font-extrabold leading-[1.18] text-ink-text" style={{ fontSize: textSize }}>
           <span>
-            <CardText text={card.text} tokens={tokens} names={names} />
+            <CardText text={card.text} tokens={tokens} names={names} sober={sober} />
           </span>
         </p>
         {card.quip && (
@@ -100,7 +100,7 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
           </p>
         )}
         <div className="flex items-center justify-between">
-          <WaxSeal n={card.penalty} size={11 * u} label={card.penalty ? `${card.penalty} ${unit}` : 'bedelsiz'} />
+          <WaxSeal n={card.penalty} size={11 * u} label={card.penalty ? `${card.penalty} ${unit}` : 'bedava'} />
           <span className="rounded-full bg-ink-950 text-bone-100" style={{ fontSize: Math.max(4.2 * u, 14), padding: `${0.8 * u}px ${2.8 * u}px` }}>
             {TARGET_LABEL[card.target]}
           </span>
@@ -164,7 +164,7 @@ export function WaxSeal({ n, size, label }: { n: number; size: number; label?: s
     return `M${pts.join(' L')}Z`;
   }, []);
   return (
-    <span className="inline-flex items-center gap-2" role="img" aria-label={`Bedel: ${label ?? n}`}>
+    <span className="inline-flex items-center gap-2" role="img" aria-label={`Ceza: ${label ?? n}`}>
       <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden>
         <path d={d} fill="#7A1E24" />
         <circle cx="50" cy="50" r="34" fill="none" stroke="#5A1218" strokeWidth="4" />

@@ -44,7 +44,7 @@ export const only = (...cards: Card[]) => new Map(cards.map((c) => [c.id, c])) a
 export function tableWith(cat: Catalog, players = 4, seed = 9, drinking = true): Sim {
   const sim = new Sim(createRoom('ABCD', 0, seed), cat);
   for (let i = 0; i < players; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0, consent: { ageOk: true } });
-  sim.as('p0', { t: 'updateSettings', patch: { drinking } });
+  sim.as('p0', { t: 'updateSettings', patch: { drinking, pace: 'timed' } });
   sim.as('p0', { t: 'start' });
   sim.timeout();
   return sim;

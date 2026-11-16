@@ -25,6 +25,7 @@ export function ResolvePanel({ view }: { view: View }) {
     return g2.optionPlayers ? name(o) : o;
   };
   const effect = r.effect ? g.effects.find((e) => e.id === r.effect) : undefined;
+  const tags = g.card?.tags ?? [];
 
   if (r.vetoed) {
     return (
@@ -41,9 +42,10 @@ export function ResolvePanel({ view }: { view: View }) {
     <div className="flex w-full max-w-sm flex-col gap-3" aria-live="polite">
       {effect && (
         <p className="ink-panel p-4 text-center text-[18px]">
-          <span className="block font-gothic text-[26px]">{effect.kind === 'curse' ? 'Lanet tuttu' : 'Kural masada'}</span>
-          {effect.text}
-          <span className="block text-[14px] text-bone-dim">Bozanı gören “Yakala!” desin.</span>
+          <span className="block font-gothic text-[26px]">{effect.kind === 'curse' ? 'Lanet tuttu' : effect.kind === 'mission' ? 'Ajan iş başında' : 'Kural masada'}</span>
+          <span className="block text-[15px] text-bone-dim">
+            {effect.kind === 'mission' ? 'Kim olduğunu yalnızca ajan biliyor. Şüphelendiğin an “Yakala!”' : 'Üstteki tabelada duruyor. Bozanı gören “Yakala!” desin.'}
+          </span>
         </p>
       )}
       {r.note && <p className="ink-panel p-3 text-center text-[17px] italic">{r.note}</p>}
@@ -64,12 +66,21 @@ export function ResolvePanel({ view }: { view: View }) {
       {r.mg?.kind === 'bomb' && <p className="ink-panel p-3 text-center text-[18px]">Bomba {r.mg.losers.map(name).join(' ve ')} elinde patladı.</p>}
       {r.winner && <p className="ink-panel p-3 text-center text-[18px]">Düelloyu <b>{name(r.winner)}</b> kazandı.</p>}
       {r.secret !== undefined && (
-        <p className="ink-panel p-3 text-center text-[18px]">
-          Gizli seçim: <b>{optionLabel(r.secret)}</b>
-          <span className="block text-[15px] text-bone-dim">
-            {r.correct?.length ? `Bilenler: ${r.correct.map(name).join(', ')}` : 'Kimse bilemedi.'}
-          </span>
-        </p>
+        <div className="ink-panel p-3 text-center">
+          <p className="text-[16px] text-bone-dim">{tags.includes('yalan') ? 'Yalan olan' : tags.includes('olcek') ? 'Gizli puan' : 'Gizli seçim'}</p>
+          <p className={`font-extrabold ${tags.includes('olcek') ? 'text-[44px] leading-none' : 'text-[24px]'}`}>{optionLabel(r.secret)}</p>
+          {r.guesses && (
+            <ul className="mt-2 flex flex-wrap justify-center gap-2">
+              {Object.entries(r.guesses).map(([id, i]) => (
+                <li key={id} className={`flex items-center gap-1 rounded-full px-2 py-1 text-[15px] ${i === r.secret ? 'bg-[#2E5E4E]' : 'bg-ink-950'}`}>
+                  <Avatar index={avatar(id)} size={22} />
+                  {name(id)}: <b>{optionLabel(i)}</b>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-1 text-[15px] text-bone-dim">{r.correct?.length ? `Tam bilenler: ${r.correct.map(name).join(', ')}` : 'Kimse tam bilemedi.'}</p>
+        </div>
       )}
       {r.author && (
         <div className="rounded-[14px] bg-parchment-200 p-4 text-center text-ink-text">
@@ -111,14 +122,15 @@ export function ResolvePanel({ view }: { view: View }) {
       )}
       {r.yesIds && (
         <p className="ink-panel p-3 text-center text-[17px]">
-          {r.yesIds.length ? `Yapmış olanlar: ${r.yesIds.map(name).join(', ')}` : 'Kimse yapmamış. Melekler masası.'}
+          {r.yesIds.length ? `İtiraf edenler: ${r.yesIds.map(name).join(', ')}` : 'Kimse yapmamış. Ya melekler masası ya da yalancılar.'}
         </p>
       )}
 
       {r.payments.length === 0 ? (
-        effect ? null : <p className="ink-panel p-4 text-center text-[19px]">Bu tur kimse ödemiyor.</p>
+        effect ? null : <p className="ink-panel p-4 text-center text-[19px]">{view.settings.drinking ? 'Bu tur kimse içmiyor. Şanslı masa.' : 'Bu tur ceza yok.'}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2" aria-label={view.settings.drinking ? 'İçenler' : 'Ceza alanlar'}>
+          <li className="text-center font-gothic text-[30px] leading-none text-[var(--accent)]">{view.settings.drinking ? 'İçiyor!' : 'Ceza!'}</li>
           {r.payments.map((p, i) => (
             <motion.li
               key={p.id}
@@ -127,10 +139,10 @@ export function ResolvePanel({ view }: { view: View }) {
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 18, delay: i * 0.12 }}
             >
-              <Avatar index={avatar(p.id)} size={40} />
-              <span className="flex-1 truncate text-[18px]">{name(p.id)}{p.id === me ? ' (sen)' : ''}</span>
+              <Avatar index={avatar(p.id)} size={48} />
+              <span className="flex-1 truncate text-[20px] font-bold">{p.id === me ? 'SEN' : name(p.id)}</span>
               <WaxSeal n={p.units} size={40} />
-              <span className="text-[18px]">{p.label}</span>
+              <span className="text-[18px]">{p.sober ? `${p.label} yap` : `${p.label} iç`}</span>
             </motion.li>
           ))}
         </ul>
@@ -156,7 +168,7 @@ export function ResolvePanel({ view }: { view: View }) {
       {me && r.waterBreak.includes(me) && (
         <div className="rounded-[14px] bg-parchment-200 p-4 text-ink-text" role="alert">
           <p className="font-gothic text-[24px]">Su Molası</p>
-          <p className="text-[18px]">Bir saatte epey içtin. Bir bardak su iç; bundan sonra bedellerin ceza olarak gelecek.</p>
+          <p className="text-[18px]">Bir saatte epey içtin. Bir bardak su iç; bundan sonra içmek yerine ceza alacaksın.</p>
         </div>
       )}
 

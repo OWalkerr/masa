@@ -38,6 +38,57 @@ export function TypeIcon({ type, size = 22, color = 'var(--ink-950)' }: { type: 
         </g>
       );
       break;
+    case 'mission':
+      // maske
+      body = (
+        <g {...common}>
+          <path d="M2,10 C6,7 18,7 22,10 C21,15 16,17 12,14 C8,17 3,15 2,10 Z" />
+          <circle cx="8" cy="11" r="1.4" fill={color} />
+          <circle cx="16" cy="11" r="1.4" fill={color} />
+        </g>
+      );
+      break;
+    case 'mirror':
+      body = (
+        <g {...common}>
+          <ellipse cx="12" cy="9" rx="6" ry="7" />
+          <path d="M12,16 L12,22 M9,22 L15,22 M9,6 L11,4" />
+        </g>
+      );
+      break;
+    case 'rule':
+    case 'curse':
+      // parşömen
+      body = (
+        <g {...common}>
+          <path d="M6,3 L18,3 L18,19 C18,21 16,22 14,21 L4,21 C6,20 6,19 6,17 Z" />
+          <path d="M9,8 L15,8 M9,12 L15,12 M9,16 L13,16" />
+        </g>
+      );
+      break;
+    case 'duel':
+      body = (
+        <g {...common}>
+          <path d="M4,4 L16,16 M20,4 L8,16 M14,18 L18,14 M10,18 L6,14 M4,20 L6,18 M20,20 L18,18" />
+        </g>
+      );
+      break;
+    case 'minigame':
+      body = (
+        <g {...common}>
+          <circle cx="11" cy="14" r="7" />
+          <path d="M15,8 L18,5 M18,5 C20,4 21,3 21,2" />
+        </g>
+      );
+      break;
+    case 'confession':
+      body = (
+        <g {...common}>
+          <path d="M4,5 L20,5 L20,16 L11,16 L6,20 L7,16 L4,16 Z" />
+          <path d="M8,10 L16,10" />
+        </g>
+      );
+      break;
     default:
       body = <path d={spiral(12, 12, 9, 2.4)} {...common} />;
   }

@@ -7,6 +7,8 @@ export type Phase =
 
 export type GameLength = 'short' | 'normal' | 'long';
 export type SipSize = 'small' | 'sip' | 'shot';
+// Tempo: rahat = sohbet için süre yok, host ilerletir; süreli = her faz geri sayımla geçer
+export type Pace = 'relaxed' | 'timed';
 
 export interface Settings {
   deck: DeckId;
@@ -14,6 +16,7 @@ export interface Settings {
   length: GameLength; // Kısa 6 / Normal 10 / Uzun 14 tur/perde
   sip: SipSize; // varsayılan 'sip'; shot kapalı gelir, host açabilir
   adult: boolean; // 18+ kilidi açık mı
+  pace: Pace;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -22,6 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   length: 'normal',
   sip: 'sip',
   adult: false,
+  pace: 'relaxed',
 };
 
 export const ROUNDS_PER_ACT: Record<GameLength, number> = { short: 6, normal: 10, long: 14 };
@@ -110,6 +114,7 @@ export interface TurnResult {
   secret?: number; // ayna: hedefin seçimi
   correct?: string[]; // ayna/itiraf: bilenler
   mg?: { kind: string; times: Record<string, number | null>; early: string[]; losers: string[] };
+  guesses?: Record<string, number>; // ayna/yalan/ölçek: kim neyi tahmin etti (sonuçta açılır)
   author?: string; // itiraf: spot ışığındaki cevabın yazarı (sonuçta açılır)
   spotlight?: string; // itiraf: spot ışığındaki cevap
   effect?: string; // kural/lanet/olay masaya kondu (etki id)
@@ -122,9 +127,10 @@ export interface TurnResult {
 export interface ActiveEffect {
   id: string;
   cardId: string;
-  kind: 'rule' | 'curse' | 'event' | 'decree';
+  kind: 'rule' | 'curse' | 'event' | 'decree' | 'mission';
   text: string; // jetonları çözülmüş metin
-  targetId?: string; // lanetli oyuncu
+  targetId?: string; // lanetli oyuncu ya da gizli görevin ajanı (ajan herkese gizli)
+  secret?: string; // gizli görevin kendisi (yalnızca ajana gider)
   turnsLeft: number | 'act';
   penalty: number;
   ownerId?: string; // kuralı koyan
@@ -133,6 +139,8 @@ export interface ActiveEffect {
 // "Yakala!" sonrası 5 sn'lik masa oylaması
 export interface CatchVote {
   id: string;
+  // rule: kural bozuldu mu; mission: ajan görevini gerçekten yaptı mı
+  mode: 'rule' | 'mission';
   accuser: string;
   accused: string;
   effectId: string;
@@ -166,6 +174,7 @@ export interface Turn {
   options: string[]; // ayna seçenekleri (etiketler ya da oyuncu id'leri)
   optionPlayers: boolean;
   mg: MinigameState | null;
+  secret: string | null; // gizli kelime/görev (yalnızca hedefe gider)
 }
 
 // Mini oyun durumu. Gizli anlar (patlama, dolma) açılana kadar istemciye gitmez.
@@ -180,7 +189,10 @@ export interface MinigameState {
   taps: Record<string, number>; // gecikmesi düzeltilmiş dokunma anı (sunucu saati)
 }
 
-export interface CatchResult extends CatchVote {
+export interface CatchResult extends Omit<CatchVote, 'mode'> {
+  // missionGuess: ajan tahmini (oylamasız), missionFail: görev süresi doldu
+  mode: 'rule' | 'mission' | 'missionGuess' | 'missionFail';
+  missionText?: string;
   guilty: boolean;
   yes: number;
   no: number;
@@ -267,6 +279,8 @@ export type ClientIntent =
   | { t: 'decree'; text: string }
   | { t: 'pass' }
   | { t: 'veto' }
+  | { t: 'advance' } // host: beklemeden sonraki adıma geç
+  | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }
   | { t: 'restart' };
 
@@ -323,7 +337,7 @@ export const DUR = {
   write: 45_000,
   guess: 30_000,
   mirror: 30_000,
-  catchVote: 5000,
+  catchVote: 8000,
   catchCooldown: 8000,
   mgIntro: 2500, // mini oyun başlamadan önce hazırlık
   bombMin: 8000,

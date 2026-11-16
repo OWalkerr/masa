@@ -1,7 +1,7 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
 import {
   answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
-  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame,
+  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone,
 } from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
@@ -188,6 +188,12 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       break;
     case 'veto':
       useVeto(s, ctx, fx, intent.by);
+      break;
+    case 'advance':
+      advance(s, ctx, fx, intent.by);
+      break;
+    case 'missionDone':
+      missionDone(s, ctx, fx, intent.by, intent.effectId);
       break;
     case 'minigameInput':
       playMinigame(s, ctx, fx, intent.by, intent.action, intent.bomb, intent.at, intent.lat);

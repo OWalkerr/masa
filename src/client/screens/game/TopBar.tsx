@@ -84,10 +84,10 @@ function Menu({ view, onClose }: { view: View; onClose: () => void }) {
       <Toggle label="Hareketi azalt" checked={rm} onChange={(v) => { setReduceMotion(v); setRm(v); }} />
       {view.settings.drinking && !you.sober && (
         <button type="button" className="min-h-[56px] rounded-[12px] bg-ink-950 px-4 text-left shadow-[inset_0_0_0_1px_var(--ash-500)]" onClick={() => { send({ t: 'quitDrinking' }); onClose(); }}>
-          Ben bıraktım <span className="text-bone-dim">· bundan sonra alkolsüz bedel</span>
+          Ben bıraktım <span className="text-bone-dim">· bundan sonra içmek yok, ceza var</span>
         </button>
       )}
-      {you.sober && view.settings.drinking && <p className="text-[15px] text-bone-dim">Bedellerin ceza olarak geliyor.</p>}
+      {you.sober && view.settings.drinking && <p className="text-[15px] text-bone-dim">İçmiyorsun; sana ceza geliyor.</p>}
       <button type="button" className="min-h-[56px] rounded-[12px] px-4 text-left text-bone-dim underline" onClick={() => { send({ t: 'leave' }); navigate('/'); }}>
         Masadan kalk
       </button>

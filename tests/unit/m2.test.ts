@@ -365,7 +365,7 @@ describe('final ve botlarla tam oyun', () => {
     const sim = new Sim(createRoom('ABCD', 0, 31337));
     sim.do({ t: 'join', playerId: 'h', secret: 's', name: 'İnsan', avatar: 0, consent: { ageOk: true } });
     for (let i = 0; i < 5; i++) sim.do({ t: 'join', playerId: `b${i}`, secret: 'bot', name: `Bot ${i}`, avatar: i, isBot: true, consent: { ageOk: true } });
-    sim.as('h', { t: 'updateSettings', patch: { length: 'short', deck: 'chaos' } });
+    sim.as('h', { t: 'updateSettings', patch: { length: 'short', deck: 'chaos', pace: 'timed' } });
     sim.as('h', { t: 'start' });
     let steps = 0;
     while (sim.s.phase !== 'summary' && steps++ < 5000) {

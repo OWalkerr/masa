@@ -13,6 +13,7 @@ const SettingsPatch = z
     length: z.enum(['short', 'normal', 'long']),
     sip: z.enum(['small', 'sip', 'shot']),
     adult: z.boolean(),
+    pace: z.enum(['relaxed', 'timed']),
   })
   .partial()
   .strict();
@@ -52,6 +53,8 @@ export const ClientMessage = z.discriminatedUnion('t', [
   }),
   z.object({ t: z.literal('decree'), text: z.string().max(200) }),
   z.object({ t: z.literal('pass') }),
+  z.object({ t: z.literal('advance') }),
+  z.object({ t: z.literal('missionDone'), effectId: z.string().max(40) }),
   z.object({ t: z.literal('veto') }),
   z.object({ t: z.literal('leave') }),
   z.object({ t: z.literal('ping'), clientTime: z.number(), rtt: z.number().min(0).max(10_000).optional() }),

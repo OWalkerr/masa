@@ -51,7 +51,7 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
         {g.blind ? 'Hayalet Saati: kartlar kapalı. Körlemesine seç.' : 'Sıra sende. Bir kart seç, yüksek sesle oku.'}
       </p>
       <div className="w-full max-w-[360px] px-2">
-        <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" beat />
+        {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" beat />}
       </div>
       <div className="relative w-full" style={{ height: w * 1.4 + 30 }}>
         {hand.map((c, i) => (
@@ -159,7 +159,7 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
       <GameCard card={card} width={w} names={names} sober={!!view.you?.sober} />
       <p className="text-center text-[20px]">{need === 2 ? 'Kartı oynayacak iki kişiyi seç' : 'Kart kime gidiyor?'}</p>
       <div className="w-full max-w-[360px] px-2">
-        <CandleTimer endsAt={g.phaseEndsAt} total={DUR.target} label="Hedef seçme süresi" />
+        {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={DUR.target} label="Hedef seçme süresi" />}
       </div>
       <div role="group" aria-label="Oyuncular" className="grid w-full max-w-sm grid-cols-3 gap-3 px-2">
         {g.targetChoices.map((id) => {
@@ -215,7 +215,7 @@ function Waiting({ view, readerName, readerAvatar }: { view: View; readerName: s
         </p>
       </div>
       <div className="w-full max-w-[320px]">
-        <CandleTimer endsAt={g.phaseEndsAt} total={g.step === 'target' ? DUR.target : DUR.choose + DUR.deal} />
+        {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={g.step === "target" ? DUR.target : DUR.choose + DUR.deal} />}
       </div>
     </div>
   );

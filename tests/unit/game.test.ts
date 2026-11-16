@@ -41,7 +41,7 @@ function table(n: number, opts: { seed?: number; drinking?: boolean; deck?: Game
   const sim = new Sim(createRoom('ABCD', 0, opts.seed ?? 42));
   for (let i = 0; i < n; i++)
     sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `Oyuncu ${i}`, avatar: i, consent: { ageOk: opts.consent ?? true } });
-  sim.as('p0', { t: 'updateSettings', patch: { length: opts.length ?? 'short', drinking: opts.drinking ?? true, deck: opts.deck ?? 'classic' } });
+  sim.as('p0', { t: 'updateSettings', patch: { length: opts.length ?? 'short', drinking: opts.drinking ?? true, deck: opts.deck ?? 'classic', pace: 'timed' } });
   sim.as('p0', { t: 'start' });
   return sim;
 }
@@ -154,6 +154,7 @@ describe('çekiliş kuralları', () => {
     );
     const sim = new Sim(createRoom('ABCD', 0, 5), small);
     for (let i = 0; i < 3; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0 });
+    sim.as('p0', { t: 'updateSettings', patch: { pace: 'timed' } });
     sim.as('p0', { t: 'start' });
     sim.timeout();
     for (let i = 0; i < 6; i++) {
@@ -210,7 +211,7 @@ describe('kart türlerinin çözümü', () => {
   function toAction(cat: Catalog, players = 4, drinking = true) {
     const sim = new Sim(createRoom('ABCD', 0, 9), cat);
     for (let i = 0; i < players; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0, consent: { ageOk: true } });
-    sim.as('p0', { t: 'updateSettings', patch: { drinking } });
+    sim.as('p0', { t: 'updateSettings', patch: { drinking, pace: 'timed' } });
     sim.as('p0', { t: 'start' });
     sim.timeout();
     return sim;
@@ -304,7 +305,7 @@ describe('bedeller ve güvenlik', () => {
   it('alkolsüzde bedel "ceza" olur ve her 3 cezada mini ceza çekilir', () => {
     const sim = new Sim(createRoom('ABCD', 0, 1), nhCat());
     for (let i = 0; i < 3; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0 });
-    sim.as('p0', { t: 'updateSettings', patch: { drinking: false } });
+    sim.as('p0', { t: 'updateSettings', patch: { drinking: false, pace: 'timed' } });
     sim.as('p0', { t: 'start' });
     sim.timeout();
     const nh = sim.turn.hand.find((id) => catalog.get(id) === undefined && Number(id.slice(2)) % 2 === 1) ?? sim.turn.hand[0]!;
@@ -405,7 +406,7 @@ describe('botlarla tam Kısa oyun', () => {
     const sim = new Sim(createRoom('ABCD', 0, 2024));
     sim.do({ t: 'join', playerId: 'h', secret: 's', name: 'İnsan', avatar: 0, consent: { ageOk: true } });
     for (let i = 0; i < 4; i++) sim.do({ t: 'join', playerId: `b${i}`, secret: 'bot', name: `Bot ${i}`, avatar: i, isBot: true, consent: { ageOk: true } });
-    sim.as('h', { t: 'updateSettings', patch: { length: 'short' } });
+    sim.as('h', { t: 'updateSettings', patch: { length: 'short', pace: 'timed' } });
     sim.as('h', { t: 'start' });
     const actsSeen = new Set<number>();
     let steps = 0;

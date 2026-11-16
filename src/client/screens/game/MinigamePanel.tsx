@@ -30,7 +30,7 @@ export function MinigamePanel({ view }: { view: View }) {
 
 function intro(kind: string) {
   if (kind === 'bomb') return 'Bomba geliyor. Eline düşerse hemen at!';
-  if (kind === 'reflex') return 'Bardak dolunca dokun. Erken dokunan da öder!';
+  if (kind === 'reflex') return 'Bardak dolunca dokun. Erken dokunan da yanar!';
   return 'Başla deyince içinden 10 say ve dokun.';
 }
 

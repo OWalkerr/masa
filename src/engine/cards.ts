@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const DECK_IDS = ['classic', 'who', 'confess', 'chaos', 'duel', 'spicy', 'clean', 'homeland'] as const;
 export const CARD_TYPES = [
   'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel',
-  'mirror', 'confession', 'curse', 'minigame', 'golden', 'tableEvent',
+  'mirror', 'confession', 'curse', 'minigame', 'golden', 'tableEvent', 'mission',
 ] as const;
 export const TARGETS = ['all', 'reader', 'picked', 'twoPicked', 'random', 'right', 'left'] as const;
 export const INPUTS = ['none', 'judge', 'votePlayer', 'yesNo', 'choice', 'text', 'catch', 'minigame'] as const;
@@ -36,7 +36,9 @@ export const CardSchema = z
     duration: z.union([z.number().int().positive().max(20), z.literal('act')]).optional(),
     tags: z.array(z.string().regex(/^[a-z]+$/)).optional(),
     quip: z.string().max(90).optional(),
-    choices: z.union([z.array(z.string().min(1).max(30)).min(2).max(6), z.literal('$players')]).optional(),
+    choices: z.union([z.array(z.string().min(1).max(30)).min(2).max(6), z.literal('$players'), z.literal('$scale')]).optional(),
+    // Gizli metin: yalnızca hedefin telefonunda görünür. "|" ile ayrılmış seçeneklerden biri rastgele seçilir.
+    secret: z.string().min(2).max(600).optional(),
     minigame: z.enum(MINIGAMES).optional(),
     art: z.string().optional(),
   })
@@ -65,15 +67,24 @@ export function lintCard(card: Card): string[] {
   if (card.type !== 'mirror' && card.choices) problems.push('choices yalnızca mirror kartında olur');
   if (card.type === 'minigame' && !card.minigame) problems.push('minigame kartı minigame alanı ister');
   if (card.type !== 'minigame' && card.minigame) problems.push('minigame alanı yalnızca minigame kartında olur');
-  if ((card.type === 'rule' || card.type === 'curse') && card.duration === undefined)
+  if ((card.type === 'rule' || card.type === 'curse' || card.type === 'mission') && card.duration === undefined)
     problems.push('rule/curse kartı duration ister');
+  if (card.secret && card.type !== 'dare' && card.type !== 'mission') problems.push('secret yalnızca dare/mission kartında olur');
+  if (card.secret && card.type === 'dare' && !['picked', 'random', 'reader', 'right', 'left'].includes(card.target))
+    problems.push('gizli kelimeli cesaret tek kişiye gider');
+  if (card.secret?.split('|').some((x) => x.trim().length < 2 || x.length > 110)) problems.push('secret seçenekleri 2–110 karakter olmalı');
+  if (card.type === 'mission' && (!card.secret || card.duration === undefined)) problems.push('mission kartı secret ve duration ister');
+  if (card.type === 'mission' && card.target !== 'random') problems.push('mission kartı random hedef ister (ajanı sistem seçer)');
+  if (card.type === 'mission' && /\{[a-z]+\}/.test(card.text)) problems.push('mission metninde jeton olmaz (ajan ele verilir)');
+  if (card.choices === '$scale' && !(card.tags ?? []).includes('olcek')) problems.push('$scale yalnızca olcek etiketli aynada olur');
+  if ((card.tags ?? []).includes('yalan') && (!Array.isArray(card.choices) || card.choices.length !== 3)) problems.push('yalan kartı 3 seçenek ister');
   if (card.type === 'duel' && card.target !== 'twoPicked') problems.push('duel kartı twoPicked hedef ister');
   if (card.type === 'golden' && card.rarity !== 'legendary') problems.push('golden kartı legendary olmalı');
   if (card.type === 'golden' && card.deck === 'clean') problems.push('clean destede golden olmaz');
   const expectedInput: Partial<Record<CardType, Input[]>> = {
     question: ['judge'], dare: ['judge'], mostLikely: ['votePlayer'], neverHave: ['yesNo'],
     rule: ['catch'], duel: ['votePlayer'], mirror: ['choice'], confession: ['text'],
-    curse: ['catch'], minigame: ['minigame'], tableEvent: ['none', 'catch'],
+    curse: ['catch'], minigame: ['minigame'], tableEvent: ['none', 'catch'], mission: ['catch'],
   };
   const allowed = expectedInput[card.type];
   if (allowed && !allowed.includes(card.input)) problems.push(`${card.type} için input ${allowed.join('/')} olmalı`);

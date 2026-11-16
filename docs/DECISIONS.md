@@ -60,3 +60,28 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
 39. **Partikül tuvali içeriğin arkasında, arka planın önündedir** (z-1). Böylece efektler kart metin panelinin üstüne çıkmaz. En fazla 150 partikül; sekme gizliyken ve "Hareketi azalt" açıkken çalışmaz.
 40. **Ana Ekran izleyicidir:** hiçbir koltuğa oturmaz, kayıtlı koltuğa da dönmez (host aynı tarayıcıda TV'yi açsa bile). TV ve dev masası ayrı paketlerdir (lazy), telefonlar bunları indirmez.
 41. **Görsel boru hattı:** `npm run convert:art` komutu `assets-raw/` içindekileri 800 ve 400 px WebP'ye çevirir; her biri 120 KB'yi geçmeyene kadar kalite düşürülür. `public/art/manifest.json` güncellenir. İstemci manifest'i bir kez çeker; görseli olmayan her şey SVG yer tutucuda kalır. `tik-sheet.png` için kare düzeni bilinmediğinden TIK şimdilik SVG; sprite düzeni belli olunca bağlanacak.
+
+## 2026-11-16 — Oyun testi geri bildirimi (kullanıcının açık isteğiyle GDD'den sapmalar)
+
+42. **Dil: "öder" yerine "içer".** Arayüzde ve kartlarda ceza her yerde "iç / içer" ya da alkolsüz masada "ceza al / ceza alır" olarak geçer. "Bedel" kelimesi oyuncunun gördüğü metinlerden çıktı (kod içinde `penalty`/`payment` kaldı).
+43. **Rahat tempo (varsayılan).** GDD bölüm 2'deki faz süreleri (seçim 15 sn, oylama 30 sn, sonuç 5 sn…) yüz yüze oyunda sohbeti öldürüyordu. Lobiye "Tempo: Rahat / Süreli" ayarı eklendi, varsayılan Rahat.
+    - Rahatta süre yalnızca geri sayımın oyunun parçası olduğu yerde var: mini oyunlar, perde perdesi ve kart açılış animasyonu, Yakala! oylaması. Kartlardaki `timer` (örneğin 60 sn stand-up) okuyucu ve hedefin telefonunda elle başlatılan geri sayım olarak kalır.
+    - Kart seçimi, hedef seçimi, oylamalar, hüküm, sonuç ekranı, masa olayı ve final süresizdir. Sonuç ekranında yalnızca host'ta "Sonraki kart →" düğmesi çıkar.
+    - Biri uyuyakalırsa host 20 sn sonra "Beklemeden geç / Okuyucu yerine kart oynat / Hükümsüz geç" diyebilir. Bu, sunucuda `advance` niyetidir ve faz zaman aşımıyla aynı yolu izler.
+    - Host bağlı değilse masadaki herhangi bir insan ilerletebilir. Mini oyun ilerletilemez.
+    - Süreli tempoda eski davranış aynen sürer; host yine erken geçebilir.
+44. **Yakala! oylaması 5 sn'den 8 sn'ye çıktı.** Masada konuşarak karar verilebilsin.
+45. **Yeni mekanik: Yalan Makinesi** (`mirror` + `yalan` etiketi, 3 seçenek). Hedef sesli olarak 2 doğru 1 yalan söyler, yalanı gizlice işaretler. Yalanı bulamayanlar içer. Herkes bulursa yalancı içer. Yutturursa +1 cesaret.
+46. **Yeni mekanik: Ölçek** (`mirror` + `olcek` etiketi, `choices: "$scale"` → 1–10). Hedef gizlice puan verir, herkes tahmin eder. En uzak tahmin(ler) içer. Tam bilen çıkarsa hedef de içer. Sonuçta herkesin tahmini görünür.
+47. **Yeni kart türü: Gizli Görev** (`mission`, `target: random`, `input: catch`, `secret` + `duration`). Sistem okuyucu dahil herkesten bir ajan seçer.
+    - Ajan ve görev yalnızca ajanın telefonuna gider: kart hedefleri, jetonlar ve "hedef olma" istatistiği de ajanı ele vermez.
+    - Ajan görevi yapınca "Görevi yaptım!" der. Görev herkese açılır, masa 12 sn oylar. Onaylarsa herkes içer ve ajan +2 cesaret alır, onaylamazsa ajan içer. Eşitlik ajanın lehine.
+    - Diğerleri Yakala! ile ajan tahmin eder. Oylama yok, sunucu gerçeği bilir. Doğruysa ajan içer ve görev biter, yanlışsa suçlayan 1 içer.
+    - Süre dolarsa ajan içer. Aynı anda tek görev olur, en az 3 oyuncu gerekir. Perde 2'den itibaren gelir.
+48. **Yeni mekanik: Anlat Bakalım** (`dare` + `anlat` etiketi + `secret`). Gizli kelime "|" ile ayrılmış listeden oyun anında seçilir ve yalnızca anlatanın telefonuna gider (basılı tutunca görünür). Kartın listesi hiçbir istemciye gönderilmez.
+49. **Kart içeriği baştan yazıldı (335 kart).** Yetişkin, kara mizah tonunda: eski sevgililer, aile, iş, para, sarhoşluk, yalanlar. Cinsel içerik yalnızca Ateşli destede ya da `flort` etiketiyle, katılım kurallarına bağlı. GDD bölüm 9–10'daki güvenlik ve "kimlik, görünüş, din, köken üzerinden şaka yok" kuralları aynen geçerli.
+50. **Ekran anlaşılırlığı:**
+    - Üst çubuğun altında her an "şu an ne oluyor / sen ne yapacaksın" şeridi var; sıra sendeyse vurgulu.
+    - Kart açılışta görselli ve büyük gelir. Eylem ve sonuçta okunaklı kompakt karta döner; altında kartın kuralı tek satır yazar ("En çok oyu alan içer").
+    - Sonuç ekranında "İçiyor!" başlığıyla içenler büyük avatarla listelenir. Ana Ekran da aynı kural satırını gösterir.
+51. **Yakala! sonuç kartı takılı kalıyordu.** Her yeni görünümde zamanlayıcı yeniden kuruluyordu ve 6 sn'den sonra kart ekranda kalıyordu. Artık yalnızca yeni sonuçta açılıyor, 6 sn sonra ya da dokununca kapanıyor. Kart alta taşındı, kural tabelalarını örtmüyor.

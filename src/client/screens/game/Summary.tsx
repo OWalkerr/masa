@@ -16,10 +16,10 @@ interface Award {
 
 const AWARDS: Award[] = [
   { title: 'Gecenin Cesuru', epitaph: 'Korkuyu tanımadı, sağduyuyu da.', pick: (s) => s.courage },
-  { title: 'Masanın Kasası', epitaph: 'Her bedeli ödedi, faiziyle.', pick: (s) => s.paidUnits },
+  { title: 'Masanın Kasası', epitaph: 'Masada en çok o içti. Karaciğerine selam olsun.', pick: (s) => s.paidUnits },
   { title: 'Kaçak Ruh', epitaph: 'Görevden kaçtı, mezardan kaçamadı.', pick: (s) => s.failed },
   { title: 'Masanın Gözdesi', epitaph: 'Herkes onu seçti, o kimseyi.', pick: (s) => s.targeted },
-  { title: 'Temiz Hayalet', epitaph: 'En az ödeyen. Şüpheli derecede masum.', pick: (s) => s.paidUnits, min: true },
+  { title: 'Temiz Hayalet', epitaph: 'En az içen. Şüpheli derecede ayık.', pick: (s) => s.paidUnits, min: true },
 ];
 
 export function Summary({ view }: { view: View }) {
@@ -65,7 +65,7 @@ export function Summary({ view }: { view: View }) {
           <tr className="text-bone-dim">
             <th className="p-2 font-bold">Oyuncu</th>
             <th className="p-2 text-right font-bold">Cesaret</th>
-            <th className="p-2 text-right font-bold">Bedel</th>
+            <th className="p-2 text-right font-bold">{view.settings.drinking ? "İçti" : "Ceza"}</th>
             <th className="p-2 text-right font-bold">Yaptı</th>
           </tr>
         </thead>

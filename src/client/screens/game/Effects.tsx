@@ -6,6 +6,8 @@ import { Avatar } from '../../components/Avatar';
 import { InkButton } from '../../components/InkButton';
 import { useReducedMotion } from '../../fx/motionPref';
 import { useRoom } from '../../store/room';
+import { drinkWord } from './explain';
+import { SecretBox } from './Flow';
 import { buzz, useRemaining } from './hooks';
 
 const CATCH_PHASES = ['choose', 'reveal', 'action', 'resolve', 'tableEvent'];
@@ -19,7 +21,15 @@ export function EffectSigns({ view }: { view: View }) {
   const g = view.game!;
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
+  const send = useRoom((s) => s.send);
+  const word = drinkWord(view);
   if (!g.effects.length) return null;
+  const signLabel = (e: EffectView) =>
+    e.kind === 'mission' ? (e.mine ? 'Görevin var! · dokun' : 'Gizli Görev · ajan kim?')
+      : `${e.kind === 'curse' ? 'Lanet · ' : e.kind === 'decree' ? 'Ferman · ' : 'Kural · '}${e.text.replace(/^(Kural|Lanet|Ferman):\s*/, '')}`;
+  const signClass = (e: EffectView) =>
+    e.kind === 'mission' ? (e.mine ? 'bg-[#8E6CD8] text-ink-950 font-bold animate-pulse' : 'bg-[#3B2650] text-bone-100')
+      : e.kind === 'curse' ? 'bg-[#3B2650] text-bone-100' : 'bg-parchment-200 text-ink-text';
   return (
     <div className="mt-1">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full gap-2 overflow-x-auto pb-1" aria-label={`${g.effects.length} aktif kural ve lanet, ayrıntı için dokun`}>
@@ -37,25 +47,41 @@ export function EffectSigns({ view }: { view: View }) {
               <svg width="60" height="10" viewBox="0 0 60 10" aria-hidden>
                 <path d="M14,0 L20,10 M46,0 L40,10" stroke="var(--ash-500)" strokeWidth="2" strokeDasharray="3 2" />
               </svg>
-              <span className={`max-w-[150px] truncate rounded-[6px] px-2 py-1 text-[14px] ${e.kind === 'curse' ? 'bg-[#3B2650] text-bone-100' : 'bg-parchment-200 text-ink-text'}`}>
-                {e.kind === 'curse' ? 'Lanet · ' : e.kind === 'decree' ? 'Ferman · ' : 'Kural · '}
-                {e.text.replace(/^(Kural|Lanet|Ferman):\s*/, '')}
-              </span>
+              <span className={`max-w-[170px] truncate rounded-[6px] px-2 py-1 text-[14px] ${signClass(e)}`}>{signLabel(e)}</span>
             </motion.span>
           ))}
         </AnimatePresence>
       </button>
       {open && (
         <ul className="ink-panel mt-2 flex flex-col gap-2 p-3">
-          {g.effects.map((e) => (
-            <li key={e.id} className="text-[16px]">
-              <span className="font-bold">{e.text}</span>
-              <span className="block text-[14px] text-bone-dim">
-                {turnsLabel(e)} · bozan {e.penalty} öder
-                {e.targetId ? ` · lanetli: ${view.players.find((p) => p.id === e.targetId)?.name}` : ''}
-              </span>
-            </li>
-          ))}
+          {g.effects.map((e) =>
+            e.kind === 'mission' ? (
+              <li key={e.id} className="flex flex-col gap-2 text-[16px]">
+                <span className="font-bold">{e.text}</span>
+                {e.mine && e.secret ? (
+                  <>
+                    <SecretBox secret={e.secret} title="Gizli görevin" />
+                    <span className="text-[14px] text-bone-dim">
+                      {turnsLabel(e)} içinde yap. Başarınca bas: masa onaylarsa herkes {e.penalty} {word.noun} {word.verb}. Süre biterse ya da yakalanırsan sen {word.verb}.
+                    </span>
+                    <InkButton onClick={() => { send({ t: 'missionDone', effectId: e.id }); setOpen(false); }}>Görevi yaptım!</InkButton>
+                  </>
+                ) : (
+                  <span className="text-[14px] text-bone-dim">
+                    {turnsLabel(e)} · ajanı bilen “Yakala!” desin: doğruysa ajan {e.penalty} {word.noun} {word.verb}, yanlışsa suçlayan 1 {word.noun}.
+                  </span>
+                )}
+              </li>
+            ) : (
+              <li key={e.id} className="text-[16px]">
+                <span className="font-bold">{e.text}</span>
+                <span className="block text-[14px] text-bone-dim">
+                  {turnsLabel(e)} · bozan {e.penalty} {word.noun} {word.verb}
+                  {e.targetId ? ` · lanetli: ${view.players.find((p) => p.id === e.targetId)?.name}` : ''}
+                </span>
+              </li>
+            ),
+          )}
         </ul>
       )}
     </div>
@@ -70,7 +96,11 @@ export function CatchButton({ view }: { view: View }) {
   const [effectId, setEffectId] = useState<string | null>(null);
   if (!g.effects.length || !CATCH_PHASES.includes(view.phase) || g.catchVote) return null;
   const me = view.you!.id;
-  const effect = g.effects.find((e) => e.id === (effectId ?? (g.effects.length === 1 ? g.effects[0]!.id : '')));
+  const word = drinkWord(view);
+  // Kendi görevin "yakalanacak" bir şey değildir
+  const catchable = g.effects.filter((e) => !(e.kind === 'mission' && e.mine));
+  if (!catchable.length) return null;
+  const effect = catchable.find((e) => e.id === (effectId ?? (catchable.length === 1 ? catchable[0]!.id : '')));
   const suspects = effect?.kind === 'curse'
     ? view.players.filter((p) => p.id === effect.targetId && p.id !== me)
     : view.players.filter((p) => !p.left && p.id !== me);
@@ -100,17 +130,21 @@ export function CatchButton({ view }: { view: View }) {
               <>
                 <p className="mb-2 text-bone-dim">Hangi kural bozuldu?</p>
                 <div className="flex flex-col gap-2">
-                  {g.effects.map((e) => (
+                  {catchable.map((e) => (
                     <button key={e.id} type="button" onClick={() => setEffectId(e.id)} className="min-h-[56px] rounded-[12px] bg-ink-950 px-3 text-left text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)]">
-                      {e.text}
+                      {e.kind === 'mission' ? 'Gizli Görev: ajanı yakala' : e.text}
                     </button>
                   ))}
                 </div>
               </>
             ) : (
               <>
-                <p className="mb-2 text-[16px]">{effect.text}</p>
-                <p className="mb-2 text-bone-dim">Kim bozdu? Masa 5 saniyede oylar. Yanlış suçlarsan 1 ödersin.</p>
+                <p className="mb-2 text-[16px]">{effect.kind === 'mission' ? 'Gizli Görev' : effect.text}</p>
+                <p className="mb-2 text-bone-dim">
+                  {effect.kind === 'mission'
+                    ? `Ajan kim? Oylama yok, gerçek hemen açılır. Bilirsen ajan ${word.verb}; yanılırsan 1 ${word.noun} sen.`
+                    : `Kim bozdu? Masa hemen oylar. Yanlış suçlarsan 1 ${word.noun} sen ${word.verb === 'içer' ? 'içersin' : 'ceza alırsın'}.`}
+                </p>
                 {suspects.length === 0 ? (
                   <p className="text-bone-dim">Bu laneti yalnızca lanetli bozabilir; o da sensin.</p>
                 ) : (
@@ -159,30 +193,42 @@ export function CatchOverlay({ view }: { view: View }) {
   const accused = view.players.find((p) => p.id === cv.accused);
   const effect = g.effects.find((e) => e.id === cv.effectId);
   const canVote = cv.voters.includes(me) && cv.myVote === null;
+  const mission = cv.mode === 'mission';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" role="alertdialog" aria-label="Yakala oylaması">
       {!reduce && <div className="pointer-events-none absolute inset-0 animate-pulse shadow-[inset_0_0_80px_#D7263D]" />}
       <div className="ink-panel relative flex w-full max-w-sm flex-col items-center gap-3 p-5 text-center">
-        <p className="font-gothic text-[34px] text-[#FF6B5A]">Yakalandı!</p>
+        <p className="font-gothic text-[34px] text-[#FF6B5A]">{mission ? 'Görev tamam mı?' : 'Yakalandı!'}</p>
         {accused && (
           <motion.div animate={reduce ? undefined : { x: [0, -6, 6, -4, 4, 0] }} transition={{ duration: 0.5, repeat: 2 }}>
             <Avatar index={accused.avatar} size={72} />
           </motion.div>
         )}
-        <p className="text-[18px]">
-          <b>{name(cv.accuser)}</b>, <b>{name(cv.accused)}</b> kişisini yakaladı.
-        </p>
-        {effect && <p className="text-[16px] text-bone-dim">{effect.text}</p>}
+        {mission ? (
+          <>
+            <p className="text-[18px]">
+              Ajan <b>{name(cv.accused)}</b>’miş! Görevini yaptığını söylüyor:
+            </p>
+            {cv.missionText && <p className="rounded-[10px] bg-parchment-200 p-3 text-[18px] font-bold text-ink-text">“{cv.missionText}”</p>}
+          </>
+        ) : (
+          <>
+            <p className="text-[18px]">
+              <b>{name(cv.accuser)}</b>, <b>{name(cv.accused)}</b> kişisini yakaladı.
+            </p>
+            {effect && <p className="text-[16px] text-bone-dim">{effect.text}</p>}
+          </>
+        )}
         <div className="h-[8px] w-full rounded-full bg-ink-950">
-          <div className="h-full rounded-full bg-[#FF6B5A] transition-[width] duration-200" style={{ width: `${Math.min(100, (left / 5000) * 100)}%` }} />
+          <div className="h-full rounded-full bg-[#FF6B5A] transition-[width] duration-200" style={{ width: `${Math.min(100, (left / (mission ? 12000 : 8000)) * 100)}%` }} />
         </div>
         {canVote ? (
           <div className="flex w-full gap-2">
             <InkButton variant="secondary" className="flex-1" onClick={() => send({ t: 'catchVote', yes: false })}>
-              Bozmadı
+              {mission ? 'Yapmadı' : 'Bozmadı'}
             </InkButton>
             <InkButton className="flex-1" onClick={() => send({ t: 'catchVote', yes: true })}>
-              Bozdu
+              {mission ? 'Yaptı' : 'Bozdu'}
             </InkButton>
           </div>
         ) : (
@@ -195,31 +241,62 @@ export function CatchOverlay({ view }: { view: View }) {
   );
 }
 
-// Yakala! sonucu: birkaç saniyelik kart
+// Yakala!/görev sonucu: alt kısımda 6 sn'lik kart; dokununca kapanır, kural tabelalarını örtmez.
+// (Önceki sürümde her yeni görünümde zamanlayıcı yeniden kurulduğu için kart ekranda takılı kalıyordu.)
 export function CatchResultToast({ view }: { view: View }) {
   const lc = view.game?.lastCatch;
+  const at = lc?.at;
   const serverNow = useRoom((s) => s.serverNow);
   const [shownAt, setShownAt] = useState<number | null>(null);
   useEffect(() => {
-    if (!lc) return;
-    if (serverNow() - lc.at > 6000) return;
-    setShownAt(lc.at);
-    const t = window.setTimeout(() => setShownAt(null), 5000);
+    if (!at || serverNow() - at > 6000) return;
+    setShownAt(at);
+    const t = window.setTimeout(() => setShownAt((cur) => (cur === at ? null : cur)), 6000);
     return () => window.clearTimeout(t);
-  }, [lc?.at, lc, serverNow]);
+    // yalnızca yeni bir sonuç geldiğinde
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at]);
   if (!lc || shownAt !== lc.at) return null;
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
-  const pay = lc.payments[0];
+  const word = drinkWord(view);
+  const pays = lc.payments.map((p) => `${name(p.id)} ${p.label}`).join(', ');
+  let title: string;
+  let body: string;
+  switch (lc.mode) {
+    case 'mission':
+      title = lc.guilty ? 'Görev başarıldı!' : 'Masa inanmadı!';
+      body = lc.guilty ? `${name(lc.accused)} ajanmış ve işini yaptı. ${lc.payments.length} kişi ${word.verb}.` : `${name(lc.accused)} yaptım dedi ama masa yemedi. Ajan ${word.verb}.`;
+      break;
+    case 'missionGuess':
+      title = lc.guilty ? 'Ajan yakalandı!' : 'Yanlış ajan!';
+      body = lc.guilty ? `${name(lc.accuser)}, ajanı buldu: ${name(lc.accused)}.` : `${name(lc.accused)} ajan değil. ${name(lc.accuser)} boşuna fener yaktı.`;
+      break;
+    case 'missionFail':
+      title = 'Görev başarısız';
+      body = `Süre doldu. Ajan ${name(lc.accused)}’miş.`;
+      break;
+    default:
+      title = lc.guilty ? 'Suçlu!' : 'Yakalanmadı!';
+      body = lc.guilty
+        ? `${name(lc.accused)} kuralı bozdu (${lc.yes} evet, ${lc.no} hayır).`
+        : `Masa ${name(lc.accused)} kişisini akladı (${lc.yes} evet, ${lc.no} hayır). ${name(lc.accuser)} boşuna fener yaktı.`;
+  }
   return (
-    <div className="fixed inset-x-3 top-24 z-40 mx-auto max-w-sm rounded-[14px] bg-parchment-200 p-4 text-ink-text shadow-[0_10px_30px_#000c]" role="status">
-      <p className="font-gothic text-[24px]">{lc.guilty ? 'Suçlu!' : 'Yanlış suçlama!'}</p>
-      <p className="text-[17px]">
-        {lc.guilty ? `${name(lc.accused)} kuralı bozdu` : `${name(lc.accuser)} boşuna fener yaktı`} ({lc.yes} evet, {lc.no} hayır).
-        {pay ? ` ${name(pay.id)} ${pay.label} öder.` : ''}
-      </p>
+    <button
+      type="button"
+      onClick={() => setShownAt(null)}
+      className="fixed inset-x-3 bottom-[92px] z-40 mx-auto block max-w-sm rounded-[14px] bg-parchment-200 p-4 text-left text-ink-text shadow-[0_10px_30px_#000c]"
+      role="status"
+      aria-label={`${title}. Kapatmak için dokun.`}
+    >
+      <p className="font-gothic text-[24px]">{title}</p>
+      <p className="text-[17px]">{body}</p>
+      {lc.missionText && <p className="mt-1 text-[16px] italic">Görev: “{lc.missionText}”</p>}
+      {pays && <p className="mt-1 text-[17px] font-bold">{word.verb === 'içer' ? 'İçiyor' : 'Ceza'}: {pays}</p>}
       {lc.mini.map((m, i) => (
         <p key={i} className="mt-1 text-[16px]">Ceza Destesi: {m.text}</p>
       ))}
-    </div>
+      <span className="mt-1 block text-right text-[13px] text-[#5a4f4a]">kapat ✕</span>
+    </button>
   );
 }

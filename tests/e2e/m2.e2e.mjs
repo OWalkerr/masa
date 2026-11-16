@@ -16,6 +16,7 @@ const pages = [];
 for (let i = 0; i < 4; i++) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
+  p.setDefaultTimeout(4000);
   p.on('pageerror', (e) => errors.push(`${NAMES[i]}: ${e.message}`));
   await p.goto(`${BASE}/m/${code}?autojoin=1&name=${NAMES[i]}&avatar=${i * 3}`);
   await p.getByText('Masa kodu').waitFor({ timeout: 20000 });
@@ -24,6 +25,7 @@ for (let i = 0; i < 4; i++) {
 await pages[0].getByText('4 kişi · 4 çevrimiçi').waitFor();
 await pages[0].getByRole('radio', { name: /Kaos/ }).click();
 await pages[0].getByRole('radio', { name: /Kısa/ }).click();
+await pages[0].getByRole('radio', { name: /Süreli/ }).click();
 await pages[0].getByRole('button', { name: 'Başlat' }).click();
 for (const p of pages) await p.getByText('Perde 1').first().waitFor({ timeout: 10000 });
 assert(true, `masa ${code}: Kaos + Kısa başladı`);
@@ -108,7 +110,7 @@ async function act(p, i) {
     if (await b.isEnabled().catch(() => false)) { await p.waitForTimeout(300); await b.click().catch(() => {}); }
   } else if (t.includes('Kart kime gidiyor') || t.includes('iki kişiyi seç')) {
     const n = t.includes('iki kişiyi') ? 2 : 1;
-    for (let k = 0; k < n; k++) await p.locator('[aria-pressed]').nth(k).click().catch(() => {});
+    for (let k = 0; k < n; k++) await p.locator('main section [aria-pressed]').nth(k).click().catch(() => {});
     await p.getByRole('button', { name: 'Seç', exact: true }).click().catch(() => {});
   } else if (t.includes('Kazanan kim?')) {
     await shot(p, 'duel');
@@ -120,7 +122,7 @@ async function act(p, i) {
   } else if (t.includes('Spot ışığındakini kim yazdı')) {
     await shot(p, 'confessGuess');
     await p.locator('main .grid button').first().click().catch(() => {});
-  } else if (t.includes('Gizlice seç. Kimse') || t.includes('Tahmin et.')) {
+  } else if (/Gizlice seç\. Kimse|Tahmin et\.|hangisi yalan|Gizli puanını ver|Üç şey söyle/.test(t)) {
     await shot(p, 'mirror');
     await p.locator('main .grid button').nth(i % 2).click().catch(() => {});
   } else if (t.includes('Gizlice birini seç') || t.includes('Kimi seçiyorsun')) {
@@ -133,8 +135,8 @@ async function act(p, i) {
       return;
     }
     await p.getByRole('button', { name: i % 2 ? 'Yaptım' : 'Yapmadım' }).click().catch(() => {});
-  } else if (t.includes('görevi yaptı mı')) {
-    await p.getByRole('button', { name: i % 2 ? 'Yaptı' : 'Yapmadı' }).click().catch(() => {});
+  } else if (/görevi yaptı mı|dürüstçe cevapladı mı|kelimeyi bildi mi/.test(t)) {
+    await p.getByRole('button', { name: i % 2 ? /^(Yaptı|Cevapladı|Bildi)$/ : /^(Yapmadı|Kaçtı|Bilemedi)/ }).click().catch(() => {});
   } else if (t.includes('Yapmayanları işaretle')) {
     await p.getByRole('button', { name: /Herkes yaptı|Hükmü ver/ }).click().catch(() => {});
   } else if (t.includes('Cebinde bir şey var')) {
@@ -145,7 +147,7 @@ async function act(p, i) {
 }
 
 while (Date.now() < deadline) {
-  if (await pages[0].getByText('Gecenin Özeti').isVisible().catch(() => false)) break;
+  if (await pages[0].getByText('Gecenin Özeti', { exact: true }).isVisible().catch(() => false)) break;
   await Promise.all(pages.map((p, i) => act(p, i)));
   if (!seen.has('tv-card') && (await tv.getByRole('group', { name: /kartı$/ }).isVisible().catch(() => false))) {
     seen.add('tv-card');
@@ -158,7 +160,7 @@ while (Date.now() < deadline) {
   }
   await pages[0].waitForTimeout(250);
 }
-for (const p of pages) await p.getByText('Gecenin Özeti').waitFor({ timeout: 20000 });
+for (const p of pages) await p.getByText('Gecenin Özeti', { exact: true }).waitFor({ timeout: 20000 });
 assert(true, 'tüm telefonlar Gecenin Özeti’nde');
 console.log('görülen ekranlar:', [...seen].join(', '));
 assert(seen.has('rule') || seen.has('curse'), 'kural ya da lanet masaya kondu');
@@ -167,7 +169,7 @@ assert(seen.has('finale'), 'final kartı geldi');
 assert(caught && seen.has('catchvote'), 'Yakala! oylaması tüm ekranlarda açıldı');
 assert(seen.has('bomb') || seen.has('reflex') || seen.has('countdown'), 'mini oyun oynandı');
 assert(seen.has('tv-card'), 'Ana Ekran kartı gösterdi');
-await tv.getByText('Gecenin Özeti').waitFor({ timeout: 15000 });
+await tv.getByText('Gecenin Özeti', { exact: true }).waitFor({ timeout: 15000 });
 assert(true, 'Ana Ekran özete ulaştı');
 assert(errors.length === 0, `sayfa hatası yok ${errors.join(' | ')}`);
 await browser.close();

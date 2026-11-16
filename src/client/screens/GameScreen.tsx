@@ -12,6 +12,7 @@ import { ActCurtain } from './game/ActCurtain';
 import { ActionPanel } from './game/ActionPanel';
 import { CardStage } from './game/CardStage';
 import { ChoosePhase } from './game/ChoosePhase';
+import { CardCompact, HostBar, NowBar } from './game/Flow';
 import { CatchButton, CatchOverlay, CatchResultToast } from './game/Effects';
 import { buzz, useCardWidth, useWakeLock } from './game/hooks';
 import { ResolvePanel } from './game/ResolvePanel';
@@ -29,8 +30,9 @@ export function GameScreen({ view }: { view: View }) {
   const cardPhase = ['reveal', 'action', 'resolve', 'tableEvent', 'finale'].includes(view.phase);
 
   return (
-    <main className="mx-auto flex min-h-full max-w-md flex-col pb-40">
+    <main className="mx-auto flex min-h-full max-w-md flex-col pb-44">
       <TopBar view={view} />
+      <NowBar view={view} />
       {view.phase === 'actIntro' && <ActCurtain key={g.act} act={g.act} drinking={drinking} />}
       <section className="flex flex-1 flex-col items-center gap-4 px-3">
         {view.phase === 'actIntro' && (
@@ -41,6 +43,7 @@ export function GameScreen({ view }: { view: View }) {
         {view.phase === 'choose' && <ChoosePhase view={view} />}
         {cardPhase && g.card && <Played view={view} />}
       </section>
+      <HostBar view={view} />
       <CatchButton view={view} />
       <CatchOverlay view={view} />
       <CatchResultToast view={view} />
@@ -53,7 +56,9 @@ function Played({ view }: { view: View }) {
   const big = useCardWidth(0.86, 340, 0.6);
   const small = useCardWidth(0.62, 250, 0.4);
   const reader = view.players.find((p) => p.id === g.readerId);
-  const width = view.phase === 'reveal' || view.phase === 'tableEvent' || view.phase === 'finale' ? big : small;
+  void small;
+  // Açılışta büyük, görselli kart; sonrasında okunaklı kompakt kart + kuralı (eylemler ekrana sığsın)
+  const full = view.phase === 'reveal' || view.phase === 'finale';
   const legendary = g.card!.rarity === 'legendary' && view.phase === 'reveal';
   const duel = g.card!.type === 'duel' && view.phase !== 'resolve';
   return (
@@ -68,7 +73,11 @@ function Played({ view }: { view: View }) {
       )}
       {legendary && <LegendaryBurst />}
       {duel && <DuelSplit view={view} />}
-      <CardStage key={g.card!.id + g.turnNo + view.phase.slice(0, 0)} view={view} card={g.card!} width={width} />
+      {full ? (
+        <CardStage key={g.card!.id + g.turnNo} view={view} card={g.card!} width={big} />
+      ) : (
+        <CardCompact view={view} card={g.card!} />
+      )}
       {view.phase === 'action' && <ActionPanel view={view} />}
       {(view.phase === 'resolve' || view.phase === 'tableEvent') && <ResolvePanel view={view} />}
       {view.phase === 'finale' && <Tik size={110} className="tik-bob" variant={view.settings.drinking && !view.you?.sober ? 'raki' : 'tea'} />}
@@ -169,7 +178,12 @@ export function useFxFeedback(view: View) {
         const n = view.players.find((p) => p.id === id)?.name;
         if (n) toast(`${n} pas geçti.`);
       }
-      if (f.kind === 'waterBreak') toast('Su Molası: bir bardak su iç. Bedellerin artık ceza.');
+      if (f.kind === 'waterBreak') toast('Su Molası: bir bardak su iç. Bundan sonra içmek yerine ceza alacaksın.');
+      if (f.kind === 'missionGiven') {
+        toast('Gizli görevin var! Üstteki “Gizli Görev” tabelasına dokun. Kimseye belli etme.');
+        buzz([30, 60, 30, 60, 30]);
+      }
+      if (f.kind === 'mission' || f.kind === 'missionClaim') play('crow');
     }
   }, [fx, me, toast, view.players]);
 }

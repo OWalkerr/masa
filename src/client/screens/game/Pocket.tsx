@@ -8,8 +8,8 @@ import { useRoom } from '../../store/room';
 import { useNames } from './hooks';
 
 export const POWER_INFO: Record<PowerKind, { name: string; desc: string }> = {
-  shield: { name: 'Kalkan', desc: 'Sana gelen bir bedeli iptal eder. Bedel anında kullanılır.' },
-  mirror: { name: 'Ayna', desc: 'Bedelini başkasına yansıtır. Hedef kendi Kalkan’ıyla karşılık verebilir.' },
+  shield: { name: 'Kalkan', desc: 'Sana gelen bir içme cezasını iptal eder. Sonuç anında kullanılır.' },
+  mirror: { name: 'Ayna', desc: 'Sana gelen içme cezasını seçtiğin birine yansıtır. O da Kalkan’ıyla karşılık verebilir.' },
   swap: { name: 'Takas', desc: 'Okuyucuyken elini yeniden çekersin.' },
   sabotage: { name: 'Sabotaj', desc: 'Sonraki okuyucunun miras kartını sen seçersin.' },
 };

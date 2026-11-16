@@ -114,7 +114,17 @@ export function LobbyScreen({ view }: { view: View }) {
           ]}
         />
         <Segmented
-          label="Süre"
+          label="Tempo"
+          value={view.settings.pace}
+          readOnly={!isHost}
+          onChange={(v) => set({ pace: v })}
+          options={[
+            { value: 'relaxed', label: 'Rahat', hint: 'Süre yok; sohbet edin, host “Sonraki kart” der' },
+            { value: 'timed', label: 'Süreli', hint: 'Her adım geri sayımla geçer' },
+          ]}
+        />
+        <Segmented
+          label="Uzunluk"
           value={view.settings.length}
           readOnly={!isHost}
           onChange={(v) => set({ length: v })}
@@ -133,7 +143,7 @@ export function LobbyScreen({ view }: { view: View }) {
             options={[
               { value: 'small', label: 'Küçük yudum' },
               { value: 'sip', label: 'Yudum' },
-              { value: 'shot', label: 'Shot', hint: 'Yalnızca 1 birimlik bedellerde' },
+              { value: 'shot', label: 'Shot', hint: 'Yalnızca 1 yudumluk cezalarda' },
             ]}
           />
         )}

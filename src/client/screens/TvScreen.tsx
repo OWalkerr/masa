@@ -19,6 +19,7 @@ import { CatchOverlay, CatchResultToast } from './game/Effects';
 import { useWakeLock } from './game/hooks';
 import { BombIcon } from './game/MinigamePanel';
 import { ResolvePanel } from './game/ResolvePanel';
+import { howTo, nowLine } from './game/explain';
 import { Summary } from './game/Summary';
 import { ACT_NAMES } from './game/TopBar';
 import { NotFound } from './NotFound';
@@ -130,12 +131,15 @@ function TvGame({ view }: { view: View }) {
               {reader && <Avatar index={reader.avatar} size={72} />}
               {reader?.name} kart seçiyor…
             </p>
-            <div className="w-[480px]">
-              <CandleTimer endsAt={g.phaseEndsAt} total={g.step === 'target' ? DUR.target : DUR.choose + DUR.deal} />
-            </div>
+            {g.phaseEndsAt && (
+              <div className="w-[480px]">
+                <CandleTimer endsAt={g.phaseEndsAt} total={g.step === 'target' ? DUR.target : DUR.choose + DUR.deal} />
+              </div>
+            )}
           </div>
         )}
         {cardPhase && g.card && <CardStage key={g.card.id + g.turnNo} view={view} card={g.card} width={cardW} />}
+        {cardPhase && g.card && <p className="max-w-[44vw] text-center text-[26px] text-bone-dim">{howTo(g.card, view)}</p>}
       </section>
       <aside className="flex min-w-0 flex-col gap-4 py-2 text-[24px]">
         {g.effects.length > 0 && (
@@ -147,6 +151,7 @@ function TvGame({ view }: { view: View }) {
             ))}
           </div>
         )}
+        {nowLine(view) && <p className="rounded-[14px] bg-ink-800 px-5 py-3 text-[30px] font-bold">{nowLine(view)!.text.replace(/^Sıra sende: /, '')}</p>}
         <TvStatus view={view} />
         <Scoreboard view={view} />
         <div className="mt-auto flex items-end justify-between">
@@ -215,7 +220,7 @@ function Scoreboard({ view }: { view: View }) {
         <tr className="text-[18px] text-bone-dim">
           <th className="p-2 text-left font-bold">Masa</th>
           <th className="p-2 text-right font-bold">Cesaret</th>
-          <th className="p-2 text-right font-bold">Bedel</th>
+          <th className="p-2 text-right font-bold">{view.settings.drinking ? 'İçti' : 'Ceza'}</th>
         </tr>
       </thead>
       <tbody>

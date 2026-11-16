@@ -42,14 +42,18 @@ export interface PublicStats {
 
 export interface EffectView {
   id: string;
-  kind: 'rule' | 'curse' | 'event' | 'decree';
+  kind: 'rule' | 'curse' | 'event' | 'decree' | 'mission';
   text: string;
-  targetId?: string;
+  targetId?: string; // görevde yalnızca ajanın kendisine gider
   turnsLeft: number | 'act';
   penalty: number;
+  secret?: string; // gizli görev metni (yalnızca ajana)
+  mine?: boolean; // bu görev benim
 }
 
 export interface CatchVoteView {
+  mode: 'rule' | 'mission';
+  missionText?: string; // ajan "yaptım" deyince görev herkese açılır
   accuser: string;
   accused: string;
   effectId: string;
@@ -92,6 +96,8 @@ export interface GameView {
   stage: 'main' | 'write' | 'guess';
   options: string[];
   optionPlayers: boolean;
+  secret: string | null; // gizli kelime/görev: yalnızca hedefe
+  waitingOn: string[]; // girdisi beklenenler (isimleri göstermek için)
   answers: string[]; // itiraf: karışık cevaplar (yazarsız)
   spotlight: number | null; // itiraf: spot ışığındaki cevabın sırası
   amAuthor: boolean; // itiraf: spot ışığındaki cevap benim mi
@@ -168,7 +174,9 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
   if (!g) return null;
   const t = g.turn;
   const isReader = !!t && !t.system && t.readerId === me;
-  const card = t?.cardId ? getCard(catalog, t.cardId) ?? null : null;
+  const rawCard = t?.cardId ? getCard(catalog, t.cardId) ?? null : null;
+  const card = rawCard ? stripSecret(rawCard) : null;
+  const mission = card?.type === 'mission';
   // Kart açılış anına kadar yalnızca okuyucuya görünür
   const cardVisible = !!card && (s.phase !== 'choose' || isReader);
   const inChoose = s.phase === 'choose' && t?.step === 'choose';
@@ -184,7 +192,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
   let hand: GameView['hand'] = null;
   if (isReader && inChoose && t) {
     // Hayalet Saati: kartlar kapalı, yalnızca sıra numarası gider
-    hand = t.blind ? t.hand.map((_, i) => ({ id: `blind-${i}`, hidden: true as const })) : t.hand.map((id) => getCard(catalog, id)!).filter(Boolean);
+    hand = t.blind ? t.hand.map((_, i) => ({ id: `blind-${i}`, hidden: true as const })) : t.hand.map((id) => getCard(catalog, id)!).filter(Boolean).map(stripSecret);
   }
   return {
     act: g.act,
@@ -207,12 +215,15 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         ? s.players.filter((p) => !p.left && p.id !== t.readerId && consentsFor(s, p.id, card) && !cursedFor(s, p.id, card)).map((p) => p.id)
         : [],
     card: cardVisible ? card : null,
-    targets: cardVisible ? t?.targets ?? [] : [],
+    // Gizli görevin ajanı kimseye gitmez (kendisine de: görevi effects üzerinden görür)
+    targets: cardVisible && !mission ? t?.targets ?? [] : [],
     tokens: cardVisible ? t?.tokens ?? {} : {},
     input: card && action && !t?.system ? actionKind(card) : null,
     stage: t?.stage ?? 'main',
     options: cardVisible ? t?.options ?? [] : [],
     optionPlayers: !!t?.optionPlayers,
+    secret: t?.secret && me && !mission && t.targets.includes(me) && s.phase !== 'choose' ? t.secret : null,
+    waitingOn: expected.filter((id) => (t?.stage === 'write' ? t.texts[id] === undefined : !t?.inputs[id])),
     // İtiraf: cevaplar yazarsız ve karışık; yazar yalnızca sonuçta açılır
     answers: guess && t ? t.shuffled.map((id) => t.texts[id] ?? '').filter((x) => x) : [],
     spotlight: guess && t?.spotlightAuthor ? t.shuffled.indexOf(t.spotlightAuthor) : null,
@@ -224,9 +235,18 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
     passed: t?.passed ?? [],
     // Oylar ve cevaplar yalnızca sonuçta açılır
     result: s.phase === 'resolve' || s.phase === 'tableEvent' || s.phase === 'finale' ? t?.result ?? null : null,
-    effects: g.effects.map((e) => ({ id: e.id, kind: e.kind, text: e.text, targetId: e.targetId, turnsLeft: e.turnsLeft, penalty: e.penalty })),
+    effects: g.effects.map((e) => {
+      const mine = e.kind === 'mission' && e.targetId === me;
+      return {
+        id: e.id, kind: e.kind, text: e.text, turnsLeft: e.turnsLeft, penalty: e.penalty,
+        targetId: e.kind === 'mission' ? (mine ? e.targetId : undefined) : e.targetId,
+        ...(mine ? { secret: e.secret, mine: true } : {}),
+      };
+    }),
     catchVote: cv
       ? {
+          mode: cv.mode,
+          missionText: cv.mode === 'mission' ? g.effects.find((e) => e.id === cv.effectId)?.secret : undefined,
           accuser: cv.accuser,
           accused: cv.accused,
           effectId: cv.effectId,
@@ -252,6 +272,13 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
     restCards: canSabotage && t ? t.rest.map((id) => getCard(catalog, id)!).filter(Boolean) : [],
     log: s.phase === 'summary' ? g.log : [],
   };
+}
+
+// Kartın gizli metni (kelime/görev listesi) hiçbir istemciye gitmez; seçilen tek metin turda tutulur
+function stripSecret(c: Card): Card {
+  if (!c.secret) return c;
+  const { secret: _s, ...rest } = c;
+  return rest;
 }
 
 function cursedFor(s: GameState, id: string, card: Card): boolean {
