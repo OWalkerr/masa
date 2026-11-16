@@ -5,6 +5,7 @@ import type { Card } from '../../../engine/cards';
 import type { TokenKey } from '../../../engine/types';
 import { InkFrame } from '../ink/InkFrame';
 import { spiral } from '../ink/wobble';
+import { keyItem, useManifest } from '../../art/manifest';
 import { CardArt } from './CardArt';
 import { CardText } from './CardText';
 import { TARGET_LABEL, TYPE_LABEL, hashId } from './labels';
@@ -64,7 +65,7 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
       {/* görsel penceresi: üst %55 (bant dahil), gotik kemer */}
       <div className="relative" style={{ height: width * 1.4 * 0.55 - 11 * u, padding: `${2 * u}px ${5 * u}px 0` }}>
         <div className="h-full w-full overflow-hidden" style={{ clipPath: ARCH, background: '#1E1A24' }}>
-          <CardArt card={card} />
+          <CardArt card={card} width={width} />
         </div>
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
           <path
@@ -179,6 +180,15 @@ export function WaxSeal({ n, size, label }: { n: number; size: number; label?: s
 // Kart arkası: kurum zemin, çizgili kenar, dolunay içinde TIK silueti, vurgu renginde spiral
 export function CardBack({ width, className = '', style }: { width: number; className?: string; style?: CSSProperties }) {
   const u = width / 100;
+  const m = useManifest();
+  const img = keyItem(m, 'card-back');
+  if (img) {
+    return (
+      <div className={`relative overflow-hidden ${className}`} style={{ width, height: width * 1.4, borderRadius: 4 * u, boxShadow: '0 14px 30px #000b', ...style }} aria-hidden>
+        <img src={width > 200 ? img.w800 : img.w400} alt="" className="h-full w-full object-cover" draggable={false} />
+      </div>
+    );
+  }
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ width, height: width * 1.4, borderRadius: 4 * u, background: 'var(--ink-800)', boxShadow: '0 14px 30px #000b', ...style }} aria-hidden>
       <div className="stripes absolute inset-0" style={{ borderRadius: 4 * u }} />

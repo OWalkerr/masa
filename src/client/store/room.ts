@@ -26,8 +26,9 @@ interface RoomStore {
   fx: FxEvent[]; // son efekt olayları
   serverNow(): number;
   resuming: boolean; // kayıtlı koltuğa dönülüyor
+  spectator: boolean;
   you: string | null;
-  open(code: string): void;
+  open(code: string, spectator?: boolean): void;
   close(): void;
   send(msg: ClientMessage): void;
   toast(text: string, tone?: Toast['tone']): void;
@@ -43,14 +44,15 @@ export const useRoom = create<RoomStore>((set, get) => ({
   toasts: [],
   conn: null,
   resuming: false,
+  spectator: false,
   you: null,
   fx: [],
   serverNow() {
     return Date.now() + (get().conn?.clockOffset ?? 0);
   },
 
-  open(code) {
-    if (get().code === code && get().conn) return;
+  open(code, spectator = false) {
+    if (get().code === code && get().conn && get().spectator === spectator) return;
     get().conn?.close();
     const conn = new RoomConnection(code, {
       onStatus: (status) => set({ status }),
@@ -72,8 +74,8 @@ export const useRoom = create<RoomStore>((set, get) => ({
           }
         }
       },
-    });
-    set({ code, conn, view: null, status: 'connecting', resuming: !!loadSeat(code), you: null });
+    }, spectator);
+    set({ code, conn, view: null, status: 'connecting', resuming: !spectator && !!loadSeat(code), you: null, spectator });
     conn.connect();
   },
 

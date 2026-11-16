@@ -64,7 +64,8 @@ export function RoomScreen({ code }: { code: string }) {
         </div>
       )}
       {status === 'closed' && <NotFound title="Masa kapandı" text="Bu masa uzun süre boş kaldığı için kaldırıldı." />}
-      {status !== 'closed' && body}
+      {/* içerik partikül katmanının (z-1) üstünde: efektler kart metnine binmez */}
+      {status !== 'closed' && <div className="relative z-[2] min-h-full">{body}</div>}
     </div>
   );
 }

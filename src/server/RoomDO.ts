@@ -12,6 +12,7 @@ import type { Env } from './worker';
 
 interface Attachment {
   pid: string | null;
+  rtt?: number; // istemcinin ölçtüğü gidiş-dönüş süresi (ms), mini oyun gecikme düzeltmesi için
 }
 
 function randomId(bytes: number): string {
@@ -89,7 +90,16 @@ export class RoomDO extends DurableObject<Env> {
 
     switch (parsed.t) {
       case 'ping':
+        if (parsed.rtt !== undefined) ws.serializeAttachment({ ...att, rtt: parsed.rtt } satisfies Attachment);
         return this.send(ws, { t: 'pong', serverTime: now, clientTime: parsed.clientTime });
+
+      case 'minigameInput': {
+        if (!att.pid) return this.sendError(ws, 'NO_SEAT', 'Önce masaya otur.');
+        // Varış anı ve tek yön gecikme tahmini sunucuda eklenir; istemci kendi saatini bildiremez
+        const lat = Math.min(400, Math.max(0, (att.rtt ?? 0) / 2));
+        await this.dispatch({ t: 'minigameInput', action: parsed.action, bomb: parsed.bomb, at: now, lat, by: att.pid }, ws);
+        return;
+      }
 
       case 'resume': {
         const p = this.game.players.find((x) => x.id === parsed.playerId && !x.left);

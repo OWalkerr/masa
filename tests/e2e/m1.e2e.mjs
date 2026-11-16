@@ -37,7 +37,7 @@ async function act(p, i) {
   const m = t.match(/Perde (\d)/);
   if (m) acts.add(m[1]);
   if (t.includes('Sıra sende. Bir kart seç')) {
-    const b = p.getByRole('button', { name: 'Oyna' });
+    const b = p.getByRole('button', { name: 'Oyna', exact: true });
     if (await b.isEnabled().catch(() => false)) { await p.waitForTimeout(400); await b.click().catch(() => {}); actions++; }
   } else if (t.includes('Kart kime gidiyor') || t.includes('iki kişiyi seç')) {
     const opts = p.locator('[aria-pressed]');

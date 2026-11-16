@@ -15,7 +15,7 @@ export const ACT_TYPES: Record<1 | 2 | 3, CardType[]> = {
 
 // Motorda çözümü yazılmış türler (M2/M3'te genişleyecek)
 export const IMPLEMENTED_TYPES: ReadonlySet<CardType> = new Set([
-  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden',
+  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden', 'minigame',
 ]);
 
 const RARITY_W = { common: 1, rare: 0.35, legendary: 0.06 } as const;

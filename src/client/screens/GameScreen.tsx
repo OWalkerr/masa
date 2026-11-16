@@ -5,6 +5,8 @@ import type { View } from '../../engine/viewFor';
 import { Avatar } from '../components/Avatar';
 import { Tik } from '../components/Tik';
 import { useReducedMotion } from '../fx/motionPref';
+import { play, useMusic } from '../audio/sound';
+import { emit, emitAt } from '../fx/particles';
 import { useRoom } from '../store/room';
 import { ActCurtain } from './game/ActCurtain';
 import { ActionPanel } from './game/ActionPanel';
@@ -19,6 +21,7 @@ import { TopBar } from './game/TopBar';
 export function GameScreen({ view }: { view: View }) {
   useWakeLock(view.phase !== 'summary');
   useFxFeedback(view);
+  useMusic(!!view.you?.isHost);
   const g = view.game;
   if (!g) return null;
   if (view.phase === 'summary') return <Summary view={view} />;
@@ -113,7 +116,7 @@ function DuelSplit({ view }: { view: View }) {
 }
 
 // Efekt olaylarına dokunsal geri bildirim (Android). iOS'ta titreşim yok; görsel efektler yeterli.
-function useFxFeedback(view: View) {
+export function useFxFeedback(view: View) {
   const fx = useRoom((s) => s.fx);
   const toast = useRoom((s) => s.toast);
   const seen = useRef(fx.at(-1)?.seq ?? 0);
@@ -122,8 +125,40 @@ function useFxFeedback(view: View) {
     for (const f of fx) {
       if (f.seq <= seen.current) continue;
       seen.current = f.seq;
-      if (f.kind === 'resolve' && me && (f.payload as { payers: string[] }).payers.includes(me)) buzz([40, 60, 40]);
-      if (f.kind === 'deal' && (f.payload as { readerId: string }).readerId === me) buzz(25);
+      const sober = !view.settings.drinking || !!view.you?.sober;
+      if (f.kind === 'resolve') {
+        const payers = (f.payload as { payers: string[] }).payers;
+        if (payers.length) {
+          play('seal');
+          window.setTimeout(() => play(sober ? 'spoon' : 'clink'), 250);
+        }
+        if (me && payers.includes(me)) buzz([40, 60, 40]);
+      }
+      if (f.kind === 'deal') {
+        play('paper');
+        if ((f.payload as { readerId: string }).readerId === me) buzz(25);
+      }
+      if (f.kind === 'reveal') {
+        const rarity = (f.payload as { rarity: string }).rarity;
+        play(rarity === 'legendary' ? 'organ' : 'flip');
+        window.setTimeout(() => {
+          const card = document.querySelector('[role=group][aria-label$="kartı"]');
+          if (rarity === 'legendary') emitAt('dust', card, 70);
+          else if (rarity === 'rare') emitAt('glint', card, 24);
+          else emitAt('ink', card, 14);
+        }, 320);
+      }
+      if (f.kind === 'actIntro' || f.kind === 'finale') play('curtain');
+      if (f.kind === 'rule' || f.kind === 'curse') play('seal');
+      if (f.kind === 'catch') play('crow');
+      if (f.kind === 'mgStart' && (f.payload as { kind: string }).kind === 'bomb') play('fuse');
+      if (f.kind === 'bombThrow') play('tap');
+      if (f.kind === 'filled') play('clink');
+      if (f.kind === 'boom') {
+        play('boom');
+        emit('bat', window.innerWidth / 2, window.innerHeight / 2, 40);
+        if ((f.payload as { holder: string }).holder === me) buzz([200, 80, 200]);
+      }
       if (f.kind === 'powerEarned') {
         const names: Record<string, string> = { shield: 'Kalkan', mirror: 'Ayna', swap: 'Takas', sabotage: 'Sabotaj' };
         toast(`Cebine bir ${names[(f.payload as { power: string }).power] ?? 'güç'} girdi.`);

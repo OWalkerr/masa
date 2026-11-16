@@ -9,6 +9,7 @@ import { Avatar } from '../../components/Avatar';
 import { CardBack, GameCard } from '../../components/GameCard/GameCard';
 import { InkButton } from '../../components/InkButton';
 import { useReducedMotion } from '../../fx/motionPref';
+import { preloadCards } from '../../art/manifest';
 import { useRoom } from '../../store/room';
 import { CandleTimer } from './CandleTimer';
 import { useCardWidth, useNames } from './hooks';
@@ -41,13 +42,16 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
     send({ t: 'playCard', cardId: id });
   };
   const focused = hand[Math.min(focus, hand.length - 1)]!;
+  useEffect(() => {
+    preloadCards(hand.filter((c): c is Card => !('hidden' in c)));
+  }, [hand]);
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="text-center text-[18px]" aria-live="polite">
         {g.blind ? 'Hayalet Saati: kartlar kapalı. Körlemesine seç.' : 'Sıra sende. Bir kart seç, yüksek sesle oku.'}
       </p>
       <div className="w-full max-w-[360px] px-2">
-        <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" />
+        <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" beat />
       </div>
       <div className="relative w-full" style={{ height: w * 1.4 + 30 }}>
         {hand.map((c, i) => (

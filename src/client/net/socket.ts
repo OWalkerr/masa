@@ -18,7 +18,7 @@ export class RoomConnection {
   rtt = 0; // ms
   clockOffset = 0; // sunucuSaati - istemciSaati (ms)
 
-  constructor(private code: string, private h: ConnHandlers) {}
+  constructor(private code: string, private h: ConnHandlers, private spectator = false) {}
 
   connect() {
     this.stopped = false;
@@ -31,18 +31,22 @@ export class RoomConnection {
       this.retry = 0;
       this.h.onStatus('open');
       // Kayıtlı koltuk varsa aynı koltuğa dön
-      const seat = loadSeat(this.code);
+      // İzleyici (Ana Ekran) hiçbir koltuğa oturmaz
+      const seat = this.spectator ? null : loadSeat(this.code);
       if (seat) this.send({ t: 'resume', playerId: seat.playerId, secret: seat.secret });
       this.ping();
+      window.setTimeout(() => this.ping(), 600);
       window.clearInterval(this.pingTimer);
-      this.pingTimer = window.setInterval(() => this.ping(), 5000);
+      this.pingTimer = window.setInterval(() => this.ping(), 4000);
     };
     ws.onmessage = (ev) => {
       let msg: ServerMessage;
       try { msg = JSON.parse(ev.data as string) as ServerMessage; } catch { return; }
       if (msg.t === 'pong') {
         const now = Date.now();
-        this.rtt = now - msg.clientTime;
+        const sample = now - msg.clientTime;
+        // Ani sıçramaları yumuşat
+        this.rtt = this.rtt ? Math.round(this.rtt * 0.7 + sample * 0.3) : sample;
         this.clockOffset = msg.serverTime + this.rtt / 2 - now;
       }
       if (msg.t === 'seat') saveSeat(this.code, { playerId: msg.playerId, secret: msg.secret });
@@ -75,7 +79,7 @@ export class RoomConnection {
   }
 
   private ping() {
-    this.send({ t: 'ping', clientTime: Date.now() });
+    this.send({ t: 'ping', clientTime: Date.now(), rtt: this.rtt || undefined });
   }
 
   send(msg: ClientMessage) {

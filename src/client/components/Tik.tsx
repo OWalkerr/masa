@@ -6,11 +6,12 @@ interface Props {
   className?: string;
   mood?: 'grin' | 'smirk';
   title?: string;
+  liquid?: boolean; // bardak dolu mu
 }
 
 const STROKE = 'var(--bone-100)';
 
-export function Tik({ variant = 'raki', size = 140, className = '', mood = 'grin', title = 'TIK' }: Props) {
+export function Tik({ variant = 'raki', size = 140, className = '', mood = 'grin', title = 'TIK', liquid = true }: Props) {
   const tea = variant === 'tea';
   const body = tea
     ? 'M62,44 C66,84 90,112 88,132 C86,152 64,182 70,214 L130,214 C136,182 114,152 112,132 C110,112 134,84 138,44 Z'
@@ -57,11 +58,11 @@ export function Tik({ variant = 'raki', size = 140, className = '', mood = 'grin
       {/* gövde */}
       <path d={body} fill="var(--ink-800)" fillOpacity="0.85" />
       <g clipPath={`url(#tik-body-${variant})`}>
-        {tea ? (
+        {liquid && (tea ? (
           <rect x="0" y="58" width="200" height="200" fill="#6E3B1A" />
         ) : (
           <rect x="0" y="118" width="200" height="200" fill="var(--bone-100)" fillOpacity="0.82" />
-        )}
+        ))}
         <path
           d={tea ? 'M72,52 C76,80 92,104 92,124' : 'M76,46 C82,66 90,84 86,104 C72,124 66,160 76,190'}
           stroke="var(--bone-100)"
@@ -89,7 +90,7 @@ export function Tik({ variant = 'raki', size = 140, className = '', mood = 'grin
         <path d={`M72,${eyesY - 20} q12,-7 22,0 M106,${eyesY - 24} q12,-8 24,2`} stroke={STROKE} strokeWidth="2.5" fill="none" strokeLinecap="round" />
       </g>
       {/* dikişli gülümseme */}
-      <g stroke={tea ? STROKE : 'var(--ink-950)'} strokeWidth="2.6" fill="none" strokeLinecap="round">
+      <g stroke={tea || !liquid ? STROKE : 'var(--ink-950)'} strokeWidth="2.6" fill="none" strokeLinecap="round">
         <path d={smile} />
         {stitches.map((d, i) => (
           <path key={i} d={d} strokeWidth="2" />

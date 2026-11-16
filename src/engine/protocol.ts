@@ -54,7 +54,8 @@ export const ClientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('pass') }),
   z.object({ t: z.literal('veto') }),
   z.object({ t: z.literal('leave') }),
-  z.object({ t: z.literal('ping'), clientTime: z.number() }),
+  z.object({ t: z.literal('ping'), clientTime: z.number(), rtt: z.number().min(0).max(10_000).optional() }),
+  z.object({ t: z.literal('minigameInput'), action: z.enum(['tap', 'throw']), bomb: z.number().int().min(0).max(3).optional() }),
 ]);
 export type ClientMessage = z.infer<typeof ClientMessage>;
 

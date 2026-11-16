@@ -1,8 +1,15 @@
 // Eriyen mum zamanlayıcı: kalan süre kadar uzun mum; son 5 sn alev hızlanır.
+import { useEffect } from 'react';
+import { play } from '../../audio/sound';
 import { useRemaining } from './hooks';
 
-export function CandleTimer({ endsAt, total, label }: { endsAt: number | null; total: number; label?: string }) {
+export function CandleTimer({ endsAt, total, label, beat }: { endsAt: number | null; total: number; label?: string; beat?: boolean }) {
   const left = useRemaining(endsAt);
+  const sec = Math.ceil(left / 1000);
+  // Son 5 sn: kalp atışı (yalnızca süresi işleyen kişide)
+  useEffect(() => {
+    if (beat && endsAt && sec > 0 && sec <= 5) play('heartbeat');
+  }, [sec, beat, endsAt]);
   if (!endsAt) return null;
   const frac = Math.max(0, Math.min(1, left / total));
   const secs = Math.ceil(left / 1000);

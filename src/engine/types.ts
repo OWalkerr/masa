@@ -109,6 +109,7 @@ export interface TurnResult {
   winner?: string; // düello kazananı
   secret?: number; // ayna: hedefin seçimi
   correct?: string[]; // ayna/itiraf: bilenler
+  mg?: { kind: string; times: Record<string, number | null>; early: string[]; losers: string[] };
   author?: string; // itiraf: spot ışığındaki cevabın yazarı (sonuçta açılır)
   spotlight?: string; // itiraf: spot ışığındaki cevap
   effect?: string; // kural/lanet/olay masaya kondu (etki id)
@@ -164,6 +165,19 @@ export interface Turn {
   blind: boolean; // Hayalet Saati: okuyucu kartları kapalı görür
   options: string[]; // ayna seçenekleri (etiketler ya da oyuncu id'leri)
   optionPlayers: boolean;
+  mg: MinigameState | null;
+}
+
+// Mini oyun durumu. Gizli anlar (patlama, dolma) açılana kadar istemciye gitmez.
+export interface MinigameState {
+  kind: 'bomb' | 'reflex' | 'countdown';
+  startAt: number;
+  stage: 'wait' | 'live' | 'done';
+  bombs: { holder: string; explodeAt: number; exploded: boolean }[];
+  throws: { bomb: number; from: string; to: string; at: number }[];
+  fillAt: number; // refleks: bardağın dolduğu an
+  signaled: boolean; // refleks: "doldu" işareti gönderildi
+  taps: Record<string, number>; // gecikmesi düzeltilmiş dokunma anı (sunucu saati)
 }
 
 export interface CatchResult extends CatchVote {
@@ -253,6 +267,7 @@ export type ClientIntent =
   | { t: 'decree'; text: string }
   | { t: 'pass' }
   | { t: 'veto' }
+  | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }
   | { t: 'restart' };
 
 export type SystemIntent =
@@ -310,6 +325,15 @@ export const DUR = {
   mirror: 30_000,
   catchVote: 5000,
   catchCooldown: 8000,
+  mgIntro: 2500, // mini oyun başlamadan önce hazırlık
+  bombMin: 8000,
+  bombMax: 20_000,
+  reflexMin: 2000,
+  reflexMax: 6000,
+  reflexWindow: 4000, // bardak dolduktan sonra dokunma süresi
+  countdownTarget: 10_000,
+  countdownMax: 20_000,
+  netGrace: 400, // ağ gecikmesi payı
 } as const;
 export const MAX_RULES = 3;
 export const MAX_CONFESSION = 80;

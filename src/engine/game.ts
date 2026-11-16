@@ -5,12 +5,13 @@ import type { Card } from './cards';
 import {
   consents, dealHand, hasToken, isSensitive, modePool, needsPick, neighbor, pickInherit, targetPool, weightedRandomPlayer,
 } from './deck';
+import { currentHolder, minigameInput, scoreMinigame, startMinigame, tickMinigame } from './minigames';
 import { applyPayment, emptyStats, revertPayment } from './penalties';
 import { activePlayers, getPlayer } from './state';
 import { getCard, TAG } from './systemCards';
 import {
   DUR, IntentError, MAX_CONFESSION, MAX_POCKET, MAX_RULES, ROUNDS_PER_ACT,
-  type ActiveEffect, type Ctx, type Fx, type GameState, type InputValue, type Phase, type PowerKind, type TokenKey,
+  type ActiveEffect, type Ctx, type MinigameState, type Fx, type GameState, type InputValue, type Phase, type PowerKind, type TokenKey,
   type Turn, type TurnResult,
 } from './types';
 
@@ -55,7 +56,7 @@ function newTurn(readerId: string, over: Partial<Turn> = {}): Turn {
     readerId, hand: [], inherited: null, cardId: null, step: 'choose', targets: [], tokens: {}, inputs: {},
     judgedPayers: null, result: null, pickedTop: false, rest: [], swapped: false, sabotagedBy: null, passed: [],
     vetoed: false, stage: 'main', texts: {}, spotlightAuthor: null, shuffled: [], system: false, blind: false,
-    options: [], optionPlayers: false, ...over,
+    options: [], optionPlayers: false, mg: null, ...over,
   };
 }
 
@@ -248,7 +249,7 @@ function ensureAndBump(s: GameState, id: string) {
 
 // --- eylem fazı ---
 
-export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'none';
+export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'minigame' | 'none';
 
 export function actionKind(c: Card): ActionKind {
   switch (c.type) {
@@ -258,6 +259,8 @@ export function actionKind(c: Card): ActionKind {
       return 'none';
     case 'mirror':
       return 'choice';
+    case 'minigame':
+      return 'minigame';
     case 'confession':
       return 'text';
     case 'duel':
@@ -308,6 +311,13 @@ function beginAction(s: GameState, ctx: Ctx, fx: Fx[]) {
   const c = card(ctx, t.cardId!);
   const k = actionKind(c);
   if (k === 'none') return resolveTurn(s, ctx, fx);
+  if (k === 'minigame') {
+    const { state, nextAt } = startMinigame(s, ctx, c);
+    t.mg = state;
+    setPhase(s, ctx, 'action', nextAt - ctx.now);
+    fx.push({ kind: 'mgStart', payload: { kind: state.kind } });
+    return;
+  }
   if (k === 'text') t.stage = 'write';
   const dur =
     k === 'votePlayer' ? DUR.vote : k === 'yesNo' ? DUR.yesNo : k === 'choice' ? DUR.mirror : k === 'text' ? DUR.write : DUR.judge + (c.timer ?? 0) * 1000;
@@ -470,6 +480,10 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
       result.tally = tally();
       // Çoğunluk bilirse yazar öder, bilemezse yanlış tahmin edenler öder
       if (voters.length > 0) payers = correct.length * 2 > voters.length ? [author] : voters.filter((id) => !correct.includes(id));
+      break;
+    }
+    case 'minigame': {
+      if (t.mg) payers = scoreMinigame(s, t.mg, result);
       break;
     }
     case 'golden': {
@@ -948,10 +962,16 @@ export function onPhaseTimeout(s: GameState, ctx: Ctx, fx: Fx[]) {
     case 'reveal':
       beginAction(s, ctx, fx);
       break;
-    case 'action':
-      if (g.turn!.stage === 'write') toGuessStage(s, ctx, fx);
+    case 'action': {
+      const t = g.turn!;
+      if (t.mg) {
+        const next = tickMinigame(s, ctx, fx);
+        if (next === null) resolveTurn(s, ctx, fx);
+        else setPhase(s, ctx, 'action', Math.max(0, next - ctx.now));
+      } else if (t.stage === 'write') toGuessStage(s, ctx, fx);
       else resolveTurn(s, ctx, fx);
       break;
+    }
     case 'resolve':
     case 'tableEvent':
       nextTurn(s, ctx, fx);
@@ -975,11 +995,31 @@ export function pendingActors(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[]
   if (g?.catchVote) for (const id of catchVoters(s)) if (g.catchVote.votes[id] === undefined) out.add(id);
   if (!t) return [...out];
   if (s.phase === 'choose' && !t.system) out.add(t.readerId);
-  if (s.phase === 'action') {
+  if (s.phase === 'action' && t.mg) {
+    for (const id of mgActors(s, t.mg)) out.add(id);
+  } else if (s.phase === 'action') {
     for (const id of expectedInputs(s, ctx)) {
       const done = t.stage === 'write' ? t.texts[id] !== undefined : !!t.inputs[id];
       if (!done) out.add(id);
     }
   }
   return [...out];
+}
+
+// Mini oyunda şu an hamle yapabilecek oyuncular (botlar için)
+export function mgActors(s: GameState, mg: MinigameState): string[] {
+  if (mg.stage !== 'live') return [];
+  const t = s.game!.turn!;
+  const active = activePlayers(s).map((p) => p.id).filter((id) => !t.passed.includes(id));
+  if (mg.kind === 'bomb') return mg.bombs.map((b, i) => (b.exploded ? null : currentHolder(mg, i))).filter((x): x is string => !!x && active.includes(x));
+  if (mg.kind === 'reflex' && !mg.signaled) return [];
+  return active.filter((id) => mg.taps[id] === undefined);
+}
+
+export function playMinigame(s: GameState, ctx: Ctx, fx: Fx[], by: string, action: 'tap' | 'throw', bomb?: number, at?: number, lat?: number) {
+  const allIn = minigameInput(s, ctx, fx, by, action, bomb, at, lat);
+  if (allIn) {
+    s.game!.turn!.mg!.stage = 'done';
+    resolveTurn(s, ctx, fx);
+  }
 }

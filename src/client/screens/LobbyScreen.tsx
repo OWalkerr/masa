@@ -58,7 +58,7 @@ export function LobbyScreen({ view }: { view: View }) {
         <InkButton variant="secondary" className="flex-1" onClick={share} seed={31}>
           Linki paylaş
         </InkButton>
-        <InkButton variant="secondary" className="w-[64px] px-0" onClick={() => navigate(`/tv/${view.code}`)} aria-label="Ana Ekran modunu aç" seed={32}>
+        <InkButton variant="secondary" className="w-[64px] px-0" onClick={() => window.open(`/tv/${view.code}`, '_blank')} aria-label="Ana Ekran modunu yeni sekmede aç" seed={32}>
           TV
         </InkButton>
       </div>

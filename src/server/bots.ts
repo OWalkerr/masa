@@ -2,6 +2,7 @@
 // Saf fonksiyonlardır; motor yalnızca "botun sırası geldi" sinyali verir (1–4 sn gecikmeyle).
 import { needsPick, targetPool } from '../engine/deck';
 import { actionKind, catchVoters, expectedInputs } from '../engine/game';
+import { currentHolder } from '../engine/minigames';
 import { BOT_NAMES } from '../engine/names';
 import type { Rng } from '../engine/rng';
 import { getCard } from '../engine/systemCards';
@@ -58,6 +59,14 @@ export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalo
     return { t: 'pickTarget', playerIds: pool.slice(0, needsPick(card)) };
   }
   if (s.phase !== 'action' || !t.cardId) return null;
+  if (t.mg) {
+    if (t.mg.stage !== 'live') return null;
+    if (t.mg.kind === 'bomb') {
+      const i = t.mg.bombs.findIndex((b, k) => !b.exploded && currentHolder(t.mg!, k) === botId);
+      return i >= 0 ? { t: 'minigameInput', action: 'throw', bomb: i } : null;
+    }
+    return t.mg.taps[botId] === undefined ? { t: 'minigameInput', action: 'tap' } : null;
+  }
   if (!expectedInputs(s, { catalog }).includes(botId)) return null;
   const card = getCard(catalog, t.cardId)!;
   const k = actionKind(card);

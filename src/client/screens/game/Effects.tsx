@@ -154,7 +154,7 @@ export function CatchOverlay({ view }: { view: View }) {
     if (cv) buzz([80, 40, 80]);
   }, [cv?.accused, cv]);
   if (!cv) return null;
-  const me = view.you!.id;
+  const me = view.you?.id ?? '';
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
   const accused = view.players.find((p) => p.id === cv.accused);
   const effect = g.effects.find((e) => e.id === cv.effectId);

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { makeRng } from '../../engine/rng';
 import { spiral } from './ink/wobble';
+import { keyItem, useManifest } from '../art/manifest';
 import { useReducedMotion } from '../fx/motionPref';
 
 interface House {
@@ -55,8 +56,10 @@ function makeHouses(seed: number, baseY: number, count: number, width: number, m
   return houses;
 }
 
-export function NightScene({ seed = 7 }: { seed?: number }) {
+export function NightScene({ seed = 7, tv = false }: { seed?: number; tv?: boolean }) {
   const reduce = useReducedMotion();
+  const m = useManifest();
+  const bg = keyItem(m, tv ? 'bg-tv' : 'bg-phone') ?? keyItem(m, tv ? 'bg-phone' : 'bg-tv');
   const ref = useRef<HTMLDivElement>(null);
   const W = 1200;
   const far = useMemo(() => makeHouses(seed, 560, 18, W, 120, 260), [seed]);
@@ -111,7 +114,10 @@ export function NightScene({ seed = 7 }: { seed?: number }) {
 
   return (
     <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-ink-950">
-      <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${W} 700`} preserveAspectRatio="xMidYMax slice">
+      {bg && (
+        <img src={bg.w800} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover" style={layer(10)} />
+      )}
+      <svg className={`absolute inset-0 h-full w-full ${bg ? 'hidden' : ''}`} viewBox={`0 0 ${W} 700`} preserveAspectRatio="xMidYMax slice">
         <defs>
           <radialGradient id="ns-sky" cx="70%" cy="20%" r="80%">
             <stop offset="0%" stopColor="#24202B" />

@@ -47,6 +47,21 @@ export function ResolvePanel({ view }: { view: View }) {
         </p>
       )}
       {r.note && <p className="ink-panel p-3 text-center text-[17px] italic">{r.note}</p>}
+      {r.mg && r.mg.kind !== 'bomb' && (
+        <ul className="ink-panel flex flex-col gap-1 p-3">
+          {Object.entries(r.mg.times)
+            .sort((a, b) => (r.mg!.kind === 'countdown' ? Math.abs((a[1] ?? 1e9) - 10000) - Math.abs((b[1] ?? 1e9) - 10000) : (a[1] ?? 1e9) - (b[1] ?? 1e9)))
+            .map(([id, ms]) => (
+              <li key={id} className={`flex justify-between text-[17px] ${r.mg!.losers.includes(id) ? 'text-[#FF8A7A]' : ''}`}>
+                <span>{name(id)}</span>
+                <span className="tabular-nums">
+                  {ms === null ? 'dokunmadı' : r.mg!.kind === 'countdown' ? `${(ms / 1000).toFixed(2)} sn` : ms < 0 ? 'erken!' : `${ms} ms`}
+                </span>
+              </li>
+            ))}
+        </ul>
+      )}
+      {r.mg?.kind === 'bomb' && <p className="ink-panel p-3 text-center text-[18px]">Bomba {r.mg.losers.map(name).join(' ve ')} elinde patladı.</p>}
       {r.winner && <p className="ink-panel p-3 text-center text-[18px]">Düelloyu <b>{name(r.winner)}</b> kazandı.</p>}
       {r.secret !== undefined && (
         <p className="ink-panel p-3 text-center text-[18px]">

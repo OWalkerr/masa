@@ -29,6 +29,11 @@ for (const p of pages) await p.getByText('Perde 1').first().waitFor({ timeout: 1
 assert(true, `masa ${code}: Kaos + Kısa başladı`);
 
 const seen = new Set();
+// Ana Ekran (izleyici) — koltuğa oturmaz
+const tvCtx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+const tv = await tvCtx.newPage();
+tv.on('pageerror', (e) => errors.push(`TV: ${e.message}`));
+await tv.goto(`${BASE}/tv/${code}`);
 const shot = async (p, key) => {
   if (seen.has(key)) return;
   seen.add(key);
@@ -41,6 +46,7 @@ const deadline = Date.now() + 12 * 60_000;
 async function act(p, i) {
   const t = await p.locator('body').innerText().catch(() => '');
   if (t.includes('Yakalandı!')) {
+    caught = true;
     await shot(p, 'catchvote');
     const b = p.getByRole('button', { name: 'Bozdu' });
     if (await b.isVisible().catch(() => false)) await b.click().catch(() => {});
@@ -50,23 +56,55 @@ async function act(p, i) {
   if (t.includes('Lanet tuttu')) await shot(p, 'curse');
   if (t.includes('Masa Olayı')) await shot(p, 'tableEvent');
   if (t.includes('Son Kadeh') || t.includes('Son Çay')) await shot(p, 'finale');
-  // bir kez Yakala!
+  // bir kez Yakala! (başka biri yakalarsa da sayılır)
   if (!caught && i === 3) {
     const y = p.getByRole('button', { name: /Yakala! Kuralı/ });
     if (await y.isVisible().catch(() => false)) {
-      await y.click();
-      const rule = p.locator('[role=dialog] button').first();
-      await rule.click().catch(() => {});
-      const suspect = p.locator('[role=dialog] .grid button').first();
-      if (await suspect.isVisible().catch(() => false)) {
-        await suspect.click();
+      await y.click().catch(() => {});
+      const dialog = p.getByRole('dialog', { name: 'Yakala' });
+      if (await dialog.getByText('Hangi kural bozuldu?').isVisible().catch(() => false)) {
+        // lanet değil, kural seç (herkes suçlanabilir)
+        const rules = dialog.locator('button', { hasText: /^Kural|^Ferman/ });
+        if (await rules.count()) await rules.first().click().catch(() => {});
+        else await dialog.locator('button').first().click().catch(() => {});
+      }
+      const suspect = dialog.locator('.grid button').first();
+      if (await suspect.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await suspect.click().catch(() => {});
         caught = true;
-      } else await p.getByRole('button', { name: 'Vazgeç' }).click().catch(() => {});
+      } else await dialog.getByRole('button', { name: 'Vazgeç' }).click().catch(() => {});
       return;
     }
   }
+  // mini oyunlar
+  const bomb = p.getByRole('button', { name: 'Bomba sende! At!' });
+  if (await bomb.isVisible().catch(() => false)) {
+    await shot(p, 'bomb');
+    await p.waitForTimeout(300 + i * 200);
+    await bomb.click().catch(() => {});
+    return;
+  }
+  if (t.includes('ŞİMDİ!')) {
+    await shot(p, 'reflex');
+    await p.waitForTimeout(150 * i);
+    await p.getByRole('button', { name: /Bardak doldu/ }).click().catch(() => {});
+    return;
+  }
+  if (t.includes('Say… ve dokun')) {
+    await shot(p, 'countdown');
+    // döngüyü bloke etmeden, bir süre sonra dokun
+    if (!p.__countdown) {
+      p.__countdown = true;
+      setTimeout(() => {
+        p.getByRole('button', { name: /İçinden 10 say/ }).click().catch(() => {});
+        p.__countdown = false;
+      }, 6000 + i * 800);
+    }
+    return;
+  }
+  if (t.includes('erken!') || t.includes(' ms') || t.includes('elinde patladı')) await shot(p, 'mgResult');
   if (t.includes('Sıra sende. Bir kart seç') || t.includes('Hayalet Saati')) {
-    const b = p.getByRole('button', { name: 'Oyna' });
+    const b = p.getByRole('button', { name: 'Oyna', exact: true });
     if (await b.isEnabled().catch(() => false)) { await p.waitForTimeout(300); await b.click().catch(() => {}); }
   } else if (t.includes('Kart kime gidiyor') || t.includes('iki kişiyi seç')) {
     const n = t.includes('iki kişiyi') ? 2 : 1;
@@ -109,6 +147,15 @@ async function act(p, i) {
 while (Date.now() < deadline) {
   if (await pages[0].getByText('Gecenin Özeti').isVisible().catch(() => false)) break;
   await Promise.all(pages.map((p, i) => act(p, i)));
+  if (!seen.has('tv-card') && (await tv.getByRole('group', { name: /kartı$/ }).isVisible().catch(() => false))) {
+    seen.add('tv-card');
+    if (SHOTS) await tv.screenshot({ path: `${SHOTS}/m3-tv.png` });
+  }
+  if (!seen.has('finale') && (await tv.getByText(/Son Kadeh|Son Çay/).first().isVisible().catch(() => false))) seen.add('finale');
+  if (!seen.has('tv-mg') && (await tv.getByText(/elinde!|ŞİMDİ|İçinden say/).first().isVisible().catch(() => false))) {
+    seen.add('tv-mg');
+    if (SHOTS) await tv.screenshot({ path: `${SHOTS}/m3-tv-mg.png` });
+  }
   await pages[0].waitForTimeout(250);
 }
 for (const p of pages) await p.getByText('Gecenin Özeti').waitFor({ timeout: 20000 });
@@ -118,6 +165,10 @@ assert(seen.has('rule') || seen.has('curse'), 'kural ya da lanet masaya kondu');
 assert(seen.has('tableEvent'), 'masa olayı ya da Su Molası geldi');
 assert(seen.has('finale'), 'final kartı geldi');
 assert(caught && seen.has('catchvote'), 'Yakala! oylaması tüm ekranlarda açıldı');
+assert(seen.has('bomb') || seen.has('reflex') || seen.has('countdown'), 'mini oyun oynandı');
+assert(seen.has('tv-card'), 'Ana Ekran kartı gösterdi');
+await tv.getByText('Gecenin Özeti').waitFor({ timeout: 15000 });
+assert(true, 'Ana Ekran özete ulaştı');
 assert(errors.length === 0, `sayfa hatası yok ${errors.join(' | ')}`);
 await browser.close();
-console.log('M2 uçtan uca: hepsi geçti');
+console.log('M2+M3 uçtan uca: hepsi geçti');

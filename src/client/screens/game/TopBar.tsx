@@ -5,6 +5,7 @@ import { Avatar } from '../../components/Avatar';
 import { Toggle } from '../../components/Segmented';
 import { getReduceMotion, setReduceMotion } from '../../fx/motionPref';
 import { navigate } from '../../router';
+import { useMuted } from '../../audio/sound';
 import { useRoom } from '../../store/room';
 import { EffectSigns } from './Effects';
 import { Pocket } from './Pocket';
@@ -59,6 +60,7 @@ export function TopBar({ view }: { view: View }) {
           })}
         </ol>
         <Pocket view={view} />
+        <MuteButton />
         <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menü" className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
           <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
             <path d="M4,6 h14 M4,11 h14 M4,16 h14" stroke="var(--bone-100)" strokeWidth="2.4" strokeLinecap="round" />
@@ -74,9 +76,11 @@ export function TopBar({ view }: { view: View }) {
 function Menu({ view, onClose }: { view: View; onClose: () => void }) {
   const send = useRoom((s) => s.send);
   const [rm, setRm] = useState(getReduceMotion);
+  const [muted, setMuted] = useMuted();
   const you = view.you!;
   return (
     <div className="ink-panel mt-2 flex flex-col gap-1 p-4">
+      <Toggle label="Sessiz" checked={muted} onChange={setMuted} />
       <Toggle label="Hareketi azalt" checked={rm} onChange={(v) => { setReduceMotion(v); setRm(v); }} />
       {view.settings.drinking && !you.sober && (
         <button type="button" className="min-h-[56px] rounded-[12px] bg-ink-950 px-4 text-left shadow-[inset_0_0_0_1px_var(--ash-500)]" onClick={() => { send({ t: 'quitDrinking' }); onClose(); }}>
@@ -88,5 +92,17 @@ function Menu({ view, onClose }: { view: View; onClose: () => void }) {
         Masadan kalk
       </button>
     </div>
+  );
+}
+
+export function MuteButton() {
+  const [muted, setMuted] = useMuted();
+  return (
+    <button type="button" onClick={() => setMuted(!muted)} aria-pressed={muted} aria-label={muted ? 'Sesi aç' : 'Sessiz'} className="flex h-[48px] w-[44px] items-center justify-center rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
+        <path d="M3,8 h4 l5,-4 v14 l-5,-4 h-4 Z" fill="var(--bone-100)" />
+        {muted ? <path d="M15,8 l5,6 M20,8 l-5,6" stroke="var(--bone-100)" strokeWidth="2" /> : <path d="M15,7 q3,4 0,8 M17,4 q6,7 0,14" stroke="var(--bone-100)" strokeWidth="1.8" fill="none" />}
+      </svg>
+    </button>
   );
 }

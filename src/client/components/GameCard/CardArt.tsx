@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import type { Card } from '../../../engine/cards';
 import { spiral } from '../ink/wobble';
+import { artFor, useManifest } from '../../art/manifest';
 import { hashId } from './labels';
 
 const B = 'var(--bone-100)';
@@ -113,7 +114,23 @@ function Fallback({ v }: { v: number }) {
   );
 }
 
-export function CardArt({ card }: { card: Pick<Card, 'id' | 'type'> }) {
+export function CardArt({ card, width = 300 }: { card: Pick<Card, 'id' | 'type' | 'art'>; width?: number }) {
+  const m = useManifest();
+  const art = artFor(m, card);
+  if (art) {
+    // 4:3 görsel kemer maskesine object-fit: cover ile yerleşir, odak ortada
+    return (
+      <img
+        src={art.w400}
+        srcSet={`${art.w400} 400w, ${art.w800} 800w`}
+        sizes={`${Math.round(width)}px`}
+        alt=""
+        decoding="async"
+        className="h-full w-full object-cover object-center"
+        draggable={false}
+      />
+    );
+  }
   const v = hashId(card.id) % 2;
   const scene = SCENES[card.type];
   return (

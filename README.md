@@ -17,3 +17,13 @@ Telefonlardan oynanan, gotik masal görselli parti kart oyunu. Tasarım: [`docs/
 
 - `/` giriş · `/m/KOD` masa · `/tv/KOD` Ana Ekran · `/dev/table` tek sekmede 4 telefon
 - `/?bots=N` ile kurulan masaya ilk oyuncu oturunca N bot gelir.
+
+## Görseller
+
+1. PNG'leri `assets-raw/` altına koy (adlar için `assets-raw/README.md`).
+2. `npm run convert:art` → `public/art/*.webp` + `public/art/manifest.json`.
+3. Commit + push. Görseli olmayan her şey SVG yer tutucuda kalır.
+
+## Ana Ekran
+
+Lobideki **TV** düğmesi `/tv/KOD` adresini yeni sekmede açar (laptop/TV). Ana Ekran koltuğa oturmaz; müzik orada çalar.

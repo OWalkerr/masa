@@ -1,7 +1,7 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
 import {
   answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
-  submitInput, useVeto, usePass, usePower, voteCatch,
+  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame,
 } from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
@@ -189,6 +189,9 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
     case 'veto':
       useVeto(s, ctx, fx, intent.by);
       break;
+    case 'minigameInput':
+      playMinigame(s, ctx, fx, intent.by, intent.action, intent.bomb, intent.at, intent.lat);
+      break;
 
     case 'restart': {
       requireHost(s, intent.by);
@@ -245,14 +248,27 @@ function scheduleBots(s: GameState, ctx: Ctx) {
   s.timers = s.timers.filter((t) => t.kind !== 'bot' || (t.playerId && pending.has(t.playerId) && (t.payload as { k?: string })?.k === botKey(s)));
   for (const id of pending) {
     if (s.timers.some((t) => t.kind === 'bot' && t.playerId === id)) continue;
-    s.timers.push({ id: `bot-${s.seq++}`, kind: 'bot', at: ctx.now + 1000 + ctx.rng.int(3000), playerId: id, payload: { k: botKey(s) } });
+    s.timers.push({ id: `bot-${s.seq++}`, kind: 'bot', at: botAt(s, ctx), playerId: id, payload: { k: botKey(s) } });
   }
+}
+
+// Botun ne zaman hamle yapacağı: normalde 1–4 sn; mini oyunlarda oyuna uygun
+function botAt(s: GameState, ctx: Ctx): number {
+  const mg = s.game?.turn?.mg;
+  if (mg && s.phase === 'action' && mg.stage === 'live') {
+    if (mg.kind === 'bomb') return ctx.now + 600 + ctx.rng.int(1900);
+    if (mg.kind === 'reflex') return ctx.now + 250 + ctx.rng.int(650);
+    return Math.max(ctx.now, mg.startAt + 8500 + ctx.rng.int(3000));
+  }
+  return ctx.now + 1000 + ctx.rng.int(3000);
 }
 
 // Botun hangi adım için zamanlandığı (adım değişince zamanlayıcı yenilenir)
 function botKey(s: GameState): string {
   const t = s.game?.turn;
-  return `${s.phase}:${s.game?.turnNo ?? -1}:${t?.step ?? ''}:${t?.stage ?? ''}:${t?.cardId ?? ''}:${s.game?.catchVote?.id ?? ''}`;
+  const mg = t?.mg;
+  const mgKey = mg ? `${mg.stage}:${mg.signaled}:${mg.throws.length}` : '';
+  return `${s.phase}:${s.game?.turnNo ?? -1}:${t?.step ?? ''}:${t?.stage ?? ''}:${t?.cardId ?? ''}:${s.game?.catchVote?.id ?? ''}:${mgKey}`;
 }
 
 function clampAvatar(a: number): number {

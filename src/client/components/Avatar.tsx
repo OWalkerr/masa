@@ -1,5 +1,6 @@
 // 12 gotik masal avatarı (mürekkep çizgi, iri oyuk gözler, dikişler). Emoji yok.
 import type { ReactNode } from 'react';
+import { keyItem, useManifest } from '../art/manifest';
 
 const S = 'var(--bone-100)';
 const D = 'var(--ink-950)';
@@ -146,6 +147,20 @@ interface Props {
 
 export function Avatar({ index, size = 56, dim = false, className = '', label }: Props) {
   const i = ((index % 12) + 12) % 12;
+  const m = useManifest();
+  const img = keyItem(m, m?.avatars[String(i)]);
+  if (img) {
+    return (
+      <img
+        src={img.w400}
+        width={size}
+        height={size}
+        alt={label ?? AVATAR_NAMES[i]}
+        className={`rounded-full object-cover shadow-[0_0_0_2px_var(--ash-500)] ${className} ${dim ? 'opacity-40 grayscale' : ''}`}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   return (
     <svg
       viewBox="0 0 100 100"

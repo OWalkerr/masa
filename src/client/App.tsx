@@ -1,10 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { matchRoute, usePath } from './router';
-import { DevTable } from './screens/DevTable';
+
+// Ana Ekran ve geliştirici masası ayrı paket: telefonlar indirmez
+const TvScreen = lazy(() => import('./screens/TvScreen').then((m) => ({ default: m.TvScreen })));
+const DevTable = lazy(() => import('./screens/DevTable').then((m) => ({ default: m.DevTable })));
 import { Home } from './screens/Home';
 import { NotFound } from './screens/NotFound';
 import { RoomScreen } from './screens/RoomScreen';
-import { TvScreen } from './screens/TvScreen';
 import { Toasts } from './components/Toasts';
+import { ParticleLayer } from './fx/ParticleLayer';
 
 export function App() {
   const route = matchRoute(usePath());
@@ -12,9 +16,12 @@ export function App() {
     <>
       {route.name === 'home' && <Home />}
       {route.name === 'room' && <RoomScreen code={route.code} />}
-      {route.name === 'tv' && <TvScreen code={route.code} />}
-      {route.name === 'devTable' && <DevTable />}
+      <Suspense fallback={null}>
+        {route.name === 'tv' && <TvScreen code={route.code} />}
+        {route.name === 'devTable' && <DevTable />}
+      </Suspense>
       {route.name === 'notFound' && <NotFound />}
+      <ParticleLayer />
       <Toasts />
     </>
   );

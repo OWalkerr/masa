@@ -49,3 +49,14 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
 31. **Masa olayları okuyucu turu sayılmaz:** perde ilerlemesini ve sırayı değiştirmez. Her 8 turda bir Su Molası gelir (1. perde dahil). Aynı tura masa olayı da denk gelirse Su Molası öncelikli.
 32. **Final kartı sistem kartıdır** (Son Kadeh / Son Çay). Kapanış sözünü en çok cesaret puanı olan söyler.
 33. **Güç kartı kazanımı:** her 3 cesarette rastgele bir güç kartı. Cep doluysa o hak yanar, birikmez. Altın kart ve olaylarla gelen güçler cep doluysa en eskisinin yerine geçer.
+
+## 2026-11-16 — M3
+
+34. **Gecikme düzeltmesi:** istemci 4 sn'de bir ölçtüğü gidiş-dönüş süresini (RTT, yumuşatılmış) ping ile bildirir. Sunucu bunu sokette saklar ve mini oyun girdisine varış anını ve tek yön gecikmeyi (`lat = RTT/2`, en fazla 400 ms) kendisi ekler; istemci kendi saatini bildiremez. Dokunma anı `varış − lat`. Refleks ve geri sayımda işaretin istemciye varışı da `lat` sürdüğü için tepki `varış − 2·lat − işaret` olarak hesaplanır.
+35. **Bomba:** patlama anı gizlidir (zamanlayıcı bitişi de istemciye gönderilmez). Patlamadan sonra 400 ms ağ payı beklenir. Bu payda gelen ama patlamadan önce yapılmış atışlar geçerlidir, sonradan yapılanlar reddedilir. `cift` etiketi iki bomba demektir (en az 3 oyuncu). Dokunan bombayı rastgele birine atar; elinde başka bomba olmayan biri tercih edilir.
+36. **Refleks:** dolma anından önce dokunan "erken" sayılır ve öder; en geç dokunan da öder. Hiç dokunmayan en geç sayılır. Dolma işaretinden sonra 4 sn süre var.
+37. **Geri sayım:** başlangıç işaretinden sonra 10 saniyeye en uzak kalan öder; 20 sn içinde dokunmayan en uzak sayılır.
+38. **Sesler tamamen tarayıcıda sentezlenir** (dışarıdan ses dosyası yok, lisans sorunu yok). İlk dokunuşta OfflineAudioContext ile çizilip WAV'a çevrilir ve Howler ile çalınır. Ortam müziği (müzik kutusu + akordeon valsi, re minör, yaklaşık 20 sn'lik döngü) yalnızca Ana Ekran'da ve host telefonunda çalar. Sessiz tercihi cihazda saklanır.
+39. **Partikül tuvali içeriğin arkasında, arka planın önündedir** (z-1). Böylece efektler kart metin panelinin üstüne çıkmaz. En fazla 150 partikül; sekme gizliyken ve "Hareketi azalt" açıkken çalışmaz.
+40. **Ana Ekran izleyicidir:** hiçbir koltuğa oturmaz, kayıtlı koltuğa da dönmez (host aynı tarayıcıda TV'yi açsa bile). TV ve dev masası ayrı paketlerdir (lazy), telefonlar bunları indirmez.
+41. **Görsel boru hattı:** `npm run convert:art` komutu `assets-raw/` içindekileri 800 ve 400 px WebP'ye çevirir; her biri 120 KB'yi geçmeyene kadar kalite düşürülür. `public/art/manifest.json` güncellenir. İstemci manifest'i bir kez çeker; görseli olmayan her şey SVG yer tutucuda kalır. `tik-sheet.png` için kare düzeni bilinmediğinden TIK şimdilik SVG; sprite düzeni belli olunca bağlanacak.

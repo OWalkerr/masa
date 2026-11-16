@@ -6,6 +6,7 @@ import { Avatar } from '../../components/Avatar';
 import { InkButton } from '../../components/InkButton';
 import { useRoom } from '../../store/room';
 import { CandleTimer } from './CandleTimer';
+import { MinigamePanel } from './MinigamePanel';
 
 export function ActionPanel({ view }: { view: View }) {
   const g = view.game!;
@@ -19,6 +20,15 @@ export function ActionPanel({ view }: { view: View }) {
   const waiting = g.expected.filter((id) => !g.submitted.includes(id)).length;
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
   const passed = g.passed.includes(me);
+
+  if (card.type === 'minigame' && g.mg) {
+    return (
+      <div className="flex w-full max-w-sm flex-col items-center gap-3">
+        {passed ? <Info>Pas geçtin. Bu oyunda bedel yok.</Info> : <MinigamePanel view={view} />}
+        {g.mg.stage === 'wait' && <PassVeto view={view} />}
+      </div>
+    );
+  }
 
   let body;
   if (passed) {
@@ -76,7 +86,7 @@ export function ActionPanel({ view }: { view: View }) {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-3">
-      <CandleTimer endsAt={g.phaseEndsAt} total={total} />
+      <CandleTimer endsAt={g.phaseEndsAt} total={total} beat={g.expected.includes(me) && !g.submitted.includes(me)} />
       {card.timer && isReader && (g.input === 'judge' || card.type === 'duel') && <DareTimer seconds={card.timer} />}
       {body}
       <PassVeto view={view} />

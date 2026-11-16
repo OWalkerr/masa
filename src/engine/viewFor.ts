@@ -3,6 +3,7 @@ import type { Card } from './cards';
 import { actionKind, expectedInputs, type ActionKind } from './game';
 import { isSober } from './penalties';
 import { catchVoters, nextReaderId } from './game';
+import { currentHolder } from './minigames';
 import { getCard } from './systemCards';
 import type { CatchResult, Catalog, GameState, InputValue, Phase, PowerKind, Settings, TokenKey, TurnLog, TurnResult } from './types';
 
@@ -58,6 +59,16 @@ export interface CatchVoteView {
   myVote: boolean | null;
 }
 
+export interface MinigameView {
+  kind: 'bomb' | 'reflex' | 'countdown';
+  stage: 'wait' | 'live' | 'done';
+  startAt: number;
+  holders: { holder: string; exploded: boolean }[]; // bomba
+  filled: boolean; // refleks: bardak doldu mu
+  tapped: string[];
+  myTapped: boolean;
+}
+
 export interface GameView {
   act: 1 | 2 | 3;
   actTurn: number;
@@ -93,6 +104,7 @@ export interface GameView {
   effects: EffectView[];
   catchVote: CatchVoteView | null;
   lastCatch: (Omit<CatchResult, 'votes'>) | null;
+  mg: MinigameView | null;
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
 }
@@ -181,7 +193,8 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
     turnNo: g.turnNo,
     readerId: t && !t.system ? t.readerId : null,
     system: !!t?.system,
-    phaseEndsAt: g.phaseEndsAt,
+    // Mini oyunda zamanlayıcı gizli anı (patlama/dolma) ele verir: gönderilmez
+    phaseEndsAt: t?.mg && t.mg.stage === 'live' && (t.mg.kind === 'bomb' || !t.mg.signaled) ? null : g.phaseEndsAt,
     hand,
     blind: !!t?.blind && isReader,
     handCount: t?.hand.length ?? 0,
@@ -224,6 +237,18 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         }
       : null,
     lastCatch: lc ? (({ votes: _v, ...rest }) => rest)(lc) : null,
+    mg: t?.mg
+      ? {
+          kind: t.mg.kind,
+          stage: t.mg.stage,
+          startAt: t.mg.startAt,
+          // Patlama ve dolma anları gizli; yalnızca kimin elinde olduğu gider
+          holders: t.mg.bombs.map((b, i) => ({ holder: currentHolder(t.mg!, i), exploded: b.exploded })),
+          filled: t.mg.signaled,
+          tapped: Object.keys(t.mg.taps),
+          myTapped: !!me && t.mg.taps[me] !== undefined,
+        }
+      : null,
     restCards: canSabotage && t ? t.rest.map((id) => getCard(catalog, id)!).filter(Boolean) : [],
     log: s.phase === 'summary' ? g.log : [],
   };
