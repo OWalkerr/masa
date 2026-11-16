@@ -1,0 +1,21 @@
+{
+  "deck": "chaos",
+  "cards": [
+    {"id":"chaos-r-01","deck":"chaos","type":"rule","intensity":2,"rarity":"common","target":"all","input":"catch","text":"Kural: Herkes cümlesini \"efendim\" diye bitirir.","penalty":1,"duration":6},
+    {"id":"chaos-r-02","deck":"chaos","type":"rule","intensity":2,"rarity":"common","target":"all","input":"catch","text":"Kural: Kimse \"evet\" ya da \"hayır\" diyemez.","penalty":1,"duration":6},
+    {"id":"chaos-r-03","deck":"chaos","type":"rule","intensity":3,"rarity":"common","target":"all","input":"catch","text":"Kural: Bedel ödemeden önce ayağa kalkıp kendi etrafında dönmek zorunlu.","penalty":1,"duration":6},
+    {"id":"chaos-r-04","deck":"chaos","type":"rule","intensity":3,"rarity":"rare","target":"all","input":"catch","text":"Kural: Okuyucu kartı okurken herkes gözlerini kapatır. Açanı yakala!","penalty":1,"duration":"act"},
+    {"id":"chaos-cu-01","deck":"chaos","type":"curse","intensity":3,"rarity":"common","target":"picked","input":"catch","text":"Lanet: {secilen} 3 tur boyunca korsan gibi konuşur.","penalty":1,"duration":3,"quip":"Arrr. Bu kelime bile beni yordu."},
+    {"id":"chaos-cu-02","deck":"chaos","type":"curse","intensity":2,"rarity":"common","target":"random","input":"catch","text":"Lanet: {rastgele} 3 tur boyunca herkese \"Hocam\" diye hitap eder.","penalty":1,"duration":3},
+    {"id":"chaos-cu-03","deck":"chaos","type":"curse","intensity":3,"rarity":"common","target":"picked","input":"catch","text":"Lanet: {secilen} 3 tur boyunca her cümleye \"Aslında\" diye başlar.","penalty":1,"duration":3},
+    {"id":"chaos-mg-01","deck":"chaos","type":"minigame","intensity":2,"rarity":"common","target":"all","input":"minigame","text":"Bomba! Bu sefer fitil kısa. Elinde patlayan öder.","penalty":2,"minigame":"bomb"},
+    {"id":"chaos-mg-02","deck":"chaos","type":"minigame","intensity":3,"rarity":"rare","target":"all","input":"minigame","text":"Çifte Bomba! İki bomba aynı anda dolaşıyor. Elinde patlayan öder.","penalty":3,"minigame":"bomb"},
+    {"id":"chaos-mg-03","deck":"chaos","type":"minigame","intensity":2,"rarity":"common","target":"all","input":"minigame","text":"Refleks: Ay doğunca dokun. En geç kalan öder.","penalty":1,"minigame":"reflex"},
+    {"id":"chaos-d-01","deck":"chaos","type":"dare","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, 20 saniyede bir sandalyenin aşk hikayesini dram dizisi gibi anlat.","penalty":2,"timer":20},
+    {"id":"chaos-d-02","deck":"chaos","type":"dare","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen} ve {sag}, 15 saniye boyunca dokunmadan kavga eden iki sokak kedisi olun.","penalty":2,"timer":15},
+    {"id":"chaos-d-03","deck":"chaos","type":"dare","intensity":3,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, odadaki bir eşyayla 20 saniyelik dramatik bir veda sahnesi oyna.","penalty":3,"timer":20},
+    {"id":"chaos-du-01","deck":"chaos","type":"duel","intensity":2,"rarity":"common","target":"twoPicked","input":"votePlayer","text":"Düello: {secilen} ve {ikinci} kelime kelime ortak hikaye anlatsın. İlk takılan kaybeder.","penalty":2},
+    {"id":"chaos-du-02","deck":"chaos","type":"duel","intensity":3,"rarity":"common","target":"twoPicked","input":"votePlayer","text":"Düello: {secilen} ve {ikinci} 10 saniyede masaya en çok iltifatı yağdırsın.","penalty":2,"timer":10},
+    {"id":"gold-04","deck":"chaos","type":"golden","intensity":3,"rarity":"legendary","target":"reader","input":"votePlayer","text":"Mezardan Dönüş: Bu gece ödediğin son 3 bedeli seçtiğin birine devret.","penalty":0}
+  ]
+}

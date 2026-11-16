@@ -1,0 +1,18 @@
+{
+  "deck": "homeland",
+  "cards": [
+    {"id":"homeland-q-01","deck":"homeland","type":"question","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, bir düğünde yaptığın en utanç verici şey neydi?","penalty":1},
+    {"id":"homeland-q-02","deck":"homeland","type":"question","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, hayatın dizi olsa adı ne olurdu, jeneriğinde hangi şarkı çalardı?","penalty":1},
+    {"id":"homeland-d-01","deck":"homeland","type":"dare","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, halay başı gibi peçete sallayarak masaya 15 saniyelik bir anons yap.","penalty":1,"timer":15},
+    {"id":"homeland-d-02","deck":"homeland","type":"dare","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, minibüs şoförü gibi masadakileri tek tek durağında indir.","penalty":1},
+    {"id":"homeland-d-03","deck":"homeland","type":"dare","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, teyze moduna gir ve {rastgele} kişisine 20 saniye \"Ne zaman evleniyorsun?\" sohbeti aç.","penalty":2,"timer":20},
+    {"id":"homeland-w-01","deck":"homeland","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bayram ziyaretinde kolonyayı herkesin üstüne döker?","penalty":1},
+    {"id":"homeland-w-02","deck":"homeland","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim nikahta ayakkabı pazarlığını en sıkı yapar?","penalty":1},
+    {"id":"homeland-w-03","deck":"homeland","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir hafta içinde mahallenin çay ocağının müdavimi olur?","penalty":1},
+    {"id":"homeland-n-01","deck":"homeland","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç takı töreninden kaçmak için tuvalete saklanmadım.","penalty":1},
+    {"id":"homeland-n-02","deck":"homeland","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç \"Ben tokum\" deyip sonra masada en çok yiyen olmadım.","penalty":1},
+    {"id":"homeland-r-01","deck":"homeland","type":"rule","intensity":1,"rarity":"common","target":"all","input":"catch","text":"Kural: Herkes konuşmaya \"Valla\" diye başlar.","penalty":1,"duration":6},
+    {"id":"homeland-m-01","deck":"homeland","type":"mirror","intensity":1,"rarity":"common","target":"picked","input":"choice","text":"{secilen} gizlice seçsin: Kahvaltıda olmazsa olmazı ne?","penalty":1,"choices":["Sucuklu yumurta","Simit ve peynir","Menemen","Bal kaymak"]},
+    {"id":"homeland-g-01","deck":"homeland","type":"golden","intensity":2,"rarity":"legendary","target":"reader","input":"catch","text":"Ağa Kartı: Perde sonuna kadar herkes sana \"Ağam\" diye seslenir. Unutanı yakala!","penalty":1,"duration":"act"}
+  ]
+}

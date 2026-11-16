@@ -1,0 +1,49 @@
+{
+  "name": "masa",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run validate:cards && tsc -b && vite build",
+    "preview": "vite preview",
+    "validate:cards": "tsx scripts/validate-cards.ts",
+    "split:seed": "tsx scripts/split-seed.ts",
+    "convert:art": "tsx scripts/convert-art.ts",
+    "test": "vitest run",
+    "test:e2e": "node tests/e2e/m0.e2e.mjs",
+    "typecheck": "tsc -b",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@fontsource/alegreya-sans": "^5.3.0",
+    "@fontsource/grenze-gotisch": "^5.3.0",
+    "howler": "^2.2.4",
+    "motion": "^14.14.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.69.1",
+    "@cloudflare/workers-types": "^5.20261116.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/howler": "^2.2.13",
+    "@types/node": "^26.6.6",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.162.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

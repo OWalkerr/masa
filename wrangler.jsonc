@@ -1,0 +1,17 @@
+{
+  // MASA — tek Worker: API + oda başına Durable Object + statik dosyalar
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "masa",
+  "main": "src/server/worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "RoomDO" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomDO"] }]
+}

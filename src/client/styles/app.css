@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Fontlar: kendi sunucumuzdan, latin + latin-ext (Türkçe harfler için) */
+@import '@fontsource/grenze-gotisch/latin-700.css';
+@import '@fontsource/grenze-gotisch/latin-ext-700.css';
+@import '@fontsource/alegreya-sans/latin-700.css';
+@import '@fontsource/alegreya-sans/latin-ext-700.css';
+@import '@fontsource/alegreya-sans/latin-800.css';
+@import '@fontsource/alegreya-sans/latin-ext-800.css';
+@import '@fontsource/alegreya-sans/latin-700-italic.css';
+@import '@fontsource/alegreya-sans/latin-ext-700-italic.css';
+
+@theme {
+  --color-ink-950: var(--ink-950);
+  --color-ink-800: var(--ink-800);
+  --color-ash-500: var(--ash-500);
+  --color-bone-100: var(--bone-100);
+  --color-bone-dim: var(--bone-dim);
+  --color-parchment-200: var(--parchment-200);
+  --color-gold-400: var(--gold-400);
+  --color-ink-text: var(--ink-text);
+  --color-accent: var(--accent);
+  --font-gothic: var(--font-gothic);
+  --font-body: var(--font-body);
+}
+
+/* Taban kurallar katmanda olmalı; yoksa Tailwind yardımcı sınıflarını ezer */
+@layer base {
+html, body, #root { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ink-950);
+  color: var(--bone-100);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+button, input { font: inherit; color: inherit; }
+::selection { background: var(--accent); color: var(--ink-950); }
+
+.font-gothic { font-family: var(--font-gothic); font-weight: 700; letter-spacing: 0.01em; }
+}
+
+/* Mürekkep paneli: koyu zemin, titrek kenar SVG ile çizilir */
+.ink-panel {
+  background: color-mix(in srgb, var(--ink-800) 92%, transparent);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 1px var(--ash-500), 0 10px 30px rgb(0 0 0 / 0.5);
+}
+
+/* Siyah-beyaz çizgili bant */
+.stripes {
+  background: repeating-linear-gradient(-45deg, var(--bone-100) 0 8px, var(--ink-950) 8px 16px);
+}
+
+/* Odak halkası her zaman görünür */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+
+/* Stop-motion "line boil": 3 path varyantı sırayla görünür (yaklaşık 8 fps) */
+.boil > * { animation: boil 0.375s steps(1, end) infinite; opacity: 0; }
+.boil > *:nth-child(1) { animation-delay: 0s; }
+.boil > *:nth-child(2) { animation-delay: -0.125s; }
+.boil > *:nth-child(3) { animation-delay: -0.25s; }
+@keyframes boil { 0% { opacity: 1; } 33.33% { opacity: 0; } 100% { opacity: 0; } }
+
+/* Mum alevi: 10 fps titreme */
+.flame { transform-origin: 50% 100%; animation: flicker 0.6s steps(6, end) infinite; }
+@keyframes flicker {
+  0% { transform: scale(1, 1) rotate(-2deg); }
+  20% { transform: scale(0.92, 1.08) rotate(3deg); }
+  40% { transform: scale(1.05, 0.95) rotate(-1deg); }
+  60% { transform: scale(0.95, 1.1) rotate(2deg); }
+  80% { transform: scale(1.02, 0.96) rotate(-3deg); }
+  100% { transform: scale(1, 1) rotate(0deg); }
+}
+
+/* Sis katmanları */
+.fog { animation: fog-drift 60s linear infinite; }
+.fog-2 { animation-duration: 95s; animation-direction: reverse; }
+@keyframes fog-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* TIK süzülmesi (stop-motion) */
+.tik-bob { animation: tik-bob 2.4s steps(12, end) infinite; }
+@keyframes tik-bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-6px) rotate(1.5deg); } }
+
+.bat-fly { animation: bat-fly 9s linear forwards; }
+@keyframes bat-fly {
+  0% { transform: translate(-10vw, 30vh) scale(0.8); }
+  50% { transform: translate(50vw, 12vh) scale(1); }
+  100% { transform: translate(115vw, 22vh) scale(0.7); }
+}
+.bat-wing { animation: bat-wing 0.25s steps(2, end) infinite; transform-origin: 50% 50%; }
+@keyframes bat-wing { 0% { transform: scaleY(1); } 100% { transform: scaleY(-0.4); } }
+
+/* Hareketi azalt: paralaks, titreme ve sarsıntı kapanır */
+@media (prefers-reduced-motion: reduce) {
+  .boil > * { animation: none; opacity: 0; }
+  .boil > *:first-child { opacity: 1; }
+  .flame, .fog, .tik-bob, .bat-fly, .bat-wing { animation: none !important; }
+}
+:root[data-reduce-motion='true'] .boil > * { animation: none; opacity: 0; }
+:root[data-reduce-motion='true'] .boil > *:first-child { opacity: 1; }
+:root[data-reduce-motion='true'] .flame,
+:root[data-reduce-motion='true'] .fog,
+:root[data-reduce-motion='true'] .tik-bob,
+:root[data-reduce-motion='true'] .bat-fly { animation: none !important; }
+
+.safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }

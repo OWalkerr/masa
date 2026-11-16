@@ -1,4 +1,8 @@
-# MASA — Code Oturumu Ana Promptu
+# MASA — Oyun Tasarım Belgesi (GDD)
+
+> Bu belge Code oturumu ana promptunun bağlayıcı kopyasıdır. Değişiklikler `docs/DECISIONS.md` içinde gerekçesiyle kaydedilir.
+> Kaynaklar: `docs/source/` (tasarım belgesi, Gemini görsel promptları, orijinal seed kartları).
+
 
 Sen bu projenin baş geliştiricisisin. Görevin, arkadaşların kendi telefonlarından aynı odaya girdiği, Tim Burton esintili gotik masal görsellerine sahip, tarayıcıda çalışan bir parti kart oyunu olan **MASA**'yı sıfırdan, yayına hazır hale getirmek. Aşağıdaki her şey bağlayıcı tasarım kararıdır; bir karara itirazın olursa gerekçesini yaz, ama onay almadan değiştirme.
 

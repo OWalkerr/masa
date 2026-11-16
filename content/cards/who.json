@@ -1,0 +1,21 @@
+{
+  "deck": "who",
+  "cards": [
+    {"id":"who-w-01","deck":"who","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir tartışmayı kaybettiğini asla kabul etmez?","penalty":1},
+    {"id":"who-w-02","deck":"who","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim izlemediği bir diziyi izlemiş gibi konuşur?","penalty":1},
+    {"id":"who-w-03","deck":"who","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim sabah alarmını en çok erteler?","penalty":1},
+    {"id":"who-w-04","deck":"who","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir korku filminde \"Ben bakıp geleyim\" diyen kişidir?","penalty":1,"quip":"Bakmaya gidenler hep bize gelir."},
+    {"id":"who-w-05","deck":"who","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim grup sohbetine en uzun sesli mesajı atar?","penalty":1},
+    {"id":"who-w-06","deck":"who","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir gün ünlü olur ama tamamen yanlış bir sebepten?","penalty":1},
+    {"id":"who-w-07","deck":"who","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim parasını en saçma şeye harcar?","penalty":1},
+    {"id":"who-w-08","deck":"who","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim ilk buluşmada en çok konuşur?","penalty":2},
+    {"id":"who-w-09","deck":"who","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim 3 gün telefonsuz kalırsa delirir?","penalty":2},
+    {"id":"who-w-10","deck":"who","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bu masadaki herkesin sırrını bilir?","penalty":2},
+    {"id":"who-w-11","deck":"who","type":"mostLikely","intensity":3,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir mezarlıkta en rahat uyur?","penalty":2,"quip":"Komşular sessizdir."},
+    {"id":"who-w-12","deck":"who","type":"mostLikely","intensity":3,"rarity":"rare","target":"all","input":"votePlayer","text":"Kim bu masadan birine gizlice aşık olmuştur?","penalty":3},
+    {"id":"who-n-01","deck":"who","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç bir sınavda kopya çekmedim.","penalty":1},
+    {"id":"who-n-02","deck":"who","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç öğretmenime yanlışlıkla \"anne\" ya da \"baba\" demedim.","penalty":1},
+    {"id":"who-n-03","deck":"who","type":"neverHave","intensity":2,"rarity":"common","target":"all","input":"yesNo","text":"Hiç bana gelen bir hediyeyi başkasına hediye etmedim.","penalty":1},
+    {"id":"who-n-04","deck":"who","type":"neverHave","intensity":2,"rarity":"common","target":"all","input":"yesNo","text":"Hiç bir doğum gününü unutup son dakika kurtarmadım.","penalty":1}
+  ]
+}

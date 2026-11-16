@@ -1,0 +1,20 @@
+{
+  "deck": "clean",
+  "cards": [
+    {"id":"clean-q-01","deck":"clean","type":"question","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, ilk kazandığın parayla ne almıştın?","penalty":1},
+    {"id":"clean-q-02","deck":"clean","type":"question","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, çocukken en çok neyden korkardın?","penalty":1},
+    {"id":"clean-q-03","deck":"clean","type":"question","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, ıssız bir adaya yanına alacağın 3 eşya ne olurdu?","penalty":1},
+    {"id":"clean-q-04","deck":"clean","type":"question","intensity":1,"rarity":"common","target":"all","input":"judge","text":"Herkes sırayla: En sevdiğin bayram anını anlat.","penalty":1},
+    {"id":"clean-d-01","deck":"clean","type":"dare","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, 20 saniyede bir kaşığı alkış alacak şekilde tanıt.","penalty":1,"timer":20},
+    {"id":"clean-d-02","deck":"clean","type":"dare","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, {sag} kişisinin en sevdiği yemeği tahmin et. Bilemezsen öde.","penalty":1},
+    {"id":"clean-d-03","deck":"clean","type":"dare","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, haber spikeri gibi bu masanın bugünkü en önemli haberini sun.","penalty":1,"timer":30},
+    {"id":"clean-w-01","deck":"clean","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir toplantıda en çok \"Sesim geliyor mu?\" der?","penalty":1},
+    {"id":"clean-w-02","deck":"clean","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bayramda en çok harçlık toplardı?","penalty":1},
+    {"id":"clean-w-03","deck":"clean","type":"mostLikely","intensity":1,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bir tarifi en çok değiştirip sonra tarifi suçlar?","penalty":1},
+    {"id":"clean-n-01","deck":"clean","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç bir toplantıda kameramı kapatıp uyuklamadım.","penalty":1},
+    {"id":"clean-n-02","deck":"clean","type":"neverHave","intensity":1,"rarity":"common","target":"all","input":"yesNo","text":"Hiç markette yanlış kişinin arabasını ittirmedim.","penalty":1},
+    {"id":"clean-m-01","deck":"clean","type":"mirror","intensity":1,"rarity":"common","target":"picked","input":"choice","text":"{secilen} gizlice seçsin: Hangi devirde yaşamak isterdi?","penalty":1,"choices":["Osmanlı sarayı","80'ler İstanbul","Uzak gelecek","Dinozorlar çağı"]},
+    {"id":"clean-r-01","deck":"clean","type":"rule","intensity":1,"rarity":"common","target":"all","input":"catch","text":"Kural: Kimse \"aynen\" diyemez.","penalty":1,"duration":6},
+    {"id":"clean-mg-01","deck":"clean","type":"minigame","intensity":1,"rarity":"common","target":"all","input":"minigame","text":"Refleks: Çay demlenince dokun. En geç kalan öder.","penalty":1,"minigame":"reflex"}
+  ]
+}

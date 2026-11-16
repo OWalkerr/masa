@@ -1,0 +1,11 @@
+{
+  "deck": "spicy",
+  "cards": [
+    {"id":"spicy-q-01","deck":"spicy","type":"question","intensity":1,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, başına gelen en kötü ilk buluşmayı anlat.","penalty":1,"tags":["flort"]},
+    {"id":"spicy-q-02","deck":"spicy","type":"question","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, bu masada ilk görüşte kimi çekici bulmuştun?","penalty":2,"tags":["flort"]},
+    {"id":"spicy-q-03","deck":"spicy","type":"question","intensity":3,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, telefonundaki en son flörtöz mesajı yüksek sesle oku ya da öde.","penalty":3,"tags":["flort","telefon"]},
+    {"id":"spicy-d-01","deck":"spicy","type":"dare","intensity":2,"rarity":"common","target":"picked","input":"judge","text":"{secilen}, {rastgele} kişisine 15 saniye boyunca bildiğin en kötü tavlama repliklerini söyle.","penalty":2,"timer":15,"tags":["flort"]},
+    {"id":"spicy-w-01","deck":"spicy","type":"mostLikely","intensity":2,"rarity":"common","target":"all","input":"votePlayer","text":"Kim bu masada en çok kalp kırmıştır?","penalty":2,"tags":["flort"]},
+    {"id":"spicy-n-01","deck":"spicy","type":"neverHave","intensity":2,"rarity":"common","target":"all","input":"yesNo","text":"Hiç bir randevudan kaçmak için sahte acil durum uydurmadım.","penalty":1,"tags":["flort"]}
+  ]
+}

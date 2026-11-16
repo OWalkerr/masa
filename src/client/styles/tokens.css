@@ -1,0 +1,42 @@
+/* MASA tasarım token'ları — "Gece Yarısı Meyhanesi" */
+:root {
+  --ink-950: #0D0B10;   /* ana arka plan */
+  --ink-800: #1B1820;   /* paneller, kart arkası */
+  --ash-500: #3A3640;   /* çizgiler, pasif */
+  --bone-100: #EDE6D6;  /* başlık, çizgili bant */
+  --parchment-200: #D9CFB8; /* kart metin paneli, birincil buton */
+  --gold-400: #D4AF37;  /* legendary, ödüller */
+  --ink-text: #1A1418;  /* parşömen üstündeki koyu mürekkep */
+  --bone-dim: #A39C8E;  /* ikincil metin (ink zeminde ≥ 4.5:1) */
+
+  /* Deste vurgu renkleri */
+  --deck-classic: #E8B04A;
+  --deck-who: #A3E635;
+  --deck-confess: #7FB2E5;
+  --deck-chaos: #D7263D;
+  --deck-duel: #8E6CD8;
+  --deck-spicy: #E0457B;
+  --deck-clean: #5ED6B4;
+  --deck-homeland: #F28C28;
+
+  --deck-accent: var(--deck-classic);
+  --accent: var(--deck-accent);
+
+  --font-gothic: 'Grenze Gotisch', 'Alegreya Sans', serif;
+  --font-body: 'Alegreya Sans', system-ui, sans-serif;
+
+  --tap: 56px; /* en küçük dokunma alanı */
+  --radius: 14px;
+
+  /* Stop-motion ritmi: dekoratif animasyonlar 8–12 fps */
+  --boil-steps: steps(1, end);
+}
+
+[data-deck='classic'] { --deck-accent: var(--deck-classic); }
+[data-deck='who'] { --deck-accent: var(--deck-who); }
+[data-deck='confess'] { --deck-accent: var(--deck-confess); }
+[data-deck='chaos'] { --deck-accent: var(--deck-chaos); }
+[data-deck='duel'] { --deck-accent: var(--deck-duel); }
+[data-deck='spicy'] { --deck-accent: var(--deck-spicy); }
+[data-deck='clean'] { --deck-accent: var(--deck-clean); }
+[data-deck='homeland'] { --deck-accent: var(--deck-homeland); }
