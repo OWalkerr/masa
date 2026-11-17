@@ -1,5 +1,6 @@
 // TIK: masanın sunucusu. Alkollüde lale biçimli rakı kadehi, alkolsüzde ince belli çay bardağı.
 // İnce çöp kolları, iri oyuk gözleri ve dikişli bir gülümsemesi vardır.
+import { keyItem, useManifest, type ArtItem } from '../art/manifest';
 interface Props {
   variant?: 'raki' | 'tea';
   size?: number;
@@ -9,9 +10,36 @@ interface Props {
   liquid?: boolean; // bardak dolu mu
 }
 
+
 const STROKE = 'var(--bone-100)';
 
-export function Tik({ variant = 'raki', size = 140, className = '', mood = 'grin', title = 'TIK', liquid = true }: Props) {
+export function Tik(props: Props) {
+  const m = useManifest();
+  const { variant = 'raki', mood = 'grin' } = props;
+  const img = keyItem(m, `tik-${variant}${mood === 'smirk' ? '-turn' : ''}`) ?? keyItem(m, `tik-${variant}`);
+  return img ? <TikArt {...props} src={img} /> : <TikSvg {...props} />;
+}
+
+// Çizilmiş TIK: poz sayfasından kesilen görsel, gotik kemer çerçevede (SVG ile aynı 200:260 kutu)
+const ARCH = 'polygon(0% 100%, 0% 30%, 4% 19%, 12% 10%, 24% 4%, 38% 1%, 50% 0%, 62% 1%, 76% 4%, 88% 10%, 96% 19%, 100% 30%, 100% 100%)';
+function TikArt({ size = 140, className = '', title = 'TIK', src }: Props & { src: ArtItem }) {
+  const h = (size * 260) / 200;
+  return (
+    <span className={`relative inline-block ${className}`} style={{ width: size, height: h }} role="img" aria-label={title}>
+      <img
+        src={size > 120 ? src.w800 : src.w400}
+        alt=""
+        width={size}
+        height={h}
+        className="h-full w-full object-cover"
+        style={{ clipPath: ARCH, WebkitMaskImage: 'radial-gradient(ellipse 75% 70% at 50% 45%, #000 62%, transparent 100%)', maskImage: 'radial-gradient(ellipse 75% 70% at 50% 45%, #000 62%, transparent 100%)' }}
+        draggable={false}
+      />
+    </span>
+  );
+}
+
+function TikSvg({ variant = 'raki', size = 140, className = '', mood = 'grin', title = 'TIK', liquid = true }: Props) {
   const tea = variant === 'tea';
   const body = tea
     ? 'M62,44 C66,84 90,112 88,132 C86,152 64,182 70,214 L130,214 C136,182 114,152 112,132 C110,112 134,84 138,44 Z'

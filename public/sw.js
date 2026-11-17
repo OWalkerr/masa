@@ -2,7 +2,7 @@
 // - Sayfalar (navigasyon): önce ağ; internet yoksa son kayıtlı kabuk. Böylece her yayın anında görünür.
 // - /assets/* (adı içeriğinin özetiyle değişen dosyalar), yazı tipleri, görseller: önbellekten, yoksa ağdan.
 // - /api ve WebSocket asla önbelleğe alınmaz.
-const VERSION = 'masa-v1';
+const VERSION = 'masa-v2';
 const SHELL = '/';
 
 self.addEventListener('install', (e) => {
@@ -33,7 +33,41 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/art/') || url.pathname.startsWith('/icons/')) {
+  // Görsel listesi her zaman ağdan (yeni görseller hemen görünsün); internet yoksa son kopya
+  if (url.pathname === '/art/manifest.json') {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((r) => r ?? Response.error())),
+    );
+    return;
+  }
+
+  // Görseller: önbellekten hemen, arka planda tazele (aynı adla güncellenen görsel bir sonraki açılışta gelir)
+  if (url.pathname.startsWith('/art/') || url.pathname.startsWith('/icons/')) {
+    e.respondWith(
+      caches.open(VERSION).then((c) =>
+        c.match(req).then((hit) => {
+          const net = fetch(req)
+            .then((res) => {
+              if (res.ok) c.put(req, res.clone());
+              return res;
+            })
+            .catch(() => hit ?? Response.error());
+          return hit ?? net;
+        }),
+      ),
+    );
+    return;
+  }
+
+  if (url.pathname.startsWith('/assets/')) {
     e.respondWith(
       caches.match(req).then(
         (hit) =>

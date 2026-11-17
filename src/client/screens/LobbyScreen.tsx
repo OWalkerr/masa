@@ -1,4 +1,5 @@
 // Lobi: meyhane masası, QR + link, ayarlar (yalnızca host), kişisel tercihler, "Başlat".
+import { keyItem, useManifest } from '../art/manifest';
 import { tikLine } from '../tik/lines';
 import { TikSays } from '../tik/TikSays';
 import { useState } from 'react';
@@ -93,6 +94,7 @@ export function LobbyScreen({ view }: { view: View }) {
                   } ${!m.available ? 'opacity-40' : ''} ${!isHost && !on ? 'opacity-60' : ''}`}
                   style={on ? { boxShadow: `inset 0 0 0 3px ${m.accent}` } : undefined}
                 >
+                  <DeckBanner deck={m.id} accent={m.accent} />
                   <span className="flex items-center gap-2 text-[16px]">
                     <span aria-hidden className="inline-block h-3 w-3 rotate-45" style={{ background: m.accent }} />
                     {on ? '✓ ' : ''}
@@ -208,5 +210,16 @@ function ConsentPanel({ view }: { view: View }) {
         </>
       )}
     </section>
+  );
+}
+
+// Deste görseli (yoksa vurgu renginde sisli bir şerit)
+function DeckBanner({ deck, accent }: { deck: string; accent: string }) {
+  const m = useManifest();
+  const img = keyItem(m, m?.decks[deck]);
+  return img ? (
+    <img src={img.w400} alt="" width={160} height={60} loading="lazy" className="mb-1 h-[60px] w-full rounded-[8px] object-cover" draggable={false} />
+  ) : (
+    <span aria-hidden className="mb-1 block h-[60px] w-full rounded-[8px]" style={{ background: `radial-gradient(circle at 50% 120%, ${accent}55, transparent 70%), var(--ink-800)` }} />
   );
 }

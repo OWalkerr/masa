@@ -44,7 +44,9 @@ export function useManifest(): ArtManifest | null {
 export function artFor(m: ArtManifest | null, card: Pick<Card, 'id' | 'type' | 'art'>): ArtItem | null {
   if (!m) return null;
   if (card.art && m.items[card.art]) return m.items[card.art]!;
-  const vars = m.byType[card.type];
+  // Görseli henüz olmayan türler en yakın türün görselini kullanır (Gizli Görev → Ayna)
+  const FALLBACK: Partial<Record<string, string>> = { mission: 'mirror' };
+  const vars = m.byType[card.type]?.length ? m.byType[card.type] : m.byType[FALLBACK[card.type] ?? ''];
   if (!vars?.length) return null;
   return m.items[vars[hashId(card.id) % vars.length]!] ?? null;
 }

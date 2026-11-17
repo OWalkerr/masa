@@ -106,3 +106,14 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - bir oyuncu 25 sn kopup döner,
     - host 15 sn kaybolur (10 sn sonra hostluk devredilir, yeni host ilerletir) ve geri döner.
     Herkes özete ulaşmalı, sayfa hatası olmamalı.
+
+## 2026-11-17 — İlk görseller
+
+58. **Görsel teslimi Claude yükleme sayfasıyla.** Kullanıcı hiçbir şey kuramadığı için görseller bir yükleme sayfasıyla geliyor (yalnızca sahibine açık). Sayfa görseli tarayıcıda en uzun kenarı 2048 px olacak şekilde WebP'ye küçültüp yüklüyor. Böylece sohbetin 5 dosya sınırı ve GitHub'ın boyut sınırı aşılıyor. Dosyalar buradan indirilip `assets-raw/` altına kaydediliyor (kaynak olarak depoda duruyor).
+59. **İlk teslimde 31 dosya geldi:**
+    - 12 kart türü × 2 varyant.
+    - 5 mod görseli: classic, who, confess, chaos, clean.
+    - TIK poz sayfası ve stil referansı.
+    Görseli olmayan tür (Gizli Görev) Ayna görselini kullanıyor. Görseli olmayan mod (Ateşli, Memleket) lobide vurgu renginde bir şeritle görünüyor.
+60. **TIK çizimi:** Poz sayfasından önden ve yarı yandan pozlar (rakı + çay) 200:260 kesiliyor. Arka plan parşömen olduğu için TIK gotik kemer biçimli, kenarı yumuşak bir madalyonda gösteriliyor. "smirk" ruh hâli yarı yandan pozu kullanıyor. Görsel yoksa eski SVG TIK çiziliyor.
+61. **Service worker görsel listesini (`/art/manifest.json`) her açılışta ağdan alıyor.** Görseller önbellekten hemen geliyor ve arka planda tazeleniyor; aynı adla güncellenen görsel bir sonraki açılışta görünüyor.

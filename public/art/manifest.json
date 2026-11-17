@@ -1,7 +1,294 @@
 {
-  "version": 1794826139414,
-  "items": {},
-  "byType": {},
-  "decks": {},
+  "version": 1794897580416,
+  "items": {
+    "deck-chaos": {
+      "w800": "/art/deck-chaos-800.webp",
+      "w400": "/art/deck-chaos-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 73898
+    },
+    "deck-classic": {
+      "w800": "/art/deck-classic-800.webp",
+      "w400": "/art/deck-classic-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 72102
+    },
+    "deck-clean": {
+      "w800": "/art/deck-clean-800.webp",
+      "w400": "/art/deck-clean-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 83074
+    },
+    "deck-confess": {
+      "w800": "/art/deck-confess-800.webp",
+      "w400": "/art/deck-confess-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 71696
+    },
+    "deck-who": {
+      "w800": "/art/deck-who-800.webp",
+      "w400": "/art/deck-who-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 74940
+    },
+    "type-confession-01": {
+      "w800": "/art/type-confession-01-800.webp",
+      "w400": "/art/type-confession-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 75174
+    },
+    "type-confession-02": {
+      "w800": "/art/type-confession-02-800.webp",
+      "w400": "/art/type-confession-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 72056
+    },
+    "type-curse-01": {
+      "w800": "/art/type-curse-01-800.webp",
+      "w400": "/art/type-curse-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 64304
+    },
+    "type-curse-02": {
+      "w800": "/art/type-curse-02-800.webp",
+      "w400": "/art/type-curse-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 63220
+    },
+    "type-dare-01": {
+      "w800": "/art/type-dare-01-800.webp",
+      "w400": "/art/type-dare-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 78604
+    },
+    "type-dare-02": {
+      "w800": "/art/type-dare-02-800.webp",
+      "w400": "/art/type-dare-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 78542
+    },
+    "type-duel-01": {
+      "w800": "/art/type-duel-01-800.webp",
+      "w400": "/art/type-duel-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 75944
+    },
+    "type-duel-02": {
+      "w800": "/art/type-duel-02-800.webp",
+      "w400": "/art/type-duel-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 73946
+    },
+    "type-golden-01": {
+      "w800": "/art/type-golden-01-800.webp",
+      "w400": "/art/type-golden-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 71998
+    },
+    "type-golden-02": {
+      "w800": "/art/type-golden-02-800.webp",
+      "w400": "/art/type-golden-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 68392
+    },
+    "type-minigame-01": {
+      "w800": "/art/type-minigame-01-800.webp",
+      "w400": "/art/type-minigame-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 76590
+    },
+    "type-minigame-02": {
+      "w800": "/art/type-minigame-02-800.webp",
+      "w400": "/art/type-minigame-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 83994
+    },
+    "type-mirror-01": {
+      "w800": "/art/type-mirror-01-800.webp",
+      "w400": "/art/type-mirror-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 60236
+    },
+    "type-mirror-02": {
+      "w800": "/art/type-mirror-02-800.webp",
+      "w400": "/art/type-mirror-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 56548
+    },
+    "type-mostlikely-01": {
+      "w800": "/art/type-mostlikely-01-800.webp",
+      "w400": "/art/type-mostlikely-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 58954
+    },
+    "type-mostlikely-02": {
+      "w800": "/art/type-mostlikely-02-800.webp",
+      "w400": "/art/type-mostlikely-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 57478
+    },
+    "type-neverhave-01": {
+      "w800": "/art/type-neverhave-01-800.webp",
+      "w400": "/art/type-neverhave-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 75058
+    },
+    "type-neverhave-02": {
+      "w800": "/art/type-neverhave-02-800.webp",
+      "w400": "/art/type-neverhave-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 78174
+    },
+    "type-question-01": {
+      "w800": "/art/type-question-01-800.webp",
+      "w400": "/art/type-question-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 83508
+    },
+    "type-question-02": {
+      "w800": "/art/type-question-02-800.webp",
+      "w400": "/art/type-question-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 81160
+    },
+    "type-rule-01": {
+      "w800": "/art/type-rule-01-800.webp",
+      "w400": "/art/type-rule-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 81506
+    },
+    "type-rule-02": {
+      "w800": "/art/type-rule-02-800.webp",
+      "w400": "/art/type-rule-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 80376
+    },
+    "type-tableevent-01": {
+      "w800": "/art/type-tableevent-01-800.webp",
+      "w400": "/art/type-tableevent-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 77200
+    },
+    "type-tableevent-02": {
+      "w800": "/art/type-tableevent-02-800.webp",
+      "w400": "/art/type-tableevent-02-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 74836
+    },
+    "tik-raki": {
+      "w800": "/art/tik-raki-800.webp",
+      "w400": "/art/tik-raki-400.webp",
+      "width": 400,
+      "height": 520,
+      "bytes": 21868
+    },
+    "tik-raki-turn": {
+      "w800": "/art/tik-raki-turn-800.webp",
+      "w400": "/art/tik-raki-turn-400.webp",
+      "width": 400,
+      "height": 520,
+      "bytes": 21216
+    },
+    "tik-tea": {
+      "w800": "/art/tik-tea-800.webp",
+      "w400": "/art/tik-tea-400.webp",
+      "width": 400,
+      "height": 520,
+      "bytes": 22282
+    },
+    "tik-tea-turn": {
+      "w800": "/art/tik-tea-turn-800.webp",
+      "w400": "/art/tik-tea-turn-400.webp",
+      "width": 400,
+      "height": 520,
+      "bytes": 21550
+    }
+  },
+  "byType": {
+    "confession": [
+      "type-confession-01",
+      "type-confession-02"
+    ],
+    "curse": [
+      "type-curse-01",
+      "type-curse-02"
+    ],
+    "dare": [
+      "type-dare-01",
+      "type-dare-02"
+    ],
+    "duel": [
+      "type-duel-01",
+      "type-duel-02"
+    ],
+    "golden": [
+      "type-golden-01",
+      "type-golden-02"
+    ],
+    "minigame": [
+      "type-minigame-01",
+      "type-minigame-02"
+    ],
+    "mirror": [
+      "type-mirror-01",
+      "type-mirror-02"
+    ],
+    "mostLikely": [
+      "type-mostlikely-01",
+      "type-mostlikely-02"
+    ],
+    "neverHave": [
+      "type-neverhave-01",
+      "type-neverhave-02"
+    ],
+    "question": [
+      "type-question-01",
+      "type-question-02"
+    ],
+    "rule": [
+      "type-rule-01",
+      "type-rule-02"
+    ],
+    "tableEvent": [
+      "type-tableevent-01",
+      "type-tableevent-02"
+    ]
+  },
+  "decks": {
+    "chaos": "deck-chaos",
+    "classic": "deck-classic",
+    "clean": "deck-clean",
+    "confess": "deck-confess",
+    "who": "deck-who"
+  },
   "avatars": {}
 }
