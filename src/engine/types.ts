@@ -115,6 +115,7 @@ export interface TurnResult {
   correct?: string[]; // ayna/itiraf: bilenler
   mg?: { kind: string; times: Record<string, number | null>; early: string[]; losers: string[] };
   sketch?: { word: string; drawer: string; correct: string[]; strokes: number[][] }; // Karakalem sonucu
+  gallery?: { prompt: string; items: { author: string; strokes: number[][]; votes: number }[]; worst: string[] }; // Sergi sonucu
   guesses?: Record<string, number>; // ayna/yalan/ölçek: kim neyi tahmin etti (sonuçta açılır)
   author?: string; // itiraf: spot ışığındaki cevabın yazarı (sonuçta açılır)
   spotlight?: string; // itiraf: spot ışığındaki cevap
@@ -176,6 +177,7 @@ export interface Turn {
   optionPlayers: boolean;
   mg: MinigameState | null;
   sk: SketchState | null; // Karakalem çizimi
+  gal: GalleryState | null; // Sergi
   secret: string | null; // gizli kelime/görev (yalnızca hedefe gider)
 }
 
@@ -188,6 +190,18 @@ export interface SketchState {
   correct: string[]; // bilme sırasına göre
   wrong: { id: string; text: string; at: number }[]; // masaya uçuşan yanlış tahminler
   guessed: Record<string, number>; // kişi başı tahmin sayısı
+}
+
+// Sergi: herkes aynı konuyu çizer, isimsiz galeride en kötü eser oylanır
+export interface GalleryState {
+  prompt: string;
+  stage: 'draw' | 'vote';
+  startAt: number;
+  endsAt: number;
+  drawings: Record<string, number[][]>;
+  done: string[]; // "Bitirdim" diyenler
+  order: string[]; // galerideki sıra (sanatçılar, karışık)
+  votes: Record<string, number>; // oy veren → eser sırası
 }
 
 // Mini oyun durumu. Gizli anlar (patlama, dolma) açılana kadar istemciye gitmez.
@@ -296,6 +310,8 @@ export type ClientIntent =
   | { t: 'drawUndo' }
   | { t: 'drawClear' }
   | { t: 'guess'; text: string } // Karakalem tahmini
+  | { t: 'galDone' } // Sergi: eserimi teslim ettim
+  | { t: 'galVote'; index: number } // Sergi: en kötü eser
   | { t: 'advance'; at?: string } // host: beklemeden sonraki adıma geç (at: istemcinin gördüğü adım)
   | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }

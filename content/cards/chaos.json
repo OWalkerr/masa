@@ -46,6 +46,7 @@
     {"id": "chaos-d-06", "deck": "chaos", "type": "dare", "intensity": 3, "rarity": "common", "target": "picked", "input": "judge", "text": "{secilen}, bu masayı bir kötü adam gibi tehdit et. 20 saniye, gülersen iç.", "penalty": 2, "timer": 20},
     {"id": "chaos-mg-06", "deck": "chaos", "type": "minigame", "intensity": 3, "rarity": "common", "target": "all", "input": "minigame", "text": "Bomba, son perde: Fitil kısa, ceza ağır. Elinde patlayan iç.", "penalty": 3, "minigame": "bomb"},
     {"id": "chaos-w-03", "deck": "chaos", "type": "mostLikely", "intensity": 2, "rarity": "common", "target": "all", "input": "votePlayer", "text": "Kim bu oyunu kazanmak için hile yapar ve yakalanınca 'şakaydı' der?", "penalty": 1},
-    {"id": "chaos-du-05", "deck": "chaos", "type": "duel", "intensity": 3, "rarity": "common", "target": "twoPicked", "input": "votePlayer", "text": "Düello: {secilen} ve {ikinci} 15 saniye birbirine bakarak ciddi kalsın. Gülen kaybeder.", "penalty": 2, "timer": 15}
+    {"id": "chaos-du-05", "deck": "chaos", "type": "duel", "intensity": 3, "rarity": "common", "target": "twoPicked", "input": "votePlayer", "text": "Düello: {secilen} ve {ikinci} 15 saniye birbirine bakarak ciddi kalsın. Gülen kaybeder.", "penalty": 2, "timer": 15},
+    {"id": "chaos-s-01", "deck": "chaos", "type": "gallery", "intensity": 2, "rarity": "common", "target": "all", "input": "drawAll", "text": "Kaos Sergisi: 30 saniye, herkes aynı konuyu çizer. En kötü eser iki kat içer.", "penalty": 2, "timer": 30, "secret": "Pazartesi sabahı|Bu gecenin özeti|Garsonun en kötü gecesi|Zombi spor salonunda"}
   ]
 }

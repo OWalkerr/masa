@@ -1,4 +1,5 @@
 // Hüküm: bedeller (sayılı bal mumu mührü), cesaret puanları, oy sayımı, mini cezalar, Su Molası.
+import { GalleryResult } from './Gallery';
 import { SketchFinal } from './Sketch';
 import { tikLine } from '../../tik/lines';
 import { TikSays } from '../../tik/TikSays';
@@ -51,6 +52,7 @@ export function ResolvePanel({ view }: { view: View }) {
           </span>
         </p>
       )}
+      {r.gallery && <GalleryResult view={view} r={r.gallery} />}
       {r.sketch && (
         <div className="flex flex-col items-center gap-2">
           <SketchFinal strokes={r.sketch.strokes} word={r.sketch.word} />

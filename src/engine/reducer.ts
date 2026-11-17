@@ -1,7 +1,7 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
 import {
   answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
-  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone, sketchDraw, sketchUndo, sketchGuess,
+  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone, sketchDraw, sketchUndo, sketchGuess, galleryFinish, galleryCast,
 } from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
@@ -200,6 +200,12 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       break;
     case 'guess':
       sketchGuess(s, ctx, fx, intent.by, intent.text);
+      break;
+    case 'galDone':
+      galleryFinish(s, ctx, fx, intent.by);
+      break;
+    case 'galVote':
+      galleryCast(s, ctx, fx, intent.by, intent.index);
       break;
     case 'advance':
       advance(s, ctx, fx, intent.by, intent.at);

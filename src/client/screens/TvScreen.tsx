@@ -1,5 +1,6 @@
 // Ana Ekran (/tv/KOD): büyük kart, masa sahnesi, skor ve katılım QR'ı. Telefonlar kumanda olur.
 // Koltuğa oturmaz (izleyici); ortam müziği burada çalar.
+import { GalleryTv, GalleryWall } from './game/Gallery';
 import { SketchBoard, SketchTv } from './game/Sketch';
 import { useEffect } from 'react';
 import { modeById } from '../../engine/modes';
@@ -140,7 +141,8 @@ function TvGame({ view }: { view: View }) {
           </div>
         )}
         {cardPhase && g.card && g.sketch && <SketchBoard sk={g.sketch} maxPx={Math.round(window.innerHeight * 0.8)} />}
-        {cardPhase && g.card && !g.sketch && <CardStage key={g.card.id + g.turnNo} view={view} card={g.card} width={cardW} />}
+        {cardPhase && g.card && g.gallery?.stage === 'vote' && <GalleryWall view={view} />}
+        {cardPhase && g.card && !g.sketch && !(g.gallery?.stage === 'vote') && <CardStage key={g.card.id + g.turnNo} view={view} card={g.card} width={cardW} />}
         {cardPhase && g.card && <p className="max-w-[44vw] text-center text-[26px] text-bone-dim">{howTo(g.card, view)}</p>}
       </section>
       <aside className="flex min-w-0 flex-col gap-4 py-2 text-[24px]">
@@ -172,6 +174,7 @@ function TvStatus({ view }: { view: View }) {
   const g = view.game!;
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
   if (view.phase === 'action' && g.sketch) return <SketchTv view={view} />;
+  if (view.phase === 'action' && g.gallery) return <GalleryTv view={view} />;
   if (view.phase === 'action' && g.mg) {
     const mg = g.mg;
     return (

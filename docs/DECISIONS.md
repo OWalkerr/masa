@@ -154,3 +154,13 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Node'un fetch'i proxy'yi kendiliğinden kullanmadığı için betik `NODE_USE_ENV_PROXY=1` ile çalışır; anahtarı proxy ekler.
     - Mastering (`scripts/master-sounds.sh`, ffmpeg): baş ve son boşluk kırpılır, kısa efektler ortalama ≈ -20 dB, fon (vals, fitil) ≈ -26 dB, tepe en fazla -1,5 dBFS. `scripts/trim-onset.py` geç başlayan efektleri asıl vuruştan başlatır.
     - Toplam boyut ≈ 800 KB. Sesler ilk dokunuştan sonra yüklenir, ilk açılışı yavaşlatmaz.
+
+## 2026-11-17 — Sergi, botlar, TV, tasarım ve efektler
+
+69. **Yeni kart türü: Sergi** (`gallery`, `input: drawAll`, `target: all`, `secret` = konu listesi). Herkes aynı konuyu aynı anda çizer (süre kartta, varsayılan 45 sn; tempodan bağımsız işler).
+    - Çizim sırasında kimse başkasının tuvalini görmez: parçalar sunucuda birikir, canlı yayınlanmaz.
+    - "Eserimi teslim et" ile erken bitilir; herkes teslim edince süre beklenmez. Pas geçen çizmez ama oy verebilir.
+    - Galeri karışık sırada ve isimsiz açılır; çizgiler gönderilmeden önce Ramer–Douglas–Peucker ile seyreltilir. Herkes kendi eseri dışındaki "en kötü eseri" oylar; rahat tempoda oylama süresizdir.
+    - En çok oyu alan(lar) içer, hiç oy alamayanlar "temiz eser" ile +1 cesaret alır. Sonuçta sanatçılar ve oy sayıları açılır, en kötüye "Rezalet Ödülü" bandı takılır.
+    - Konular masadaki kişilerin portresi değildir (görünüş üzerinden alay yasağı).
+70. **Çekilişte "türün en eski kartı geri döner" kuralı daraltıldı.** Yalnızca taze kartlar el için yetmediğinde (3 kart, en az 2 tür) uygulanır. Az kartlı türler (Sergi gibi) taze kart varken kullanılmış kartı ele geri getirmesin.

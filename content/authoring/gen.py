@@ -5,9 +5,9 @@ from cards_a import classic, who
 from cards_b import confess, chaos, homeland, spicy, clean, sketch
 
 PREFIX = {"question": "q", "dare": "d", "mostLikely": "w", "neverHave": "n", "rule": "r", "curse": "cu",
-          "duel": "du", "mirror": "m", "confession": "c", "minigame": "mg", "golden": "g", "tableEvent": "e", "mission": "gg", "sketch": "k"}
+          "duel": "du", "mirror": "m", "confession": "c", "minigame": "mg", "golden": "g", "tableEvent": "e", "mission": "gg", "sketch": "k", "gallery": "s"}
 INPUT = {"question": "judge", "dare": "judge", "mostLikely": "votePlayer", "neverHave": "yesNo", "rule": "catch", "curse": "catch",
-         "duel": "votePlayer", "mirror": "choice", "confession": "text", "minigame": "minigame", "golden": "judge", "tableEvent": "none", "mission": "catch", "sketch": "draw"}
+         "duel": "votePlayer", "mirror": "choice", "confession": "text", "minigame": "minigame", "golden": "judge", "tableEvent": "none", "mission": "catch", "sketch": "draw", "gallery": "drawAll"}
 ORDER = ["id", "deck", "type", "intensity", "rarity", "target", "input", "text", "penalty", "timer", "duration", "tags", "quip", "choices", "minigame", "secret"]
 
 def build(deck, rows):

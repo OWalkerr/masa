@@ -88,6 +88,21 @@ export interface SketchView {
   blind: boolean; // Kör Ressam: çizen kendi çizgisini görmez
 }
 
+export interface GalleryView {
+  prompt: string;
+  stage: 'draw' | 'vote';
+  startAt: number;
+  endsAt: number;
+  myStrokes: number[][]; // çizim aşamasında yalnızca kendi tuvalin
+  iDone: boolean;
+  doneCount: number;
+  artists: number;
+  items: number[][][]; // galeride: eserler (sanatçısız, karışık sıra)
+  myIndex: number | null; // kendi eserin (oy veremezsin)
+  myVote: number | null;
+  votedCount: number;
+}
+
 export interface GameView {
   act: 1 | 2 | 3;
   actTurn: number;
@@ -127,6 +142,7 @@ export interface GameView {
   lastCatch: (Omit<CatchResult, 'votes'>) | null;
   mg: MinigameView | null;
   sketch: SketchView | null;
+  gallery: GalleryView | null;
   stepKey: string; // "ilerlet" isteğinin hangi adım için olduğunu sunucuya bildirmek için
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
@@ -239,7 +255,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
     stage: t?.stage ?? 'main',
     options: cardVisible ? t?.options ?? [] : [],
     optionPlayers: !!t?.optionPlayers,
-    secret: t?.secret && me && !mission && card?.type !== 'sketch' && t.targets.includes(me) && s.phase !== 'choose' ? t.secret : null,
+    secret: t?.secret && me && !mission && card?.type !== 'sketch' && card?.type !== 'gallery' && t.targets.includes(me) && s.phase !== 'choose' ? t.secret : null,
     waitingOn: expected.filter((id) => (t?.stage === 'write' ? t.texts[id] === undefined : !t?.inputs[id])),
     // İtiraf: cevaplar yazarsız ve karışık; yazar yalnızca sonuçta açılır
     answers: guess && t ? t.shuffled.map((id) => t.texts[id] ?? '').filter((x) => x) : [],
@@ -287,6 +303,23 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         }
       : null,
     stepKey: stepKey(s),
+    gallery:
+      t?.gal && s.phase === 'action'
+        ? {
+            prompt: t.gal.prompt,
+            stage: t.gal.stage,
+            startAt: t.gal.startAt,
+            endsAt: t.gal.endsAt,
+            myStrokes: t.gal.stage === 'draw' && me ? t.gal.drawings[me] ?? [] : [],
+            iDone: !!me && t.gal.done.includes(me),
+            doneCount: t.gal.done.length,
+            artists: activePlayersCount(s) - t.passed.length,
+            items: t.gal.stage === 'vote' ? t.gal.order.map((id) => t.gal!.drawings[id] ?? []) : [],
+            myIndex: t.gal.stage === 'vote' && me && t.gal.order.includes(me) ? t.gal.order.indexOf(me) : null,
+            myVote: me && t.gal.votes[me] !== undefined ? t.gal.votes[me]! : null,
+            votedCount: Object.keys(t.gal.votes).length,
+          }
+        : null,
     sketch:
       t?.sk && t.secret && s.phase === 'action'
         ? {
@@ -328,4 +361,8 @@ function consentsFor(s: GameState, id: string, card: Card): boolean {
   if (spicy && !(p.consent.ageOk && p.consent.spicy)) return false;
   if (tags.includes('temas') && !(p.consent.ageOk && p.consent.contact)) return false;
   return true;
+}
+
+function activePlayersCount(s: GameState): number {
+  return s.players.filter((p) => !p.left).length;
 }

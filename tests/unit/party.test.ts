@@ -382,3 +382,53 @@ describe('Karakalem', () => {
     expect(sim.turn.result!.payments).toEqual([]);
   });
 });
+
+describe('Sergi', () => {
+  const gal = card('ga', { type: 'gallery', input: 'drawAll', target: 'all', text: 'Sergi: herkes çizsin.', secret: 'Vampir diş hekiminde', timer: 45 });
+  const cat = only(gal, card('q', { type: 'question' }));
+
+  function setup() {
+    const sim = relaxed(cat);
+    playForce(sim, 'ga');
+    sim.timeout(); // açılış
+    sim.now = sim.turn.gal!.startAt;
+    return { sim, ids: sim.s.order };
+  }
+
+  it('çizerken kimse başkasının tuvalini görmez; konu herkese açık', () => {
+    const { sim, ids } = setup();
+    sim.as(ids[0]!, { t: 'drawSeg', s: [100, 100, 200, 200], n: true });
+    const fx = sim.as(ids[1]!, { t: 'drawSeg', s: [300, 300, 400, 400], n: true });
+    expect(fx.some((f) => f.kind === 'draw')).toBe(false); // canlı yayın yok
+    const v0 = viewFor(sim.s, ids[0]!, cat).game!.gallery!;
+    expect(v0.prompt).toBe('Vampir diş hekiminde');
+    expect(v0.myStrokes).toEqual([[100, 100, 200, 200]]);
+    expect(JSON.stringify(viewFor(sim.s, ids[0]!, cat))).not.toContain('300,300');
+  });
+
+  it('herkes teslim edince galeri isimsiz açılır; kendi eserine oy yok; en çok oy alan içer', () => {
+    const { sim, ids } = setup();
+    ids.forEach((id, i) => sim.as(id, { t: 'drawSeg', s: [i * 10, i * 10, i * 10 + 5, i * 10 + 5], n: true }));
+    for (const id of ids) sim.as(id, { t: 'galDone' });
+    const gl = sim.turn.gal!;
+    expect(gl.stage).toBe('vote');
+    expect(phaseTimer(sim)).toBeUndefined(); // rahat tempoda oylama süresiz
+    const v = viewFor(sim.s, ids[0]!, cat).game!.gallery!;
+    expect(v.items).toHaveLength(ids.length);
+    expect(JSON.stringify(v)).not.toContain(ids[1]!); // sanatçı adı/kimliği yok
+    const victim = gl.order[0]!;
+    const victimIdx = 0;
+    expect(() => sim.as(victim, { t: 'galVote', index: victimIdx })).toThrow();
+    for (const id of ids) sim.as(id, { t: 'galVote', index: id === victim ? 1 : victimIdx });
+    const r = sim.turn.result!;
+    expect(r.payments.map((p) => p.id)).toEqual([victim]);
+    expect(r.gallery!.worst).toEqual([victim]);
+    expect(r.gallery!.items.find((x) => x.author === victim)!.votes).toBe(ids.length - 1);
+  });
+
+  it('çizim süresi dolunca galeri kendiliğinden açılır', () => {
+    const { sim } = setup();
+    sim.timeout();
+    expect(sim.turn.gal!.stage).toBe('vote');
+  });
+});

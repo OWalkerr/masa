@@ -75,7 +75,7 @@ function Played({ view }: { view: View }) {
       {duel && <DuelSplit view={view} />}
       {full ? (
         <CardStage key={g.card!.id + g.turnNo} view={view} card={g.card!} width={big} />
-      ) : g.sketch ? null : (
+      ) : g.sketch || g.gallery ? null : (
         <CardCompact view={view} card={g.card!} />
       )}
       {view.phase === 'action' && <ActionPanel view={view} />}
@@ -184,7 +184,8 @@ export function useFxFeedback(view: View) {
         buzz([30, 60, 30, 60, 30]);
       }
       if (f.kind === 'mission' || f.kind === 'missionClaim') play('crow');
-      if (f.kind === 'sketchStart') play('paper');
+      if (f.kind === 'sketchStart' || f.kind === 'galleryStart') play('paper');
+      if (f.kind === 'galleryOpen') play('curtain');
       if (f.kind === 'guessWrong') play('wrong');
       if (f.kind === 'guessRight') {
         play('right');

@@ -8,14 +8,14 @@ import type { Catalog, GameState, Player } from './types';
 export const ACT_INTENSITY: Record<1 | 2 | 3, number[]> = { 1: [1], 2: [1, 2], 3: [2, 3] };
 
 export const ACT_TYPES: Record<1 | 2 | 3, CardType[]> = {
-  1: ['question', 'dare', 'mostLikely', 'neverHave', 'sketch'],
-  2: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'mission', 'sketch'],
-  3: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'curse', 'minigame', 'mission', 'sketch'],
+  1: ['question', 'dare', 'mostLikely', 'neverHave', 'sketch', 'gallery'],
+  2: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'mission', 'sketch', 'gallery'],
+  3: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'curse', 'minigame', 'mission', 'sketch', 'gallery'],
 };
 
 // Motorda çözümü yazılmış türler (M2/M3'te genişleyecek)
 export const IMPLEMENTED_TYPES: ReadonlySet<CardType> = new Set([
-  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden', 'minigame', 'mission', 'sketch',
+  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden', 'minigame', 'mission', 'sketch', 'gallery',
 ]);
 
 const RARITY_W = { common: 1, rare: 0.35, legendary: 0.06 } as const;
@@ -63,7 +63,7 @@ export function feasible(s: GameState, card: Card, readerId: string): boolean {
   if (card.type === 'rule' && (s.game?.effects ?? []).filter((e) => e.kind !== 'curse' && e.kind !== 'mission').length >= 3) return false;
   // Aynı anda tek gizli görev
   if (card.type === 'mission' && (s.game?.effects ?? []).some((e) => e.kind === 'mission')) return false;
-  if ((card.type === 'confession' || card.type === 'mirror' || card.type === 'duel' || card.type === 'mission' || card.type === 'sketch') && activePlayers(s).length < 3) return false;
+  if ((card.type === 'confession' || card.type === 'mirror' || card.type === 'duel' || card.type === 'mission' || card.type === 'sketch' || card.type === 'gallery') && activePlayers(s).length < 3) return false;
   const pool = targetPool(s, card, readerId);
   let need = 0;
   switch (card.target) {
@@ -123,8 +123,10 @@ export function dealHand(s: GameState, catalog: Catalog, rng: Rng, readerId: str
 
   let cands = base.filter((c) => !used.has(c.id) && intensities.includes(c.intensity));
   if (cands.length < 3 - hand.length) cands = base.filter((c) => !used.has(c.id) && c.intensity <= maxI);
-  // Havuz tükenen türler için o türün en eski kartı geri döner
-  for (const t of allowedTypes) {
+  // Havuz tükenen türler için o türün en eski kartı geri döner — yalnızca taze kart çeşitliliği yetmiyorsa
+  // (az kartlı türler, örn. Sergi, elde yeterince taze kart varken kullanılmış kartı geri getirmesin)
+  const freshTypes = new Set(cands.map((c) => c.type));
+  for (const t of freshTypes.size >= 2 && cands.length >= 3 - hand.length ? [] : allowedTypes) {
     if (cands.some((c) => c.type === t)) continue;
     const oldest = g.used.map((id) => catalog.get(id)).find((c) => c && c.type === t && base.includes(c) && c.intensity <= maxI);
     if (oldest) cands.push(oldest);

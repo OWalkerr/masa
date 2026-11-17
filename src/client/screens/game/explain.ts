@@ -44,6 +44,8 @@ export function howTo(card: Card, view: View): string {
       return 'Altın kart: kartın dediği olur.';
     case 'tableEvent':
       return 'Masa olayı: herkesi ilgilendirir.';
+    case 'gallery':
+      return `Herkes aynı konuyu çizer. Galeride eserler isimsiz açılır, en kötüsünü oylarsınız; sanatçısı ${v}.`;
     case 'sketch':
       if (tags.includes('tekcizgi')) return `Tek çizgi: kalem kalkarsa çizim biter. Bilemeyen ${v}; kimse bilemezse çizen ${v}.`;
       if (tags.includes('kor')) return `Çizen kendi çizdiğini göremez. Bilemeyen ${v}; kimse bilemezse çizen ${v}.`;
@@ -78,6 +80,10 @@ export function nowLine(view: View): NowLine | null {
       return { text: g.system ? 'Masaya bir olay düştü!' : `${reader} kartı açtı!`, mine: false };
     case 'action': {
       if (g.mg) return { text: g.mg.stage === 'wait' ? 'Hazır ol…' : 'Şimdi!', mine: true };
+      if (g.gallery) {
+        if (g.gallery.stage === 'draw') return g.gallery.iDone ? { text: `Eserin teslim edildi. ${g.gallery.doneCount}/${g.gallery.artists} sanatçı hazır.`, mine: false } : { text: `Çiz: “${g.gallery.prompt}”`, mine: true };
+        return g.gallery.myVote === null && g.gallery.items.length ? { text: 'Galeri açıldı! En kötü eseri seç.', mine: true } : { text: `Oylar toplanıyor… ${g.gallery.votedCount} oy`, mine: false };
+      }
       if (g.sketch) {
         if (me === g.sketch.drawer) return { text: 'Çiz! Harf, rakam yazmak yok.', mine: true };
         if (me && g.sketch.correct.includes(me)) return { text: 'Bildin! Diğerlerinin acı çekmesini izle.', mine: false };

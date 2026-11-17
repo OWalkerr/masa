@@ -69,6 +69,24 @@ export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalo
     }
     return t.mg.taps[botId] === undefined ? { t: 'minigameInput', action: 'tap' } : null;
   }
+  if (t.gal) {
+    const gl = t.gal;
+    if (gl.stage === 'draw') {
+      if (gl.done.includes(botId) || t.passed.includes(botId)) return null;
+      if ((gl.drawings[botId]?.length ?? 0) >= 4) return { t: 'galDone' };
+      const pts: number[] = [];
+      let x = 150 + rng.int(700), y = 150 + rng.int(700);
+      for (let i = 0; i < 20; i++) {
+        x = Math.max(0, Math.min(1000, x + rng.int(101) - 50));
+        y = Math.max(0, Math.min(1000, y + rng.int(101) - 50));
+        pts.push(x, y);
+      }
+      return { t: 'drawSeg', s: pts, n: true };
+    }
+    if (gl.votes[botId] !== undefined) return null;
+    const opts = gl.order.map((a, i) => (a === botId ? -1 : i)).filter((i) => i >= 0);
+    return opts.length ? { t: 'galVote', index: rng.pick(opts) } : null;
+  }
   if (t.sk && t.secret) {
     // Ressam bot: rastgele kıvrımlı bir çizgi
     if (t.sk.drawer === botId) {

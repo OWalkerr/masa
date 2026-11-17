@@ -3,7 +3,7 @@ import type { CardType, Target } from '../../../engine/cards';
 export const TYPE_LABEL: Record<CardType, string> = {
   question: 'Soru', dare: 'Cesaret', mostLikely: 'Kim Daha?', neverHave: 'Hiç Yapmadım',
   rule: 'Kural', duel: 'Düello', mirror: 'Ayna', confession: 'İtiraf', curse: 'Lanet',
-  minigame: 'Mini Oyun', golden: 'Altın Kart', tableEvent: 'Masa Olayı', mission: 'Gizli Görev', sketch: 'Karakalem',
+  minigame: 'Mini Oyun', golden: 'Altın Kart', tableEvent: 'Masa Olayı', mission: 'Gizli Görev', sketch: 'Karakalem', gallery: 'Sergi',
 };
 
 // Etikete göre özel ad (aynı motor türünün farklı oyunları)

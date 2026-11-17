@@ -57,6 +57,8 @@ export const ClientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('drawUndo') }),
   z.object({ t: z.literal('drawClear') }),
   z.object({ t: z.literal('guess'), text: z.string().max(120) }),
+  z.object({ t: z.literal('galDone') }),
+  z.object({ t: z.literal('galVote'), index: z.number().int().min(0).max(20) }),
   z.object({ t: z.literal('advance'), at: z.string().max(80).optional() }),
   z.object({ t: z.literal('missionDone'), effectId: z.string().max(40) }),
   z.object({ t: z.literal('veto') }),

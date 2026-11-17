@@ -267,3 +267,29 @@ chaos += [
   ("mostLikely", 2, "all", "Kim bu oyunu kazanmak için hile yapar ve yakalanınca 'şakaydı' der?", 1, {}),
   ("duel", 3, "twoPicked", "Düello: {secilen} ve {ikinci} 15 saniye birbirine bakarak ciddi kalsın. Gülen kaybeder.", 2, {"timer": 15}),
 ]
+
+# --- Sergi (herkes aynı konuyu çizer, isimsiz galeri, en kötü eser içer) ---
+G_AILE = "Kayınvalide pazar sabahı|Teyze düğünde dans ederken|Ev sahibi kira artırırken|Patron zam istediğinde|Bayramda el öpme kuyruğu|Aile WhatsApp grubunun bir günü"
+G_GOTIK = "Vampir diş hekiminde|Hayaletin ilk randevusu|Zombi spor salonunda|Cadının süpürgesi bozulunca|Kurt adam berberde|Mezarlıkta doğum günü partisi"
+G_HAYAT = "Pazartesi sabahı|Akşamdan kalma bir pazar|İnternetin kesildiği an|Kombinin bozulduğu kış gecesi|Son otobüsü kaçırmak|Maaşın yattığı gün"
+G_MASA = "TIK'in düğün fotoğrafı|Bu gecenin özeti|Masanın 20 yıl sonraki buluşması|Rakı şişesinin hayat hikâyesi|Meyhanede kapanış saati|Garsonun en kötü gecesi"
+G_DEYIM = "Ağzı kulaklarında|Burnundan kıl aldırmamak|Pireyi deve yapmak|Etekleri zil çalmak|Ayvayı yemek|Dut yemiş bülbül"
+G_FLORT = "Felaket bir ilk buluşma|Tinder eşleşmesi|Ertesi sabah|Kıskançlık krizi|Eski sevgiliyle karşılaşmak"
+
+sketch += [
+  ("gallery", 1, "all", "Sergi: Herkes 45 saniyede ekrandaki konuyu çizsin. Galeride en kötü eserin sanatçısı içer.", 1, {"timer": 45, "secret": G_AILE, "quip": "Sanat acı çekmektir. Bu gece sizinki."}),
+  ("gallery", 1, "all", "Gotik Sergi: Herkes aynı korku sahnesini çizsin. En kötü eser sahibine içirir.", 1, {"timer": 45, "secret": G_GOTIK}),
+  ("gallery", 1, "all", "Sergi: Hayatın küçük felaketleri. Herkes çizer, galeri isimsiz açılır, en kötüsü içer.", 1, {"timer": 45, "secret": G_HAYAT}),
+  ("gallery", 2, "all", "Meyhane Sergisi: Bu masanın sanat tarihi. 45 saniye, isimsiz galeri, en kötüsü içer.", 1, {"timer": 45, "secret": G_MASA}),
+  ("gallery", 2, "all", "Hızlı Sergi: 25 saniye! Herkes aynı konuyu çizer. En kötü eser içer.", 1, {"timer": 25, "secret": G_HAYAT}),
+  ("gallery", 3, "all", "Deyim Sergisi: Herkes aynı deyimi çizsin. Galeride en kötüsü iki kat içer.", 2, {"timer": 60, "secret": G_DEYIM}),
+  ("gallery", 3, "all", "Gotik Sergi, son perde: 40 saniye, en kötü eser iki kat içer.", 2, {"timer": 40, "secret": G_GOTIK}),
+  ("gallery", 2, "all", "Sergi 18+: Romantik felaketleri çizin. En kötü eser içer.", 1, {"timer": 45, "tags": ["flort"], "secret": G_FLORT}),
+]
+
+chaos += [
+  ("gallery", 2, "all", "Kaos Sergisi: 30 saniye, herkes aynı konuyu çizer. En kötü eser iki kat içer.", 2, {"timer": 30, "secret": "Pazartesi sabahı|Bu gecenin özeti|Garsonun en kötü gecesi|Zombi spor salonunda"}),
+]
+clean += [
+  ("gallery", 1, "all", "Sergi: Herkes 45 saniyede aynı konuyu çizsin. Galeride en kötü eserin sanatçısı ceza alır.", 1, {"timer": 45, "secret": "Pazartesi sabahı|İnternetin kesildiği an|Kombinin bozulduğu kış gecesi|Kedinin vazoyu düşürdüğü an|Bayramda el öpme kuyruğu"}),
+]

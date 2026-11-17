@@ -112,7 +112,8 @@ export function SketchBoard({ sk, maxPx = 560, className = '' }: { sk: SketchVie
 }
 
 // Çizen: dokunarak çizer, parçalar 150 ms'de bir gönderilir
-function DrawPad({ sk }: { sk: SketchView }) {
+// Ortak çizim tuvali: Karakalem'de çizen, Sergi'de herkes kullanır
+export function DrawPad({ sk }: { sk: Pick<SketchView, 'strokes' | 'blind' | 'singleLine'> }) {
   const send = useRoom((s) => s.send);
   const { ref, size } = useCanvasSize(560);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -234,7 +235,7 @@ function DrawPad({ sk }: { sk: SketchView }) {
   );
 }
 
-function TimeBar({ sk }: { sk: SketchView }) {
+export function TimeBar({ sk }: { sk: Pick<SketchView, 'startAt' | 'endsAt'> }) {
   const left = useRemaining(sk.endsAt);
   const total = sk.endsAt - sk.startAt;
   const sec = Math.ceil(left / 1000);
@@ -373,7 +374,7 @@ export function SketchTv({ view }: { view: View }) {
 }
 
 // Sonuç: son çizim küçük bir tablo gibi
-export function SketchFinal({ strokes, word, size = 220 }: { strokes: number[][]; word: string; size?: number }) {
+export function SketchFinal({ strokes, word, size = 220, caption }: { strokes: number[][]; word: string; size?: number; caption?: React.ReactNode }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const dpr = typeof window !== 'undefined' ? Math.min(2, window.devicePixelRatio || 1) : 1;
   useEffect(() => {
@@ -390,8 +391,12 @@ export function SketchFinal({ strokes, word, size = 220 }: { strokes: number[][]
         role="img"
         aria-label={`Çizim: ${word}`}
       />
-      <figcaption className="text-[15px] text-bone-dim">
-        Eser: <b className="text-bone-100">“{word}”</b>
+      <figcaption className="text-center text-[15px] text-bone-dim">
+        {caption ?? (
+          <>
+            Eser: <b className="text-bone-100">“{word}”</b>
+          </>
+        )}
       </figcaption>
     </figure>
   );

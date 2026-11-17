@@ -233,3 +233,8 @@ who += [
   ("neverHave", 1, "all", "Hiç gece 3'te internetten gereksiz bir şey satın almadım.", 1, {}),
   ("neverHave", 2, "all", "Hiç birine sırf adını unuttuğum için 'canım' demedim.", 1, {}),
 ]
+
+classic += [
+  ("gallery", 1, "all", "Sergi: Herkes 45 saniyede ekrandaki konuyu çizsin. Galeride en kötü eserin sanatçısı içer.", 1, {"timer": 45, "secret": "Kayınvalide pazar sabahı|Vampir diş hekiminde|Hayaletin ilk randevusu|İnternetin kesildiği an|Rakı şişesinin hayat hikâyesi|Pazartesi sabahı"}),
+  ("gallery", 2, "all", "Gotik Sergi: Herkes aynı korku sahnesini çizsin. En kötü eser sahibine içirir.", 1, {"timer": 45, "secret": "Zombi spor salonunda|Cadının süpürgesi bozulunca|Kurt adam berberde|Mezarlıkta doğum günü partisi"}),
+]

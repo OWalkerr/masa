@@ -7,6 +7,7 @@ import {
 } from './deck';
 import { currentHolder, minigameInput, scoreMinigame, startMinigame, tickMinigame } from './minigames';
 import { clearSketch, drawSegment, guessWord, newSketch, scoreSketch, SKETCH, undoStroke } from './sketch';
+import { GALLERY, galleryDone, galleryDraw, galleryUndo, galleryVote, newGallery, scoreGallery, toVote } from './gallery';
 import { applyPayment, emptyStats, revertPayment } from './penalties';
 import { activePlayers, getPlayer } from './state';
 import { getCard, TAG } from './systemCards';
@@ -63,7 +64,7 @@ function newTurn(readerId: string, over: Partial<Turn> = {}): Turn {
     readerId, hand: [], inherited: null, cardId: null, step: 'choose', targets: [], tokens: {}, inputs: {},
     judgedPayers: null, result: null, pickedTop: false, rest: [], swapped: false, sabotagedBy: null, passed: [],
     vetoed: false, stage: 'main', texts: {}, spotlightAuthor: null, shuffled: [], system: false, blind: false,
-    options: [], optionPlayers: false, mg: null, sk: null, secret: null, ...over,
+    options: [], optionPlayers: false, mg: null, sk: null, gal: null, secret: null, ...over,
   };
 }
 
@@ -264,7 +265,7 @@ function ensureAndBump(s: GameState, id: string) {
 
 // --- eylem fazı ---
 
-export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'minigame' | 'draw' | 'none';
+export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'minigame' | 'draw' | 'drawAll' | 'none';
 
 export function actionKind(c: Card): ActionKind {
   switch (c.type) {
@@ -279,6 +280,8 @@ export function actionKind(c: Card): ActionKind {
       return 'minigame';
     case 'sketch':
       return 'draw';
+    case 'gallery':
+      return 'drawAll';
     case 'confession':
       return 'text';
     case 'duel':
@@ -318,6 +321,13 @@ export function expectedInputs(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[
     case 'text':
       ids = t.stage === 'guess' ? active.filter((id) => id !== t.spotlightAuthor) : active;
       break;
+    case 'drawAll': {
+      // Sergi: çizimde teslim etmeyenler, galeride oy vermeyenler
+      const gl = t.gal;
+      if (!gl) return [];
+      const live = active.filter((id) => !t.passed.includes(id));
+      return gl.stage === 'draw' ? live.filter((id) => !gl.done.includes(id)) : active.filter((id) => gl.votes[id] === undefined && gl.order.some((a) => a !== id));
+    }
     case 'draw':
       // Henüz bilemeyen tahminciler
       ids = t.sk ? active.filter((id) => id !== t.sk!.drawer && !t.sk!.correct.includes(id)) : [];
@@ -338,6 +348,13 @@ function beginAction(s: GameState, ctx: Ctx, fx: Fx[]) {
     t.mg = state;
     setPhase(s, ctx, 'action', nextAt - ctx.now);
     fx.push({ kind: 'mgStart', payload: { kind: state.kind } });
+    return;
+  }
+  if (k === 'drawAll') {
+    // Sergi: konu herkese açık, çizim süresi tempodan bağımsız işler
+    t.gal = newGallery(ctx.now, c.timer ?? GALLERY.defaultSec, t.secret ?? 'Kendi portren');
+    setPhase(s, ctx, 'action', t.gal.endsAt - ctx.now);
+    fx.push({ kind: 'galleryStart' });
     return;
   }
   if (k === 'draw') {
@@ -530,6 +547,13 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
     }
     case 'minigame': {
       if (t.mg) payers = scoreMinigame(s, t.mg, result);
+      break;
+    }
+    case 'gallery': {
+      if (!t.gal) break;
+      if (t.gal.stage === 'draw') toVote(t.gal, activePlayers(s).map((p) => p.id).filter((id) => !t.passed.includes(id)), ctx.rng);
+      payers = scoreGallery(t.gal, result);
+      if (!payers.length) result.note = 'Kimse oy vermedi. Sanat eleştirmenleri sustu.';
       break;
     }
     case 'sketch': {
@@ -1142,7 +1166,10 @@ export function onPhaseTimeout(s: GameState, ctx: Ctx, fx: Fx[]) {
       break;
     case 'action': {
       const t = g.turn!;
-      if (t.sk) resolveTurn(s, ctx, fx);
+      if (t.gal) {
+        if (t.gal.stage === 'draw') toGalleryVote(s, ctx, fx);
+        else resolveTurn(s, ctx, fx);
+      } else if (t.sk) resolveTurn(s, ctx, fx);
       else if (t.mg) {
         const next = tickMinigame(s, ctx, fx);
         if (next === null) resolveTurn(s, ctx, fx);
@@ -1176,6 +1203,9 @@ export function pendingActors(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[]
   if (s.phase === 'choose' && !t.system) out.add(t.readerId);
   if (s.phase === 'action' && t.mg) {
     for (const id of mgActors(s, t.mg)) out.add(id);
+  } else if (s.phase === 'action' && t.gal) {
+    // Bot sanatçılar birkaç çizgi çizip teslim eder, galeride oy verir
+    for (const id of expectedInputs(s, ctx)) out.add(id);
   } else if (s.phase === 'action' && t.sk) {
     // Bot ressam birkaç çizgi çizer; tahminciler bilene kadar dener
     if (t.sk.strokes.length < 5) out.add(t.sk.drawer);
@@ -1217,11 +1247,18 @@ function requireSketch(s: GameState, ctx: Ctx): { t: Turn; c: Card } {
 }
 
 export function sketchDraw(s: GameState, ctx: Ctx, fx: Fx[], by: string, nums: number[], fresh: boolean) {
+  const gt = s.phase === 'action' ? s.game?.turn : null;
+  if (gt?.gal) {
+    if (gt.passed.includes(by)) throw new IntentError('PASSED', 'Pas geçtin.');
+    return galleryDraw(gt.gal, ctx.now, by, nums, fresh); // Sergi: kimseye canlı gitmez
+  }
   const { t, c } = requireSketch(s, ctx);
   fx.push(drawSegment(t.sk!, ctx.now, by, nums, fresh, (c.tags ?? []).includes('tekcizgi')));
 }
 
 export function sketchUndo(s: GameState, ctx: Ctx, fx: Fx[], by: string, clear: boolean) {
+  const gt = s.phase === 'action' ? s.game?.turn : null;
+  if (gt?.gal) return galleryUndo(gt.gal, by, clear);
   const { t, c } = requireSketch(s, ctx);
   const single = (c.tags ?? []).includes('tekcizgi');
   if (clear) clearSketch(t.sk!, by, single);
@@ -1235,5 +1272,36 @@ export function sketchGuess(s: GameState, ctx: Ctx, fx: Fx[], by: string, raw: s
   if (!p || p.left) throw new IntentError('NO_SEAT', 'Masada değilsin.');
   guessWord(t.sk!, t.secret!, ctx.now, by, raw, cleanText, fx);
   // Herkes bildiyse beklemeye gerek yok
+  if (expectedInputs(s, ctx).length === 0) resolveTurn(s, ctx, fx);
+}
+
+// --- Sergi ---
+
+function requireGallery(s: GameState): Turn {
+  const t = requireTurn(s, 'action');
+  if (!t.gal) throw new IntentError('BAD_INPUT', 'Şu an sergi yok.');
+  return t;
+}
+
+// Çizim bitti: isimsiz galeri açılır. Oylama rahat tempoda süresizdir.
+function toGalleryVote(s: GameState, ctx: Ctx, fx: Fx[]) {
+  const t = s.game!.turn!;
+  const artists = activePlayers(s).map((p) => p.id).filter((id) => !t.passed.includes(id));
+  toVote(t.gal!, artists, ctx.rng);
+  if (artists.length < 2) return resolveTurn(s, ctx, fx);
+  setPhase(s, ctx, 'action', pdur(s, DUR.vote));
+  fx.push({ kind: 'galleryOpen' });
+}
+
+export function galleryFinish(s: GameState, ctx: Ctx, fx: Fx[], by: string) {
+  const t = requireGallery(s);
+  galleryDone(t.gal!, by);
+  if (t.gal!.stage === 'draw' && expectedInputs(s, ctx).length === 0) toGalleryVote(s, ctx, fx);
+}
+
+export function galleryCast(s: GameState, ctx: Ctx, fx: Fx[], by: string, index: number) {
+  const t = requireGallery(s);
+  galleryVote(t.gal!, by, index);
+  fx.push({ kind: 'inputIn', payload: { playerId: by } });
   if (expectedInputs(s, ctx).length === 0) resolveTurn(s, ctx, fx);
 }

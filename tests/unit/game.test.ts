@@ -420,12 +420,13 @@ describe('botlarla tam Kısa oyun', () => {
         if (f.kind !== 'botDue') continue;
         const id = (f.payload as { playerId: string }).playerId;
         const it = botDecide(sim.s, id, makeRng(sim.s.rngState ^ 7), catalog);
-        if (it) sim.as(id, it);
+        // Sunucu gibi: reddedilen bot hamlesi (ör. patlamadan hemen sonraki atış) oyunu bozmaz
+        if (it) try { sim.as(id, it); } catch { /* reddedildi */ }
       }
       // insan oyuncu da hızlı oynar
       if (pendingActors(sim.s, { catalog }).includes('h')) {
         const it = botDecide(sim.s, 'h', makeRng(steps), catalog);
-        if (it) sim.as('h', it);
+        if (it) try { sim.as('h', it); } catch { /* reddedildi */ }
       }
     }
     expect(sim.s.phase).toBe('summary');
