@@ -154,3 +154,83 @@ button, input { font: inherit; color: inherit; }
     color: var(--bone-100);
   }
 }
+
+/* --- Ortam efektleri --- */
+/* Toz zerresi: mum ışığında yavaşça yükselip sönen nokta */
+.dust-mote {
+  background: radial-gradient(circle, #f3d9a0 0%, #f3d9a000 70%);
+  opacity: 0;
+  animation: dust-rise linear infinite;
+}
+@keyframes dust-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 0.55; }
+  85% { opacity: 0.35; }
+  100% { transform: translate(var(--drift), -40vh); opacity: 0; }
+}
+/* Köşelerde titreyen sıcak mum ışığı (stop-motion ritminde) */
+.candle-glow {
+  background:
+    radial-gradient(ellipse 45% 30% at 0% 100%, #e8b04a14, transparent 70%),
+    radial-gradient(ellipse 45% 30% at 100% 100%, #e8b04a10, transparent 70%);
+  animation: candle-glow 1.2s steps(6, end) infinite;
+}
+@keyframes candle-glow {
+  0%, 100% { opacity: 1; }
+  30% { opacity: 0.8; }
+  55% { opacity: 1; }
+  80% { opacity: 0.86; }
+}
+/* Örümcek bacakları: 8 fps kıpırtı */
+.spider-legs { animation: spider-legs 0.5s steps(2, end) infinite; transform-origin: 26px 30px; }
+@keyframes spider-legs { 0% { transform: scaleX(1); } 100% { transform: scaleX(0.92) translateY(0.6px); } }
+
+/* --- Kart parıltıları --- */
+/* Nadir: gümüş ışık süzülür; efsanevi: altın varak */
+.sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.sheen::after {
+  content: ''; position: absolute; inset: -20% -60%;
+  background: linear-gradient(105deg, transparent 40%, var(--sheen, #ffffff40) 50%, transparent 60%);
+  transform: translateX(-60%);
+  animation: sheen 3.6s ease-in-out infinite;
+}
+.sheen-gold { --sheen: #ffd98a66; }
+.sheen-silver { --sheen: #e6ecf555; }
+@keyframes sheen { 0%, 55% { transform: translateX(-60%); } 100% { transform: translateX(60%); } }
+:root[data-reduce-motion='true'] .sheen::after,
+:root[data-reduce-motion='true'] .dust-mote,
+:root[data-reduce-motion='true'] .candle-glow,
+:root[data-reduce-motion='true'] .spider-legs { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .sheen::after, .dust-mote, .candle-glow, .spider-legs { animation: none !important; }
+}
+
+/* --- Düğmeler --- */
+@layer components {
+  /* Kabartmalı parşömen: üstte ışık, altta gölge, basınca mühür gibi çöker; üzerine gelince mum ışığı */
+  .btn-parchment {
+    background:
+      radial-gradient(ellipse 80% 120% at 50% 0%, #fff7e2 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 15% 90%, #8a5a2a1c, transparent 70%),
+      var(--parchment-200);
+    box-shadow: inset 0 1px 0 #ffffffa0, inset 0 -3px 0 #5a3d2240, inset 0 0 18px #5a3d2230, 0 6px 0 #1a120c, 0 10px 22px #000a;
+    transition: transform 0.12s ease, box-shadow 0.2s ease;
+  }
+  .btn-parchment:hover:not(:disabled) {
+    box-shadow: inset 0 1px 0 #ffffffa0, inset 0 -3px 0 #5a3d2240, inset 0 0 18px #5a3d2230, 0 6px 0 #1a120c, 0 0 26px #e8b04a55, 0 10px 22px #000a;
+  }
+  .btn-parchment:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 2px 6px #5a3d2255, 0 2px 0 #1a120c, 0 4px 10px #000a; }
+  /* Bordo kadife, altın dikiş */
+  .btn-velvet {
+    background: radial-gradient(ellipse 90% 140% at 50% 0%, #4a1c26 0%, #2a1018 55%, #1a0a10 100%);
+    box-shadow: inset 0 0 0 4px #1a0a10, inset 0 0 0 5px #c9a96b55, 0 6px 0 #0b0507, 0 10px 22px #000a;
+    transition: transform 0.12s ease;
+  }
+  .btn-velvet:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 4px #1a0a10, inset 0 0 0 5px #c9a96b55, 0 2px 0 #0b0507; }
+}
+.drink-flash {
+  position: fixed; inset: 0; z-index: 55; pointer-events: none;
+  box-shadow: inset 0 0 0 0 #7a1e2400, inset 0 0 120px 30px #7a1e24cc;
+  animation: drink-flash 1.2s ease-out forwards;
+}
+@keyframes drink-flash { 0% { opacity: 0; } 15% { opacity: 1; } 35% { opacity: 0.5; } 50% { opacity: 0.9; } 100% { opacity: 0; } }

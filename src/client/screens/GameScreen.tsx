@@ -141,7 +141,10 @@ export function useFxFeedback(view: View) {
           play('seal');
           window.setTimeout(() => play(sober ? 'spoon' : 'clink'), 250);
         }
-        if (me && payers.includes(me)) buzz([40, 60, 40]);
+        if (me && payers.includes(me)) {
+          buzz([40, 60, 40]);
+          flashEdge();
+        }
       }
       if (f.kind === 'deal') {
         play('paper');
@@ -190,8 +193,21 @@ export function useFxFeedback(view: View) {
       if (f.kind === 'guessRight') {
         play('right');
         const id = (f.payload as { playerId: string }).playerId;
-        if (id === me) buzz([30, 40, 30]);
+        if (id === me) {
+          buzz([30, 40, 30]);
+          emit('dust', window.innerWidth / 2, window.innerHeight * 0.55, 60);
+        }
       }
     }
   }, [fx, me, toast, view.players]);
+}
+
+// İçme sırası sende: ekran kenarları bir an şarap kırmızısı nabız atar (hareketi azaltta yok)
+function flashEdge() {
+  if (document.documentElement.dataset.reduceMotion === 'true') return;
+  const el = document.createElement('div');
+  el.className = 'drink-flash';
+  el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el);
+  window.setTimeout(() => el.remove(), 1300);
 }

@@ -171,3 +171,13 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Kartın hedefiyse %12 ihtimalle pas geçer; yoğunluk 3 kartlarda %3 ihtimalle anonim veto eder.
     Sonuç anında bu kararlar için bot "eylem bekleyen" sayılır; karar her zaman bir eyleme döner, döngüye girmez.
 72. **Ana Ekran sabit 1920×1080 sahnede çizilir** ve pencereye orantılı ölçeklenir (letterbox; arka plan tüm ekranı kaplar). İç ölçüler artık pencereye değil sahneye göre hesaplanır.
+73. **Düğme ve kart tasarımı:**
+    - Birincil düğme kabartmalı parşömen: üstten ışık, alttan gölge, basınca mühür gibi çöker, üzerine gelince mum ışığı; köşelerde kıvrım, yazının iki yanında mürekkep süsü.
+    - İkincil düğme altın dikişli bordo kadife.
+    - Kart görsel penceresinde kenar karartması ve alttan mum ışığı var.
+    - Nadir kartta gümüş, efsanevi kartta altın varak ışıltısı süzülür.
+74. **Ortam efektleri** (`src/client/fx/Ambient.tsx`; "Hareketi azalt" açıksa hiçbiri çizilmez):
+    - Örümcek: oyun ve lobide ilk olarak 25–45 sn sonra, sonra 50–110 sn'de bir tavandan ipek ipiyle iner. Ön planda, büyük ve odak dışındadır (bulanık); sallanır, birkaç saniye asılı kalır, tırmanır. Ekranın kenarına yakın iner, yazının ortasına inmez, dokunmayı engellemez. Sekme gizliyken inmez. Giriş ekranında yoktur.
+    - Mum ışığında yükselen toz zerreleri ve köşelerde titreyen sıcak ışık.
+    - İçme sırası sana gelince ekran kenarı şarap kırmızısı nabız atar. Karakalem'de doğru bilince altın toz saçılır.
+    - Önizleme: adrese `?spider=1` eklenirse örümcek hemen iner.

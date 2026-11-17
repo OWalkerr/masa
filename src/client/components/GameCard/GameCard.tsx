@@ -64,8 +64,11 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
 
       {/* görsel penceresi: üst %55 (bant dahil), gotik kemer */}
       <div className="relative" style={{ height: width * 1.4 * 0.55 - 11 * u, padding: `${2 * u}px ${5 * u}px 0` }}>
-        <div className="h-full w-full overflow-hidden" style={{ clipPath: ARCH, background: '#1E1A24' }}>
+        <div className="relative h-full w-full overflow-hidden" style={{ clipPath: ARCH, background: '#1E1A24' }}>
           <CardArt card={card} width={width} />
+          {/* derinlik: kemer penceresinin kenarları kararır, alttan mum ışığı */}
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 75% 70% at 50% 42%, transparent 55%, #0d0b10cc 100%), linear-gradient(to top, #e8b04a1f, transparent 35%)' }} />
+          {(legendary || rare) && <div className={`sheen ${legendary ? 'sheen-gold' : 'sheen-silver'}`} />}
         </div>
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
           <path

@@ -10,6 +10,7 @@ import { RoomScreen } from './screens/RoomScreen';
 import { Toasts } from './components/Toasts';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ParticleLayer } from './fx/ParticleLayer';
+import { Ambient } from './fx/Ambient';
 
 export function App() {
   const route = matchRoute(usePath());
@@ -23,6 +24,7 @@ export function App() {
       </Suspense>
       {route.name === 'notFound' && <NotFound />}
       <ParticleLayer />
+      {route.name !== 'devTable' && <Ambient spiders={route.name !== 'home'} />}
       <Toasts />
     </ErrorBoundary>
   );
