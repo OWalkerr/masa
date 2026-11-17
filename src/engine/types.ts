@@ -80,6 +80,18 @@ export interface GameState {
   game: GameRun | null;
   stats: Record<string, PlayerStats>;
   houseCards?: import('./house').HouseCard[]; // Ev Kartları (yazar gizli)
+  series?: Series; // Rövanş: geceler boyu toplam
+}
+
+export interface Highlights {
+  arts: { word: string; by: string; strokes: number[][] }[]; // Karakalem eserleri (son 3)
+  worst: { prompt: string; by: string; strokes: number[][] } | null; // son Sergi'nin Rezalet Ödülü
+  wrong: { by: string; text: string; word: string }[]; // en komik yanlış tahminler (en fazla 8)
+}
+
+export interface Series {
+  games: number; // biten oyun sayısı
+  totals: Record<string, { paid: number; courage: number }>;
 }
 
 // --- Oyun içi durum ---
@@ -262,6 +274,7 @@ export interface GameRun {
   pendingEvent: 'table' | 'water' | null;
   lastCatch?: CatchResult;
   pot: number; // Kazan: kimsenin içmediği turlarda biriken yudumlar
+  highlights?: Highlights; // Gecenin Afişi için anılar
 }
 
 export interface PlayerStats {
@@ -323,7 +336,7 @@ export type ClientIntent =
   | { t: 'advance'; at?: string } // host: beklemeden sonraki adıma geç (at: istemcinin gördüğü adım)
   | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }
-  | { t: 'restart' };
+  | { t: 'restart'; keep?: boolean }; // keep: Rövanş (toplam skorlar korunur)
 
 export type SystemIntent =
   | { t: 'join'; playerId: string; secret: string; name: string; avatar: number; isBot?: boolean; consent?: Partial<Consent> }

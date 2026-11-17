@@ -210,3 +210,8 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Suçlu damgası (Yakala! suçlu çıkınca).
     - Efsanevi kart (altın huzmeler) ve düello (ekran ikiye bölünür, şimşek).
     - Telefonlarda bu anlar yok; telefon kişisel ekran, gösteri TV'de.
+82. **Gecenin Afişi:** Özet ekranında herkes tek dokunuşla 1080×1350 PNG üretir, indirir ya da paylaşır (Web Share).
+    - İçinde mezar taşı ödülleri, gecenin Sergi "Rezalet Ödülü" eseri, Karakalem çizimleri ve en komik yanlış tahminler var. Boş kalan yere gecenin karnesi gelir, en altta masanın toplamı.
+    - Fotoğraf ve kişisel veri yok, yalnızca takma adlar ve çizimler. Anılar (`highlights`) oyun boyunca motorda toplanır, yalnızca özette gönderilir.
+83. **Rövanş:** Özette host "Rövanş" (skorlar toplanır) ya da "Yeni gece" (sıfırdan) seçer. Toplamlar `series` altında tutulur ve özette "Rövanş #N · toplam" tablosunda görünür.
+84. Karakalem destesindeki "masadaki birinin portresini çiz" düellosu "havaya bir vampir çiz" olarak değiştirildi (görünüş üzerinden alay yasağı).

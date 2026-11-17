@@ -148,6 +148,7 @@ export interface GameView {
   stepKey: string; // "ilerlet" isteğinin hangi adım için olduğunu sunucuya bildirmek için
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
+  highlights: import('./types').Highlights | null; // yalnızca özet ekranında
 }
 
 export interface View {
@@ -159,6 +160,7 @@ export interface View {
   order: string[];
   settings: Settings;
   houseCards: { mine: { id: string; type: string; text: string }[]; total: number }; // ev kartları: yalnızca kendi kartların
+  series: { games: number; totals: Record<string, { paid: number; courage: number }> } | null; // Rövanş toplamları
   tv?: boolean; // masaya bağlı bir Ana Ekran var mı (sunucu ekler)
   you: YouView | null; // null = izleyici (henüz katılmamış ya da TV)
   startedAt: number | null;
@@ -197,6 +199,7 @@ export function viewFor(s: GameState, playerId: string | null, baseCatalog?: Cat
         }
       : null,
     startedAt: s.startedAt,
+    series: s.series ?? null,
     houseCards: {
       mine: me ? (s.houseCards ?? []).filter((h) => h.author === me.id).map((h) => ({ id: h.card.id, type: h.card.type, text: h.card.text })) : [],
       total: (s.houseCards ?? []).length,
@@ -348,6 +351,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         : null,
     restCards: canSabotage && t ? t.rest.map((id) => getCard(catalog, id)!).filter(Boolean) : [],
     log: s.phase === 'summary' ? g.log : [],
+    highlights: s.phase === 'summary' ? g.highlights ?? { arts: [], worst: null, wrong: [] } : null,
   };
 }
 

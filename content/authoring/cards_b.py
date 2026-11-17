@@ -247,7 +247,7 @@ sketch = [
   ("mostLikely", 2, "all", "Kim bir resim sergisinde 'Bunu ben de yaparım' der?", 1, {}),
   ("neverHave", 1, "all", "Hiç bir toplantıda deftere saçma şeyler karalamadım.", 1, {}),
   ("question", 1, "picked", "{secilen}, çocukken duvara çizdiğin en büyük eser neydi ve bedelini kim ödedi?", 1, {}),
-  ("duel", 2, "twoPicked", "Düello: {secilen} ve {ikinci} aynı anda masadaki birinin portresini havaya çizsin. Masa seçer.", 1, {}),
+  ("duel", 2, "twoPicked", "Düello: {secilen} ve {ikinci} aynı anda parmağıyla havaya bir vampir çizsin. Masa daha iyisini seçer.", 1, {}),
 ]
 
 confess += [

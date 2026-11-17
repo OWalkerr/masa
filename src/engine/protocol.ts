@@ -40,7 +40,7 @@ export const ClientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('vote'), playerId: z.string().max(40) }),
   z.object({ t: z.literal('answer'), yes: z.boolean() }),
   z.object({ t: z.literal('judge'), done: z.boolean().optional(), payers: z.array(z.string().max(40)).max(12).optional() }),
-  z.object({ t: z.literal('restart') }),
+  z.object({ t: z.literal('restart'), keep: z.boolean().optional() }),
   z.object({ t: z.literal('choose'), index: z.number().int().min(0).max(20) }),
   z.object({ t: z.literal('answerText'), text: z.string().max(200) }),
   z.object({ t: z.literal('catch'), effectId: z.string().max(40), accused: z.string().max(40) }),

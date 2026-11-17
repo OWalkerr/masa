@@ -630,6 +630,7 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
     applyPayment(s, ctx.rng, ctx.now, p, units + (id === potTaker ? g.pot : 0), result);
   }
   if (potTaker) g.pot = 0;
+  collectHighlights(s, ctx, t, result);
   grantMercy(s, ctx, fx, ordered, result);
   t.result = result;
   t.texts = {}; // anonim cevaplar tur bitince silinir (yalnızca spot ışığındaki sonuçta kalır)
@@ -1346,4 +1347,19 @@ function grantMercy(s: GameState, ctx: Ctx, fx: Fx[], payers: string[], result: 
     }
   }
   void ctx;
+}
+
+// Gecenin Afişi için anılar: Karakalem eserleri, Sergi'nin en kötüsü, komik yanlış tahminler
+function collectHighlights(s: GameState, ctx: Ctx, t: Turn, result: TurnResult) {
+  const g = s.game!;
+  const h = (g.highlights ??= { arts: [], worst: null, wrong: [] });
+  if (result.sketch && result.sketch.strokes.length) {
+    h.arts = [...h.arts, { word: result.sketch.word, by: result.sketch.drawer, strokes: result.sketch.strokes }].slice(-3);
+    const wrong = (t.sk?.wrong ?? []).filter((w) => w.text.length >= 3);
+    for (const w of ctx.rng.shuffle([...wrong]).slice(0, 2)) h.wrong = [...h.wrong, { by: w.id, text: w.text, word: result.sketch.word }].slice(-8);
+  }
+  if (result.gallery?.worst.length) {
+    const it = result.gallery.items.find((x) => x.author === result.gallery!.worst[0]);
+    if (it && it.strokes.length) h.worst = { prompt: result.gallery.prompt, by: it.author, strokes: it.strokes };
+  }
 }

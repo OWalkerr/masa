@@ -528,3 +528,21 @@ describe('Ev Kartları', () => {
     expect(() => sim.as('p1', { t: 'houseRemove', id: cards[0]!.id })).toThrow(); // oyun başladı
   });
 });
+
+describe('Rövanş ve anılar', () => {
+  it('Rövanş skorları toplar, Yeni gece sıfırlar; özet anıları içerir', () => {
+    const qs = only(card('q1', { type: 'question' }), card('q2', { type: 'question', text: '{secilen}, yine anlat.' }));
+    const sim = relaxed(qs);
+    sim.s.stats.p1!.paidUnits = 5;
+    sim.s.stats.p1!.courage = 3;
+    sim.s.phase = 'summary';
+    sim.as('p0', { t: 'restart', keep: true });
+    expect(sim.s.series!.games).toBe(1);
+    expect(sim.s.series!.totals.p1).toEqual({ paid: 5, courage: 3 });
+    expect(viewFor(sim.s, 'p2', qs).series!.totals.p1!.paid).toBe(5);
+    sim.as('p0', { t: 'start' });
+    sim.s.phase = 'summary';
+    sim.as('p0', { t: 'restart' });
+    expect(sim.s.series).toBeUndefined();
+  });
+});

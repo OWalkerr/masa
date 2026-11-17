@@ -120,8 +120,14 @@ assert(await vis(pages[0].getByText('Burada yatıyor:').first()), 'mezar taşı 
 assert(errors.length === 0, `sayfa hatası yok ${errors.join(' | ')}`);
 if (process.env.SHOTS) await pages[0].screenshot({ path: `${process.env.SHOTS}/summary.png`, fullPage: true });
 
-await pages[0].getByRole('button', { name: 'Tekrar Oyna' }).click();
+await pages[1].getByRole('button', { name: 'Gecenin Afişi' }).click();
+await pages[1].getByRole('img', { name: 'Gecenin Afişi' }).waitFor({ timeout: 15000 });
+const posterW = await pages[1].getByRole('img', { name: 'Gecenin Afişi' }).evaluate((img) => img.naturalWidth);
+assert(posterW === 1080, `Gecenin Afişi çizildi (${posterW} px)`);
+if (process.env.SHOTS) await pages[1].screenshot({ path: `${process.env.SHOTS}/poster-sheet.png` });
+await pages[1].getByRole('button', { name: 'Kapat' }).click();
+await pages[0].getByRole('button', { name: 'Rövanş' }).click();
 for (const p of pages) await p.getByText('Masa kodu').waitFor({ timeout: 10000 });
-assert(true, 'Tekrar Oyna ile herkes lobiye döndü');
+assert(true, 'Rövanş ile herkes lobiye döndü');
 await browser.close();
 console.log('M1 uçtan uca: hepsi geçti');

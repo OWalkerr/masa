@@ -1,4 +1,6 @@
 // Gecenin Özeti: ödüller yerden yükselen komik mezar taşları olarak gelir. İstatistikler ve "Tekrar Oyna".
+import { useState } from 'react';
+import { renderPoster } from './Poster';
 import { tikLine } from '../../tik/lines';
 import { TikSays } from '../../tik/TikSays';
 import { motion } from 'motion/react';
@@ -27,6 +29,9 @@ const AWARDS: Award[] = [
 export function Summary({ view }: { view: View }) {
   const send = useRoom((s) => s.send);
   const reduce = useReducedMotion();
+  const [poster, setPoster] = useState<string | null>(null);
+  const [making, setMaking] = useState(false);
+  const toast = useRoom((s) => s.toast);
   const players = view.players.filter((p) => !p.left && view.stats[p.id]);
   const used = new Set<string>();
   const awards = AWARDS.map((a) => {
@@ -90,17 +95,109 @@ export function Summary({ view }: { view: View }) {
       </table>
       <p className="text-[14px] text-bone-dim">{view.game?.log.length ?? 0} kart oynandı.</p>
 
+      {view.series && view.series.games > 0 && <SeriesTable view={view} />}
+
+      <InkButton
+        variant="secondary"
+        className="w-full"
+        seed={73}
+        disabled={making}
+        onClick={async () => {
+          setMaking(true);
+          try {
+            const blob = await renderPoster(view, awards.map((a) => ({ title: a.title, epitaph: a.epitaph, name: a.winner.name })));
+            setPoster(URL.createObjectURL(blob));
+          } catch {
+            toast('Afiş çizilemedi.', 'error');
+          } finally {
+            setMaking(false);
+          }
+        }}
+      >
+        {making ? 'Afiş çiziliyor…' : 'Gecenin Afişi'}
+      </InkButton>
+      {poster && <PosterSheet url={poster} onClose={() => { URL.revokeObjectURL(poster); setPoster(null); }} />}
+
       <footer className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-6 safe-bottom">
         <div className="mx-auto max-w-md">
           {view.you?.isHost ? (
-            <InkButton className="w-full" onClick={() => send({ t: 'restart' })} seed={71}>
-              Tekrar Oyna
-            </InkButton>
+            <div className="flex gap-2">
+              <InkButton className="flex-[2]" onClick={() => send({ t: 'restart', keep: true })} seed={71}>
+                Rövanş
+              </InkButton>
+              <InkButton variant="secondary" className="flex-1" onClick={() => send({ t: 'restart' })} seed={72}>
+                Yeni gece
+              </InkButton>
+            </div>
           ) : (
             <p className="text-center text-bone-dim">Masa sahibi yeni oyunu başlatabilir.</p>
           )}
         </div>
       </footer>
     </main>
+  );
+}
+
+// Rövanş: geceler boyu toplam (önceki geceler + bu gece)
+function SeriesTable({ view }: { view: View }) {
+  const series = view.series!;
+  const rows = view.players
+    .filter((p) => !p.left)
+    .map((p) => {
+      const t = series.totals[p.id] ?? { paid: 0, courage: 0 };
+      const now = view.stats[p.id];
+      return { p, paid: t.paid + (now?.paidUnits ?? 0), courage: t.courage + (now?.courage ?? 0) };
+    })
+    .sort((a, b) => b.courage - a.courage);
+  return (
+    <table className="ink-panel w-full text-left text-[16px]">
+      <caption className="p-2 text-left font-gothic text-[24px]">Rövanş #{series.games + 1} · toplam</caption>
+      <thead>
+        <tr className="text-bone-dim">
+          <th className="p-2 font-bold">Oyuncu</th>
+          <th className="p-2 text-right font-bold">Cesaret</th>
+          <th className="p-2 text-right font-bold">{view.settings.drinking ? 'İçti' : 'Ceza'}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.p.id} className="border-t border-ash-500">
+            <td className="flex items-center gap-2 p-2"><Avatar index={r.p.avatar} size={28} />{r.p.name}</td>
+            <td className="p-2 text-right tabular-nums">{r.courage}</td>
+            <td className="p-2 text-right tabular-nums">{r.paid}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// Afiş önizleme: indir ya da paylaş
+function PosterSheet({ url, onClose }: { url: string; onClose: () => void }) {
+  const share = async () => {
+    try {
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], 'masa-gecenin-afisi.png', { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'MASA · Gecenin Afişi' });
+    } catch {
+      /* paylaşım iptal edildi */
+    }
+  };
+  const canShare = typeof navigator !== 'undefined' && !!navigator.canShare;
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-ink-950/95 p-4" role="dialog" aria-label="Gecenin Afişi" onClick={onClose}>
+      <img src={url} alt="Gecenin Afişi" className="max-h-[70vh] w-auto rounded-[10px] shadow-[0_10px_40px_#000]" onClick={(e) => e.stopPropagation()} />
+      <div className="flex w-full max-w-sm gap-2" onClick={(e) => e.stopPropagation()}>
+        <a href={url} download="masa-gecenin-afisi.png" className="btn-parchment flex min-h-[56px] flex-1 items-center justify-center rounded-[14px] text-[18px] font-extrabold text-ink-text">
+          İndir
+        </a>
+        {canShare && (
+          <InkButton variant="secondary" className="flex-1" onClick={share} seed={74}>
+            Paylaş
+          </InkButton>
+        )}
+      </div>
+      <button type="button" onClick={onClose} className="min-h-[48px] px-4 text-bone-dim underline">Kapat</button>
+    </div>
   );
 }

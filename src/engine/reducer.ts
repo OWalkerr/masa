@@ -233,6 +233,16 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
     case 'restart': {
       requireHost(s, intent.by);
       requirePhase(s, 'summary');
+      // Rövanş: bu gecenin skorları toplamlara eklenir; düz "Tekrar Oyna" seriyi sıfırlar
+      if (intent.keep) {
+        const series = s.series ?? { games: 0, totals: {} };
+        series.games += 1;
+        for (const [id, st] of Object.entries(s.stats)) {
+          const cur = series.totals[id] ?? { paid: 0, courage: 0 };
+          series.totals[id] = { paid: cur.paid + st.paidUnits, courage: cur.courage + st.courage };
+        }
+        s.series = series;
+      } else s.series = undefined;
       // Aynı masa, yeni oyun: lobiye dön, kalkanları çıkar
       s.players = s.players.filter((p) => !p.left);
       s.order = s.order.filter((id) => s.players.some((p) => p.id === id));
