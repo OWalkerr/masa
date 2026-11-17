@@ -1,1 +1,21 @@
-{ "version": 0, "files": {} }
+{
+  "version": 1794914936799,
+  "files": {
+    "paper": "/sfx/paper.mp3",
+    "flip": "/sfx/flip.mp3",
+    "seal": "/sfx/seal.mp3",
+    "clink": "/sfx/clink.mp3",
+    "spoon": "/sfx/spoon.mp3",
+    "crow": "/sfx/crow.mp3",
+    "organ": "/sfx/organ.mp3",
+    "heartbeat": "/sfx/heartbeat.mp3",
+    "fuse": "/sfx/fuse.mp3",
+    "boom": "/sfx/boom.mp3",
+    "curtain": "/sfx/curtain.mp3",
+    "tap": "/sfx/tap.mp3",
+    "right": "/sfx/right.mp3",
+    "wrong": "/sfx/wrong.mp3",
+    "bell": "/sfx/bell.mp3",
+    "waltz": "/sfx/waltz.mp3"
+  }
+}

@@ -47,7 +47,7 @@ async function loadFiles() {
 async function build() {
   await loadFiles();
   for (const [name, src] of Object.entries(files)) {
-    if (name === 'music') continue;
+    if (name === 'music' || name === 'waltz') continue;
     howls.set(name as SoundName, new Howl({ src: [src], format: ['mp3'], volume: 0.75, preload: true }));
   }
   if (typeof OfflineAudioContext !== 'undefined') {
@@ -62,8 +62,9 @@ async function build() {
 
 async function buildMusic() {
   if (music) return;
-  if (files.music) {
-    music = new Howl({ src: [files.music], format: ['mp3'], loop: true, volume: 0.3, html5: true });
+  const track = files.music ?? files.waltz;
+  if (track) {
+    music = new Howl({ src: [track], format: ['mp3'], loop: true, volume: 0.45 });
     return;
   }
   if (typeof OfflineAudioContext === 'undefined') return;

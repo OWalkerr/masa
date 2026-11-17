@@ -149,3 +149,8 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Çıktılar `public/sfx/*.mp3` ve `manifest.json`.
     - İstemci önce bu dosyaları çalar; dosyası olmayan ses tarayıcıda sentezlenir, oyun hiçbir anda sessiz kalmaz.
     - Yeni sesler: doğru tahmin çanı, yanlış tahmin hayalet ıslığı, tavern zili.
+68. **ElevenLabs sesleri üretildi** (15 efekt + 30 sn'lik vals döngüsü).
+    - Müzik API'si ücretsiz planda kapalı (402); fon müziği ses efekti modeliyle 30 sn'lik döngü olarak üretildi (`waltz`). Ücretli plana geçilirse `npm run gen:sounds music` 60 sn'lik besteyi üretir; istemci önce `music`, yoksa `waltz` çalar.
+    - Node'un fetch'i proxy'yi kendiliğinden kullanmadığı için betik `NODE_USE_ENV_PROXY=1` ile çalışır; anahtarı proxy ekler.
+    - Mastering (`scripts/master-sounds.sh`, ffmpeg): baş ve son boşluk kırpılır, kısa efektler ortalama ≈ -20 dB, fon (vals, fitil) ≈ -26 dB, tepe en fazla -1,5 dBFS. `scripts/trim-onset.py` geç başlayan efektleri asıl vuruştan başlatır.
+    - Toplam boyut ≈ 800 KB. Sesler ilk dokunuştan sonra yüklenir, ilk açılışı yavaşlatmaz.

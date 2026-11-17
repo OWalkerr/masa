@@ -22,10 +22,17 @@ export const SOUNDS: Record<string, Sfx> = {
   fuse: { prompt: 'Cartoon bomb fuse lit and sizzling, crackling sparks, steady hiss', sec: 3.0, loop: true },
   boom: { prompt: 'Comedic cartoon explosion with a puff of smoke followed by a flutter of bat wings, spooky and funny, not too loud', sec: 1.8 },
   curtain: { prompt: 'Heavy velvet theatre curtain sweeping open with an old wooden pulley creak, small music box twinkle at the end', sec: 2.4 },
-  tap: { prompt: 'A single short knock of a knuckle on a wooden table, dry, close', sec: 0.3 },
+  tap: { prompt: 'A single short knock of a knuckle on a wooden table, dry, close', sec: 0.5 },
   right: { prompt: 'Short magical music box twinkle, three ascending celesta notes, gothic but happy, a correct answer chime', sec: 1.2 },
   wrong: { prompt: 'Short comic ghostly descending "wooo" whistle, like a cartoon ghost laughing at a wrong guess, playful', sec: 1.0 },
   bell: { prompt: 'A small brass tavern bell rung once, warm and bright, short ring', sec: 1.2 },
+  // Müzik API'si ücretsiz planda kapalı: ses efekti modeliyle 30 sn'lik döngü
+  waltz: {
+    prompt: 'Instrumental whimsical gothic waltz loop, music box melody with accordion and pizzicato strings, soft upright bass, 3/4 time, D minor, dark carnival but cozy and playful, background music, no vocals',
+    sec: 30,
+    influence: 0.7,
+    loop: true,
+  },
 };
 
 const MUSIC_PROMPT =
