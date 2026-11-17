@@ -4,33 +4,65 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useReducedMotion } from './motionPref';
 
-// Gotik, ince bacaklı örümcek (Burton çizgisi): tek parça SVG, bacaklar adım adım kıpırdar
+// Korkunç örümcek: tamamen siyah, kıllı silüet. Baş aşağı sarkar (karın üstte, ipe bağlı; dişler altta).
+// Eklemli uzun bacaklar, dikenler, tüylü karın. Arkadan yalnızca mum ışığı vurur (drop-shadow ile).
+const INK = '#040305';
+
+// Tüylü elips: kenarı sık, düzensiz kıllarla
+function hairy(cx: number, cy: number, rx: number, ry: number, n: number, hair: number, seed: number): string {
+  let a = seed;
+  const rnd = () => ((a = (a * 9301 + 49297) % 233280) / 233280);
+  const pts: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * Math.PI * 2;
+    const h = i % 2 ? hair * (0.6 + rnd() * 0.9) : -hair * 0.2;
+    pts.push(`${(cx + Math.cos(t) * (rx + h)).toFixed(1)},${(cy + Math.sin(t) * (ry + h)).toFixed(1)}`);
+  }
+  return `M${pts.join(' L')} Z`;
+}
+
+// Bacaklar (sağ taraf; sol ayna). [gövdeye bağlandığı nokta, diz, ayak]; i=0 en öndeki (başa yakın, aşağı uzanır)
+const LEGS: [number, number, number, number, number, number][] = [
+  [4, 70, 24, 82, 31, 99],
+  [5, 66, 30, 60, 43, 85],
+  [5, 62, 31, 45, 45, 58],
+  [4, 58, 23, 33, 38, 22],
+];
+
 function SpiderSvg({ size }: { size: number }) {
-  const legs = [-1, 1].flatMap((side) =>
-    [0, 1, 2, 3].map((i) => {
-      const y = 22 + i * 5;
-      const kx = 26 + side * (14 + i * 2);
-      const fx = 26 + side * (24 + (i === 0 || i === 3 ? 4 : 0));
-      const fy = y + (i < 2 ? -12 + i * 4 : 6 + (i - 2) * 8);
-      return { d: `M26,${y} Q${kx},${y - 10} ${fx},${fy}`, side, i };
-    }),
-  );
+  const body = useMemo(() => ({ abd: hairy(50, 38, 14, 18, 72, 2.2, 7), ceph: hairy(50, 64, 9, 9, 40, 1.4, 3) }), []);
   return (
-    <svg width={size} height={size * 1.2} viewBox="0 0 52 62" aria-hidden>
-      <g className="spider-legs" stroke="#3a3142" strokeWidth="2.8" fill="none" strokeLinecap="round">
-        {legs.map((l) => (
-          <path key={`${l.side}${l.i}`} d={l.d} />
-        ))}
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden overflow="visible">
+      {/* ip, karnın ucundaki örümcek memesine bağlanır */}
+      <line x1="50" y1="-2" x2="50" y2="21" stroke="#ede6d6" strokeOpacity="0.55" strokeWidth="0.6" />
+      <g className="spider-legs" stroke={INK} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {[-1, 1].flatMap((side) =>
+          LEGS.map(([ax, ay, kx, ky, fx, fy], i) => {
+            const X = (v: number) => 50 + side * v;
+            // diken: her eklemin biraz ilerisinde kısa, dışa bakan çizgiler
+            const sx = X((kx + fx) / 2), sy = (ky + fy) / 2;
+            return (
+              <g key={`${side}${i}`}>
+                <path d={`M${X(ax)},${ay} L${X(kx)},${ky}`} strokeWidth="3.4" />
+                <path d={`M${X(kx)},${ky} L${X(fx)},${fy}`} strokeWidth="2" />
+                <path d={`M${X(fx)},${fy} l${side * 2.5},${fy > ky ? 3 : -3}`} strokeWidth="1.2" />
+                <path d={`M${sx},${sy} l${side * 2.6},-1.6 M${X(kx)},${ky} l${side * 1.5},-2.4`} strokeWidth="0.9" />
+              </g>
+            );
+          }),
+        )}
       </g>
-      <ellipse cx="26" cy="36" rx="9" ry="11" fill="#2b2430" stroke="#ede6d6" strokeOpacity="0.7" strokeWidth="1" />
-      <ellipse cx="26" cy="22" rx="6" ry="5.5" fill="#342c3a" stroke="#ede6d6" strokeOpacity="0.7" strokeWidth="1" />
-      {/* çizgili sırt: siyah-beyaz tema */}
-      <path d="M19,33 Q26,30 33,33 M18,38 Q26,35 34,38 M19,43 Q26,40 33,43" stroke="#ede6d6" strokeOpacity="0.55" strokeWidth="1.3" fill="none" />
-      {/* iri, oyuk gözler */}
-      <circle cx="23.5" cy="21" r="2.2" fill="#ede6d6" />
-      <circle cx="28.5" cy="21" r="2.2" fill="#ede6d6" />
-      <circle cx="23.8" cy="21.3" r="0.9" fill="#120e14" />
-      <circle cx="28.2" cy="21.3" r="0.9" fill="#120e14" />
+      {/* karın: iri ve tüylü; bel ince */}
+      <path d={body.abd} fill={INK} />
+      <path d="M46,54 Q50,58 54,54 L53,57 Q50,59 47,57 Z" fill={INK} />
+      <path d={body.ceph} fill={INK} />
+      {/* zehir dişleri ve dokunaçlar (palp) */}
+      <g stroke={INK} fill="none" strokeLinecap="round">
+        <path d="M46.5,71 Q44,76 46.5,80" strokeWidth="2.4" />
+        <path d="M53.5,71 Q56,76 53.5,80" strokeWidth="2.4" />
+        <path d="M45,70 Q39,74 40,79" strokeWidth="1.6" />
+        <path d="M55,70 Q61,74 60,79" strokeWidth="1.6" />
+      </g>
     </svg>
   );
 }
@@ -50,8 +82,8 @@ function nextDrop(id: number): Drop {
     id,
     x: leftSide ? 6 + Math.random() * 14 : 64 + Math.random() * 12,
     depth: 16 + Math.random() * 20,
-    size: 82 + Math.random() * 34, // ön planda: büyük ve odak dışında
-    blur: 0.9 + Math.random() * 0.9,
+    size: 104 + Math.random() * 40, // ön planda: büyük ve hafif odak dışında
+    blur: 0.5 + Math.random() * 0.8,
     hang: 4 + Math.random() * 4,
   };
 }
@@ -67,14 +99,14 @@ function Spider({ d, onDone }: { d: Drop; onDone: () => void }) {
   return (
     <motion.div
       className="pointer-events-none fixed top-0 z-[60]"
-      style={{ left: `${d.x}vw`, filter: `blur(${d.blur}px) drop-shadow(0 0 8px #ede6d690)`, transformOrigin: '50% 0%' }}
-      initial={{ y: '-14vh', rotate: 0, opacity: 0.95 }}
+      style={{ left: `${d.x}vw`, filter: `blur(${d.blur}px) drop-shadow(0 0 2px #E8B04A55) drop-shadow(0 0 16px #E8B04A30)`, transformOrigin: '50% 0%' }}
+      initial={{ y: '-14vh', rotate: 0, opacity: 1 }}
       animate={{ y: ['-14vh', down, down, down, '-14vh'], rotate: [0, 4, -5, 3, 0] }}
       transition={{ duration: total, times: [0, 2.6 / total, (2.6 + d.hang / 2) / total, (2.6 + d.hang) / total, 1], ease: ['easeOut', 'easeInOut', 'easeInOut', 'easeIn'] }}
       aria-hidden
     >
       {/* ipek ip: örümceğin üstünden ekranın tepesine */}
-      <div className="absolute bottom-full left-1/2 h-[120vh] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#ede6d655] to-[#ede6d6aa]" />
+      <div className="absolute bottom-[98%] left-1/2 h-[120vh] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#ede6d640] to-[#ede6d68c]" />
       <SpiderSvg size={d.size} />
     </motion.div>
   );

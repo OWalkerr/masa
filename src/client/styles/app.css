@@ -182,8 +182,17 @@ button, input { font: inherit; color: inherit; }
   80% { opacity: 0.86; }
 }
 /* Örümcek bacakları: 8 fps kıpırtı */
-.spider-legs { animation: spider-legs 0.5s steps(2, end) infinite; transform-origin: 26px 30px; }
-@keyframes spider-legs { 0% { transform: scaleX(1); } 100% { transform: scaleX(0.92) translateY(0.6px); } }
+.spider-legs { animation: spider-legs 2.7s linear infinite; transform-origin: 50px 62px; }
+/* Çoğu zaman taş gibi durur, sonra ani bir seğirme: tedirgin edici */
+@keyframes spider-legs {
+  0%, 62%, 100% { transform: scale(1, 1); }
+  64% { transform: scale(0.9, 1.04); }
+  66% { transform: scale(1.06, 0.97); }
+  68% { transform: scale(0.95, 1.02); }
+  70%, 86% { transform: scale(1, 1); }
+  88% { transform: scale(1.04, 0.98) rotate(1.5deg); }
+  90% { transform: scale(1, 1); }
+}
 
 /* --- Kart parıltıları --- */
 /* Nadir: gümüş ışık süzülür; efsanevi: altın varak */

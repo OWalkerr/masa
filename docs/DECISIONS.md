@@ -251,3 +251,7 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - **TV düzeltmeleri:**
       - Oy sayımı anı artık içenleri sonuçtan alıyor. Düelloda "en çok oy alan içer" yazıyordu, oysa kaybeden içer. Kazanan da ayrıca duyuruluyor.
       - Sonuç paneli TV'de `transform: scale` yerine `zoom` ile büyütülüyor. Eskisi taşıp alttaki tabloya biniyordu.
+90. **Örümcek yeniden çizildi (2026-11-17):** Kullanıcı eskisini fazla şirin buldu.
+    - Yeni örümcek tamamen siyah ve kıllı bir silüet: iri tüylü karın, eklemli ve dikenli uzun bacaklar, aşağı bakan zehir dişleri. Göz yok. Baş aşağı sarkıyor, ip karnın ucuna bağlı.
+    - Koyu zeminde okunsun diye arkadan yalnızca hafif bir mum ışığı vuruyor (drop-shadow). Boyu biraz büyüdü, bulanıklığı azaldı.
+    - Bacaklar çoğu zaman kıpırtısız; ara ara ani, tedirgin edici seğirmeler oluyor.
