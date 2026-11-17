@@ -218,3 +218,14 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
 85. **İlk kez ipuçları (2026-11-17):** Bir rol ya da durum ilk kez başına geldiğinde ekranın üstünde kısa bir ipucu çıkar. Dokuz durum var: host, okuyucu, hedef, kural, lanet, kendi görevin, görev, güç ve kazan.
     - Her ipucu cihaz başına bir kez gösterilir ve 15 sn sonra kendiliğinden kapanır. "İpucu gösterme" ile tamamen kapatılabilir; ayar `prefs` içinde tutulur (`tipsSeen` / `tipsOff`).
     - İpucu üstte durur, Pas/Veto/Oyna düğmelerini kapatmaz. Uçtan uca testlerde `masa:pref:tipsOff` ile kapalıdır.
+86. **Son görsel paketi (2026-11-17):** 14 görsel eklendi.
+    - Avatar 8–12 eklendi. Görseller ilk tasarım belgesindeki karakterlerle geldiği için adlar da onlara göre değişti: Vampir DJ, Şair, Terzi, Dolmuşçu, Balıkçı.
+    - Gizli Görev, Karakalem ve Sergi türlerine 2'şer görsel; Karakalem modunun kapağı eklendi.
+    - `tik-reactions` sayfasından 6 TIK tepki pozu kesildi: sevinç, şaşkınlık, kahkaha, suçlama, ağlama, uyuklama. `Tik` bileşenine `pose` eklendi. Pozların kullanıldığı yerler:
+      - lobi ve özet: sevinç;
+      - kimse içmediğinde: ağlama;
+      - içenler varken: kahkaha (3+ kişide şaşkınlık);
+      - kart beklerken: uyuklama;
+      - TV'de suçlu damgası: suçlama; efsanevi kart: sevinç;
+      - 404 sayfası: ağlama.
+    - `kazan` görseli TV'deki "Kazan devrildi!" anında SVG kazanın yerini aldı.

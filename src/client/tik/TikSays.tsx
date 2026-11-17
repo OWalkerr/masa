@@ -2,10 +2,10 @@
 import { useEffect } from 'react';
 import { speak } from '../audio/voice';
 import { motion } from 'motion/react';
-import { Tik } from '../components/Tik';
+import { Tik, type TikPose } from '../components/Tik';
 import { useReducedMotion } from '../fx/motionPref';
 
-export function TikSays({ text, drinking = true, size = 56, className = '' }: { text: string; drinking?: boolean; size?: number; className?: string }) {
+export function TikSays({ text, drinking = true, size = 56, className = '', pose }: { text: string; drinking?: boolean; size?: number; className?: string; pose?: TikPose }) {
   const reduce = useReducedMotion();
   useEffect(() => speak(text), [text]);
   return (
@@ -18,7 +18,7 @@ export function TikSays({ text, drinking = true, size = 56, className = '' }: { 
       aria-label={`TIK diyor ki: ${text}`}
       role="note"
     >
-      <Tik size={size} variant={drinking ? 'raki' : 'tea'} mood="smirk" className="shrink-0" />
+      <Tik size={size} variant={drinking ? 'raki' : 'tea'} mood="smirk" pose={pose} className="shrink-0" />
       <p className="relative mb-3 rounded-[14px] rounded-bl-[4px] bg-parchment-200 px-3 py-2 text-[16px] italic leading-snug text-ink-text shadow-[0_6px_14px_#0008]">
         {text}
       </p>

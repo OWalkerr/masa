@@ -1,7 +1,9 @@
 // TIK: masanın sunucusu. Alkollüde lale biçimli rakı kadehi, alkolsüzde ince belli çay bardağı.
 // İnce çöp kolları, iri oyuk gözleri ve dikişli bir gülümsemesi vardır.
 import { keyItem, useManifest, type ArtItem } from '../art/manifest';
+export type TikPose = 'cheer' | 'shock' | 'laugh' | 'point' | 'sob' | 'doze';
 interface Props {
+  pose?: TikPose; // tepki pozu (görseli varsa)
   variant?: 'raki' | 'tea';
   size?: number;
   className?: string;
@@ -16,6 +18,8 @@ const STROKE = 'var(--bone-100)';
 export function Tik(props: Props) {
   const m = useManifest();
   const { variant = 'raki', mood = 'grin' } = props;
+  const posed = props.pose ? keyItem(m, `tik-${props.pose}`) : undefined;
+  if (posed) return <TikArt {...props} src={posed} />;
   const img = keyItem(m, `tik-${variant}${mood === 'smirk' ? '-turn' : ''}`) ?? keyItem(m, `tik-${variant}`);
   return img ? <TikArt {...props} src={img} /> : <TikSvg {...props} />;
 }

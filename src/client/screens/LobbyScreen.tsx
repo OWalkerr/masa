@@ -166,7 +166,7 @@ export function LobbyScreen({ view }: { view: View }) {
 
       <HouseCards view={view} />
       <LobbyVoice view={view} />
-      <TikSays text={tikLine('lobby', view.code)} drinking={view.settings.drinking} className="mx-auto" />
+      <TikSays pose="cheer" text={tikLine('lobby', view.code)} drinking={view.settings.drinking} className="mx-auto" />
       <div className="text-center">
         <InkButton variant="ghost" onClick={() => { send({ t: 'leave' }); navigate('/'); }}>
           Masadan kalk

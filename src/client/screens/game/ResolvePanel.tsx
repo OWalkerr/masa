@@ -175,7 +175,7 @@ export function ResolvePanel({ view }: { view: View }) {
         effect || r.potAdd !== undefined ? null : (
           <>
             <p className="ink-panel p-4 text-center text-[19px]">{view.settings.drinking ? 'Bu tur kimse içmiyor.' : 'Bu tur ceza yok.'}</p>
-            <TikSays text={tikLine('nobody', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
+            <TikSays pose="sob" text={tikLine('nobody', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
           </>
         )
       ) : (
@@ -200,6 +200,7 @@ export function ResolvePanel({ view }: { view: View }) {
 
       {r.payments.length > 0 && (
         <TikSays
+          pose={r.payments.length >= 3 ? 'shock' : 'laugh'}
           text={tikLine(!view.settings.drinking ? 'sober' : r.payments.length >= 3 ? 'heavy' : 'drink', `${view.code}${g.turnNo}`)}
           drinking={view.settings.drinking}
         />

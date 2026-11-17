@@ -7,7 +7,7 @@ export function NotFound({ title = 'Burada kimse yok', text = 'Bu sokakta masa k
   return (
     <main className="relative flex min-h-full flex-col items-center justify-center gap-4 px-4 text-center">
       <NightScene seed={3} />
-      <Tik size={110} mood="smirk" />
+      <Tik size={110} mood="smirk" pose="sob" />
       <h1 className="font-gothic text-[40px]">{title}</h1>
       <p className="max-w-xs text-bone-dim">{text}</p>
       <InkButton onClick={() => navigate('/')}>Ana kapıya dön</InkButton>

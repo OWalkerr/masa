@@ -35,7 +35,7 @@ async function encode(input: string, width: number, out: string): Promise<number
 }
 
 for (const f of files) {
-  if (/^tik-sheet\./i.test(f)) continue; // poz sayfası aşağıda kesilir
+  if (/^tik-(sheet|reactions)\./i.test(f)) continue; // poz sayfaları aşağıda kesilir
   const key = basename(f, extname(f)).toLowerCase().replace(/[^a-z0-9-]/g, '-');
   const input = join(SRC, f);
   const o800 = join(OUT, `${key}-800.webp`);
@@ -80,6 +80,30 @@ if (sheetFile) {
     const m2 = await sharp(o800).metadata();
     manifest.items[key] = { w800: `/art/${key}-800.webp`, w400: `/art/${key}-400.webp`, width: m2.width ?? 400, height: m2.height ?? 520, bytes: statSync(o800).size };
     console.log(`✓ ${key} (poz sayfasından)`);
+  }
+}
+
+// TIK tepki sayfası (3×2): üst sıra sevinç, şaşkınlık, kahkaha; alt sıra suçlama, ağlama, uyuklama.
+// Merkezler 2048×1143 sayfada ölçüldü; her poz 200:260 kesilir.
+const reactFile = files.find((f) => /^tik-reactions\./i.test(f));
+if (reactFile) {
+  const meta = await sharp(join(SRC, reactFile)).metadata();
+  const W = meta.width ?? 2048, H = meta.height ?? 1143;
+  const fx = W / 2048, fy = H / 1143;
+  const cells: Record<string, [number, number]> = {
+    'tik-cheer': [594, 30], 'tik-shock': [1039, 30], 'tik-laugh': [1526, 30],
+    'tik-point': [645, 572], 'tik-sob': [1055, 572], 'tik-doze': [1485, 572],
+  };
+  for (const [key, [cx, top]] of Object.entries(cells)) {
+    const w = Math.round(430 * fx), h = Math.min(Math.round(559 * fy), H - Math.round(top * fy));
+    const region = { left: Math.max(0, Math.round(cx * fx - w / 2)), top: Math.round(top * fy), width: w, height: h };
+    const o800 = join(OUT, `${key}-800.webp`), o400 = join(OUT, `${key}-400.webp`);
+    const buf = await sharp(join(SRC, reactFile)).extract(region).toBuffer();
+    writeFileSync(o800, await sharp(buf).resize({ width: 400 }).webp({ quality: 82 }).toBuffer());
+    writeFileSync(o400, await sharp(buf).resize({ width: 200 }).webp({ quality: 80 }).toBuffer());
+    const m2 = await sharp(o800).metadata();
+    manifest.items[key] = { w800: `/art/${key}-800.webp`, w400: `/art/${key}-400.webp`, width: m2.width ?? 400, height: m2.height ?? 520, bytes: statSync(o800).size };
+    console.log(`✓ ${key} (tepki sayfasından)`);
   }
 }
 

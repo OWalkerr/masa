@@ -115,7 +115,7 @@ function Reflex({ view }: { view: View }) {
       aria-label={tapped ? 'Dokundun' : filled ? 'Bardak doldu, dokun!' : 'Bekle, bardak dolunca dokun'}
     >
       <div className="relative">
-        <Tik size={150} mood={filled ? 'grin' : 'smirk'} liquid={filled} />
+        <Tik size={150} mood={filled ? 'grin' : 'smirk'} liquid={filled} pose={filled ? 'cheer' : undefined} />
         {!reduce && filled && <motion.div className="absolute inset-0 rounded-full" initial={{ boxShadow: '0 0 0 0 #EDE6D6' }} animate={{ boxShadow: '0 0 60px 20px #EDE6D600' }} transition={{ duration: 0.6 }} />}
       </div>
       <span className="text-[44px] font-extrabold leading-none" aria-live="assertive">

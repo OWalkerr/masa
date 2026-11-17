@@ -216,7 +216,7 @@ function Waiting({ view, readerName, readerAvatar }: { view: View; readerName: s
           {readerName} kart seçiyor…
         </p>
       </div>
-      <TikSays text={tikLine('waiting', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
+      <TikSays pose="doze" text={tikLine('waiting', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
       <div className="w-full max-w-[320px]">
         {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={g.step === "target" ? DUR.target : DUR.choose + DUR.deal} />}
       </div>

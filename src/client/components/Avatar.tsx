@@ -6,9 +6,9 @@ const S = 'var(--bone-100)';
 const D = 'var(--ink-950)';
 
 export const AVATAR_NAMES = [
-  // İlk 7'si çizilmiş görsellere göre adlandırıldı (assets-raw/avatar-01…07)
+  // Çizilmiş görsellere göre adlandırıldı (assets-raw/avatar-01…12)
   'Garson İskelet', 'Kara Kedi', 'Simitçi', 'Çaycı Nine', 'Bereli Martı', 'Kemençeci İskelet',
-  'Atkılı Çocuk', 'Örümcek', 'Ay Yüzlü', 'Yarasa', 'Fesli Bebek', 'Çizgili Kukla',
+  'Atkılı Çocuk', 'Vampir DJ', 'Şair', 'Terzi', 'Dolmuşçu', 'Balıkçı',
 ];
 
 // Ortak oyuk göz

@@ -8,6 +8,8 @@ import { Avatar } from '../../components/Avatar';
 import { Cauldron } from '../../components/Cauldron';
 import { useReducedMotion } from '../../fx/motionPref';
 import { useRoom } from '../../store/room';
+import { keyItem, useManifest } from '../../art/manifest';
+import { Tik } from '../../components/Tik';
 
 type Moment =
   | { k: 'tally'; rows: { id: string; n: number }[]; winners: string[] }
@@ -60,6 +62,7 @@ function MomentView({ m, view }: { m: Moment; view: View }) {
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
   const avatar = (id: string) => view.players.find((p) => p.id === id)?.avatar ?? 0;
   const drinking = view.settings.drinking;
+  const kazanArt = keyItem(useManifest(), 'kazan');
 
   useEffect(() => {
     if (m.k === 'tally') {
@@ -127,7 +130,18 @@ function MomentView({ m, view }: { m: Moment; view: View }) {
             animate={reduce ? { rotate: 0 } : { rotate: [0, -8, 8, -12, 70], y: [-40, 0, 0, 0, 30] }}
             transition={{ duration: 1.6, times: [0, 0.2, 0.4, 0.6, 1] }}
           >
-            <Cauldron n={m.units} size={260} label={false} />
+            {kazanArt ? (
+              <img
+                src={kazanArt.w800}
+                alt=""
+                width={440}
+                height={440}
+                className="h-[440px] w-[440px] rounded-full object-cover shadow-[0_0_80px_#A3E63555]"
+                style={{ maskImage: 'radial-gradient(circle, #000 58%, transparent 72%)', WebkitMaskImage: 'radial-gradient(circle, #000 58%, transparent 72%)' }}
+              />
+            ) : (
+              <Cauldron n={m.units} size={260} label={false} />
+            )}
           </motion.div>
           {!reduce && (
             <div className="pointer-events-none absolute left-1/2 top-1/2">
@@ -154,7 +168,10 @@ function MomentView({ m, view }: { m: Moment; view: View }) {
 
       {m.k === 'guilty' && (
         <div className="flex flex-col items-center gap-4">
-          <Avatar index={avatar(m.id)} size={220} />
+          <div className="flex items-end gap-8">
+            <Avatar index={avatar(m.id)} size={220} />
+            <Tik size={170} pose="point" variant={drinking ? 'raki' : 'tea'} />
+          </div>
           <motion.p
             className="rounded-[18px] border-[10px] border-[#D7263D] px-12 py-2 font-gothic text-[150px] leading-none text-[#D7263D]"
             initial={reduce ? { opacity: 0 } : { scale: 3.5, rotate: -18, opacity: 0 }}
@@ -177,6 +194,7 @@ function MomentView({ m, view }: { m: Moment; view: View }) {
               transition={{ duration: 2.6, ease: 'linear' }}
             />
           )}
+          <Tik size={200} pose="cheer" className="absolute bottom-[90px] right-[160px]" />
           <motion.p className="relative font-gothic text-[140px] text-[#E8C26A]" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 12 }}>
             Efsanevi Kart
           </motion.p>
