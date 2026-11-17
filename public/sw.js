@@ -2,7 +2,7 @@
 // - Sayfalar (navigasyon): önce ağ; internet yoksa son kayıtlı kabuk. Böylece her yayın anında görünür.
 // - /assets/* (adı içeriğinin özetiyle değişen dosyalar), yazı tipleri, görseller: önbellekten, yoksa ağdan.
 // - /api ve WebSocket asla önbelleğe alınmaz.
-const VERSION = 'masa-v2';
+const VERSION = 'masa-v3';
 const SHELL = '/';
 
 self.addEventListener('install', (e) => {
@@ -34,7 +34,7 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Görsel listesi her zaman ağdan (yeni görseller hemen görünsün); internet yoksa son kopya
-  if (url.pathname === '/art/manifest.json') {
+  if (url.pathname === '/art/manifest.json' || url.pathname === '/sfx/manifest.json') {
     e.respondWith(
       fetch(req)
         .then((res) => {
@@ -50,7 +50,7 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Görseller: önbellekten hemen, arka planda tazele (aynı adla güncellenen görsel bir sonraki açılışta gelir)
-  if (url.pathname.startsWith('/art/') || url.pathname.startsWith('/icons/')) {
+  if (url.pathname.startsWith('/art/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/sfx/')) {
     e.respondWith(
       caches.open(VERSION).then((c) =>
         c.match(req).then((hit) => {

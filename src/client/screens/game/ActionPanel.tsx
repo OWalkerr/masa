@@ -84,8 +84,8 @@ export function ActionPanel({ view }: { view: View }) {
     ) : (
       <Info>
         {g.targets.includes(me)
-          ? `Sahne senin: yap ya da ${card.penalty ? (view.you?.sober || !view.settings.drinking ? `${card.penalty} ceza al` : `${card.penalty} yudum iç`) : 'pas geç'}. Bitince ${reader?.name} hüküm verecek.`
-          : `İzle, gül, yorum yap. Bitince ${reader?.name} hüküm verecek.`}
+          ? `Yap ya da ${card.penalty ? (view.you?.sober || !view.settings.drinking ? `${card.penalty} ceza al` : `${card.penalty} yudum iç`) : 'pas geç'}. Kaçmak istersen pas hakkın aşağıda.`
+          : 'İzle, gül, laf at. Şov bitince hüküm okuyucuda.'}
       </Info>
     );
   } else if (g.input === 'votePlayer') {
@@ -158,7 +158,7 @@ function DuelVote({ view }: { view: View }) {
     <button
       type="button"
       onClick={() => send({ t: 'vote', playerId: p!.id })}
-      className="flex min-h-[140px] flex-1 flex-col items-center justify-center gap-2 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+      className="flex min-h-[140px] flex-1 flex-col items-center justify-center gap-2 rounded-[14px] ink-tile active:scale-95"
     >
       <Avatar index={p!.avatar} size={64} />
       <span className="max-w-full truncate px-2 text-[18px]">{p!.name}</span>
@@ -264,7 +264,7 @@ function ConfessionGuess({ view, waiting }: { view: View; waiting: number }) {
                   key={p.id}
                   type="button"
                   onClick={() => send({ t: 'vote', playerId: p.id })}
-                  className="flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+                  className="flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-[14px] ink-tile active:scale-95"
                 >
                   <Avatar index={p.avatar} size={42} />
                   <span className="max-w-full truncate px-1 text-[15px]">{p.name}</span>
@@ -327,7 +327,7 @@ function JudgeAll({ view }: { view: View }) {
               type="button"
               aria-pressed={on}
               onClick={() => setPayers((s) => (on ? s.filter((x) => x !== id) : [...s, id]))}
-              className={`flex min-h-[56px] items-center gap-2 rounded-[12px] px-2 ${on ? 'bg-[#7A1E24] text-bone-100' : 'bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]'}`}
+              className={`flex min-h-[56px] items-center gap-2 rounded-[12px] px-2 ${on ? 'bg-[#7A1E24] text-bone-100' : 'ink-tile'}`}
             >
               <Avatar index={p.avatar} size={36} />
               <span className="truncate text-[16px]">{on ? (view.settings.drinking ? 'İçer: ' : 'Ceza: ') : ''}{p.name}</span>
@@ -352,7 +352,7 @@ function VoteGrid({ view }: { view: View }) {
         <p className="text-center text-[18px]">Kimi seçiyorsun?</p>
         <div className="grid grid-cols-3 gap-2">
           {choices.map((p) => (
-            <button key={p.id} type="button" onClick={() => send({ t: 'vote', playerId: p.id })} className="flex min-h-[92px] flex-col items-center justify-center gap-1 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
+            <button key={p.id} type="button" onClick={() => send({ t: 'vote', playerId: p.id })} className="flex min-h-[92px] flex-col items-center justify-center gap-1 rounded-[14px] ink-tile">
               <Avatar index={p.avatar} size={46} />
               <span className="max-w-full truncate px-1 text-[15px]">{p.name}</span>
             </button>
@@ -370,7 +370,7 @@ function VoteGrid({ view }: { view: View }) {
             key={p.id}
             type="button"
             onClick={() => send({ t: 'vote', playerId: p.id })}
-            className="flex min-h-[92px] flex-col items-center justify-center gap-1 rounded-[14px] bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)] active:scale-95"
+            className="flex min-h-[92px] flex-col items-center justify-center gap-1 rounded-[14px] ink-tile active:scale-95"
           >
             <Avatar index={p.avatar} size={46} />
             <span className="max-w-full truncate px-1 text-[15px]">{p.name}</span>

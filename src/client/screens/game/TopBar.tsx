@@ -60,7 +60,7 @@ export function TopBar({ view }: { view: View }) {
         </ol>
         <Pocket view={view} />
         <MuteButton />
-        <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menü" className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
+        <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menü" className="flex h-[48px] w-[48px] items-center justify-center rounded-full ink-tile">
           <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
             <path d="M4,6 h14 M4,11 h14 M4,16 h14" stroke="var(--bone-100)" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
@@ -97,7 +97,7 @@ function Menu({ view, onClose }: { view: View; onClose: () => void }) {
 export function MuteButton() {
   const [muted, setMuted] = useMuted();
   return (
-    <button type="button" onClick={() => setMuted(!muted)} aria-pressed={muted} aria-label={muted ? 'Sesi aç' : 'Sessiz'} className="flex h-[48px] w-[44px] items-center justify-center rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]">
+    <button type="button" onClick={() => setMuted(!muted)} aria-pressed={muted} aria-label={muted ? 'Sesi aç' : 'Sessiz'} className="flex h-[48px] w-[44px] items-center justify-center rounded-full ink-tile">
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
         <path d="M3,8 h4 l5,-4 v14 l-5,-4 h-4 Z" fill="var(--bone-100)" />
         {muted ? <path d="M15,8 l5,6 M20,8 l-5,6" stroke="var(--bone-100)" strokeWidth="2" /> : <path d="M15,7 q3,4 0,8 M17,4 q6,7 0,14" stroke="var(--bone-100)" strokeWidth="1.8" fill="none" />}

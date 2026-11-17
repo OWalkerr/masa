@@ -110,3 +110,47 @@ button, input { font: inherit; color: inherit; }
 :root[data-reduce-motion='true'] .bat-fly { animation: none !important; }
 
 .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+/* --- Meyhane bileşenleri (yardımcı sınıflar bunları ezebilsin diye components katmanında) --- */
+@layer components {
+  /* Parşömen: lekeli, kenarı yanık kâğıt */
+  .paper {
+    background-color: var(--parchment-200);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 12% 18%, #8a5a2a14, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 88% 82%, #6b3f1a18, transparent 70%),
+      radial-gradient(circle at 70% 12%, #a0703a10 0 6%, transparent 7%),
+      linear-gradient(180deg, #fffaf00d, #00000008);
+    color: var(--ink-text);
+    box-shadow: inset 0 0 0 1px #3a2a1e33, inset 0 0 28px #5a3d2240, 0 12px 28px #000a;
+  }
+
+  /* Mürekkep karo: oy/seçim düğmeleri. Elle kesilmiş gibi düzensiz köşeler, mum ışığı kenarı */
+  .ink-tile {
+    background: linear-gradient(180deg, #241f2b, #17141c);
+    border-radius: 15px 11px 16px 10px;
+    box-shadow: inset 0 0 0 1.5px #ede6d62e, inset 0 1px 0 #ffffff12, 0 4px 10px #0007;
+    transition: transform 0.12s ease, box-shadow 0.2s ease;
+  }
+  .ink-tile:hover { box-shadow: inset 0 0 0 1.5px #ede6d655, inset 0 1px 0 #ffffff14, 0 4px 14px #0009; }
+  .ink-tile:active { transform: translateY(1px) scale(0.97); }
+  .ink-tile[aria-pressed='true'],
+  .ink-tile[aria-checked='true'] {
+    box-shadow: inset 0 0 0 2px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 45%, transparent), 0 4px 10px #0007;
+  }
+
+  /* Asma tabela şeridi: uçları çentikli parşömen bant */
+  .ribbon {
+    clip-path: polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%);
+    padding-inline: 22px;
+  }
+  .ribbon-mine {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent));
+    color: var(--ink-950);
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 55%, transparent));
+  }
+  .ribbon-idle {
+    background: linear-gradient(180deg, #2a2430, #1c1822);
+    color: var(--bone-100);
+  }
+}

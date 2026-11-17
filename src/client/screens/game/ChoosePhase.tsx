@@ -173,7 +173,7 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
               type="button"
               aria-pressed={on}
               onClick={() => toggle(id)}
-              className={`flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-[14px] ${on ? 'bg-parchment-200 text-ink-text' : 'bg-ink-800 shadow-[inset_0_0_0_1px_var(--ash-500)]'}`}
+              className={`flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-[14px] ${on ? 'bg-parchment-200 text-ink-text' : 'ink-tile'}`}
             >
               <Avatar index={p.avatar} size={48} />
               <span className="max-w-full truncate px-1 text-[15px]">{on ? '✓ ' : ''}{p.name}</span>

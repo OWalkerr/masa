@@ -185,8 +185,9 @@ export function useFxFeedback(view: View) {
       }
       if (f.kind === 'mission' || f.kind === 'missionClaim') play('crow');
       if (f.kind === 'sketchStart') play('paper');
+      if (f.kind === 'guessWrong') play('wrong');
       if (f.kind === 'guessRight') {
-        play('clink');
+        play('right');
         const id = (f.payload as { playerId: string }).playerId;
         if (id === me) buzz([30, 40, 30]);
       }

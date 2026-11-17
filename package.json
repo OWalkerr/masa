@@ -10,6 +10,7 @@
     "validate:cards": "tsx scripts/validate-cards.ts",
     "split:seed": "tsx scripts/split-seed.ts",
     "convert:art": "tsx scripts/convert-art.ts",
+    "gen:sounds": "tsx scripts/gen-sounds.ts",
     "test": "vitest run",
     "test:e2e": "node tests/e2e/m0.e2e.mjs && node tests/e2e/m1.e2e.mjs && node tests/e2e/m2.e2e.mjs && node tests/e2e/m4.e2e.mjs && node tests/e2e/a11y.e2e.mjs && node tests/e2e/sketch.e2e.mjs",
     "typecheck": "tsc -b",

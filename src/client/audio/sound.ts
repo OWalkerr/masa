@@ -5,7 +5,10 @@ import { useEffect, useState } from 'react';
 import { loadPref, savePref } from '../net/identity';
 import { MUSIC, renderBuffer, SFX, toWavUrl, type SfxName } from './synth';
 
-const howls = new Map<SfxName, Howl>();
+// Tasarlanmış sesler (ElevenLabs, scripts/gen-sounds.ts) /sfx/ altında durur; olmayan ses tarayıcıda sentezlenir.
+export type SoundName = SfxName | 'right' | 'wrong' | 'bell';
+const howls = new Map<SoundName, Howl>();
+let files: Record<string, string> = {};
 let music: Howl | null = null;
 let musicWanted = false;
 let unlocked = false;
@@ -32,17 +35,38 @@ export function useMuted(): [boolean, (v: boolean) => void] {
   return [m, setMuted];
 }
 
+async function loadFiles() {
+  try {
+    const r = await fetch('/sfx/manifest.json');
+    if (r.ok && r.headers.get('content-type')?.includes('json')) files = ((await r.json()) as { files?: Record<string, string> }).files ?? {};
+  } catch {
+    files = {};
+  }
+}
+
 async function build() {
-  if (typeof OfflineAudioContext === 'undefined') return;
-  for (const [name, def] of Object.entries(SFX) as [SfxName, (typeof SFX)[SfxName]][]) {
-    const buf = await renderBuffer(def.dur, def.draw);
-    howls.set(name, new Howl({ src: [toWavUrl(buf)], format: ['wav'], volume: 0.7 }));
+  await loadFiles();
+  for (const [name, src] of Object.entries(files)) {
+    if (name === 'music') continue;
+    howls.set(name as SoundName, new Howl({ src: [src], format: ['mp3'], volume: 0.75, preload: true }));
+  }
+  if (typeof OfflineAudioContext !== 'undefined') {
+    for (const [name, def] of Object.entries(SFX) as [SfxName, (typeof SFX)[SfxName]][]) {
+      if (howls.has(name)) continue;
+      const buf = await renderBuffer(def.dur, def.draw);
+      howls.set(name, new Howl({ src: [toWavUrl(buf)], format: ['wav'], volume: 0.7 }));
+    }
   }
   if (musicWanted) await buildMusic();
 }
 
 async function buildMusic() {
   if (music) return;
+  if (files.music) {
+    music = new Howl({ src: [files.music], format: ['mp3'], loop: true, volume: 0.3, html5: true });
+    return;
+  }
+  if (typeof OfflineAudioContext === 'undefined') return;
   const buf = await renderBuffer(MUSIC.dur, MUSIC.draw, 22050);
   music = new Howl({ src: [toWavUrl(buf)], format: ['wav'], loop: true, volume: 0.35 });
 }
@@ -63,9 +87,12 @@ export function installUnlock() {
   window.addEventListener('keydown', go);
 }
 
-export function play(name: SfxName) {
+// Tasarlanmış dosyası olmayan yeni sesler en yakın sentez sesine düşer
+const FALLBACK: Partial<Record<SoundName, SfxName>> = { right: 'clink', wrong: 'tap', bell: 'clink' };
+
+export function play(name: SoundName) {
   if (!unlocked || isMuted()) return;
-  howls.get(name)?.play();
+  (howls.get(name) ?? howls.get(FALLBACK[name] as SoundName))?.play();
 }
 
 // Müzik: TV ve host telefonu

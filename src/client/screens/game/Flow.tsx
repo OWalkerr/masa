@@ -1,4 +1,6 @@
 // Akış: "şu an ne oluyor" şeridi, kompakt kart, host'un "Sonraki" çubuğu, gizli kelime kutusu.
+import { InkButton } from '../../components/InkButton';
+import { InkFrame } from '../../components/ink/InkFrame';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { Card } from '../../../engine/cards';
@@ -20,9 +22,7 @@ export function NowBar({ view }: { view: View }) {
       key={line.text}
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`mx-3 mb-2 rounded-[12px] px-3 py-2 text-center text-[17px] font-bold leading-snug ${
-        line.mine ? 'bg-[var(--accent)] text-ink-950 shadow-[0_0_18px_var(--accent)]' : 'bg-ink-800/90 text-bone-100 shadow-[inset_0_0_0_1px_var(--ash-500)]'
-      }`}
+      className={`ribbon mx-2 mb-2 py-2 text-center text-[17px] font-bold leading-snug ${line.mine ? 'ribbon-mine' : 'ribbon-idle'}`}
       role="status"
       aria-live="polite"
     >
@@ -39,11 +39,16 @@ export function CardCompact({ view, card }: { view: View; card: Card }) {
   const frame = card.rarity === 'legendary' ? 'var(--gold-400)' : card.rarity === 'rare' ? '#C9CED6' : 'transparent';
   return (
     <div
-      className="w-full max-w-sm rounded-[16px] bg-parchment-200 p-4 text-ink-text shadow-[0_12px_30px_#000a]"
-      style={{ outline: `2px solid ${frame}`, outlineOffset: 2 }}
+      className="paper relative w-full max-w-sm rounded-[14px] p-4 pt-3"
+      style={{ outline: `2px solid ${frame}`, outlineOffset: 3 }}
       role="group"
       aria-label={`${cardLabel(card)} kartı`}
     >
+      <InkFrame seed={hashSeed(card.id)} stroke="#2a1f17" width={1.6} className="m-[5px] !h-[calc(100%-10px)] !w-[calc(100%-10px)]" />
+      <Flourish className="left-1 top-1" />
+      <Flourish className="right-1 top-1 -scale-x-100" />
+      <Flourish className="bottom-1 left-1 -scale-y-100" />
+      <Flourish className="bottom-1 right-1 -scale-100" />
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 rounded-full bg-ink-950 py-1 pl-1 pr-3 text-[15px] text-bone-100">
           <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-parchment-200">
@@ -62,6 +67,21 @@ export function CardCompact({ view, card }: { view: View; card: Card }) {
       </p>
       <p className="mt-2 border-t border-[#0002] pt-2 text-center text-[15px] leading-snug text-[#3a2f2a]">{howTo(card, view)}</p>
     </div>
+  );
+}
+
+function hashSeed(id: string): number {
+  let h = 7;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 997;
+  return h;
+}
+
+// Köşe süsü: mürekkep kıvrımı
+function Flourish({ className = '' }: { className?: string }) {
+  return (
+    <svg aria-hidden width="26" height="26" viewBox="0 0 26 26" className={`pointer-events-none absolute ${className}`}>
+      <path d="M3,23 C3,10 10,3 23,3 M3,23 C6,16 10,12 15,11 C11,13 10,17 13,18 C16,19 17,15 15,13" fill="none" stroke="#2a1f17" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -131,13 +151,9 @@ export function HostBar({ view }: { view: View }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md bg-gradient-to-t from-ink-950 via-ink-950/95 to-transparent px-3 pb-3 pt-6 safe-bottom">
       {canDrive ? (
-        <button
-          type="button"
-          onClick={() => send({ t: 'advance', at: g.stepKey })}
-          className="min-h-[60px] w-full rounded-[16px] bg-[var(--accent)] text-[20px] font-extrabold text-ink-950 shadow-[0_6px_20px_#000c] active:scale-[0.98]"
-        >
+        <InkButton className="min-h-[62px] w-full text-[21px]" seed={77} onClick={() => send({ t: 'advance', at: g.stepKey })}>
           {label}
-        </button>
+        </InkButton>
       ) : (
         <p className="rounded-[14px] bg-ink-800 px-4 py-3 text-center text-[16px] text-bone-dim shadow-[inset_0_0_0_1px_var(--ash-500)]">
           {timed ? 'Sıradaki kart birazdan açılacak.' : `Hazır olunca ${host?.name ?? 'host'} sıradaki kartı açacak. Bu arada ${word.imp === 'iç' ? 'kadehler' : 'bardaklar'} dolsun.`}

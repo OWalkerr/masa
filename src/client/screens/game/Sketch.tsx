@@ -222,10 +222,10 @@ function DrawPad({ sk }: { sk: SketchView }) {
       </div>
       {!sk.singleLine && (
         <div className="flex w-full max-w-[560px] gap-2">
-          <button type="button" onClick={() => send({ t: 'drawUndo' })} className="min-h-[52px] flex-1 rounded-[12px] bg-ink-800 text-[17px] shadow-[inset_0_0_0_1px_var(--ash-500)]">
+          <button type="button" onClick={() => send({ t: 'drawUndo' })} className="min-h-[52px] flex-1 ink-tile text-[17px]">
             ↶ Geri al
           </button>
-          <button type="button" onClick={() => send({ t: 'drawClear' })} className="min-h-[52px] flex-1 rounded-[12px] bg-ink-800 text-[17px] shadow-[inset_0_0_0_1px_var(--ash-500)]">
+          <button type="button" onClick={() => send({ t: 'drawClear' })} className="min-h-[52px] flex-1 ink-tile text-[17px]">
             Sil, baştan
           </button>
         </div>

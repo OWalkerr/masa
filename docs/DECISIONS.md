@@ -139,3 +139,13 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Karakalem modu: `sketch` + `classic` havuzu, çizim ağırlığı 7. Çizim kartları her perdede gelir. Deyim ve atasözü çizimleri yoğunluk 3'tür.
 64. **Çizim verisi:** noktalar 0..1000 tam sayı (ekrandan bağımsız). Çizen 160 ms'de bir en fazla 80 noktalık parça gönderir. Sunucu parçayı herkese yalnızca olay olarak iletir; tam görünüm en fazla 2,5 sn'de bir gider (her parçada tam görünüm göndermek trafiği şişirirdi). Arada bağlanan telefon çizimi bir sonraki tam görünümde eksiksiz alır. Üst sınır: 6000 nokta, 200 çizgi.
 65. **Kart yazımı artık depoda:** `content/authoring/` (Python). `gen.py` desteleri `content/cards/*.json`'a yazar; JSON hâlâ oyunun kaynağıdır ve doğrulamadan geçer.
+66. **Görsel dil cilası:**
+    - "Şu an ne oluyor" şeridi uçları çentikli asma tabela; sıra sendeyse mum ışığıyla parlar.
+    - Kartın metin paneli ve kompakt kart lekeli, kenarı yanık parşömen (`.paper`); kompakt kartta titrek mürekkep çerçeve ve köşe kıvrımları var.
+    - Oy ve seçim düğmeleri elle kesilmiş gibi düzensiz köşeli mürekkep karolar (`.ink-tile`); seçilince mum ışığı halkası.
+    - "Sonraki kart" parşömen mürekkep düğmesi.
+    - Bu sınıflar `@layer components` içinde, yardımcı sınıflar ezebilir.
+67. **Ses dosyaları ElevenLabs ile üretilir** (`npm run gen:sounds`, `scripts/gen-sounds.ts`). API anahtarı ortamın ağ şifresidir: koda ve dosyaya yazılmaz, proxy ekler.
+    - Çıktılar `public/sfx/*.mp3` ve `manifest.json`.
+    - İstemci önce bu dosyaları çalar; dosyası olmayan ses tarayıcıda sentezlenir, oyun hiçbir anda sessiz kalmaz.
+    - Yeni sesler: doğru tahmin çanı, yanlış tahmin hayalet ıslığı, tavern zili.

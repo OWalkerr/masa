@@ -86,8 +86,8 @@ export function GameCard({ card, width, tokens, names, sober, inherited, classNa
 
       {/* metin paneli: parşömen üstünde koyu mürekkep (kontrast ≥ 7:1) */}
       <div
-        className="absolute flex flex-col"
-        style={{ left: 3 * u, right: 3 * u, bottom: 3 * u, top: width * 1.4 * 0.55 + 1.5 * u, background: 'var(--parchment-200)', borderRadius: 2.5 * u, padding: `${3 * u}px ${4 * u}px ${2.5 * u}px` }}
+        className="paper absolute flex flex-col"
+        style={{ left: 3 * u, right: 3 * u, bottom: 3 * u, top: width * 1.4 * 0.55 + 1.5 * u, borderRadius: 2.5 * u, padding: `${3 * u}px ${4 * u}px ${2.5 * u}px` }}
       >
         <p className="flex flex-1 items-center justify-center text-center font-extrabold leading-[1.18] text-ink-text" style={{ fontSize: textSize }}>
           <span>
