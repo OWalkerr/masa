@@ -233,7 +233,38 @@ export function ResolvePanel({ view }: { view: View }) {
       {g.hasInheritForNext && nextReader && (
         <p className="text-center text-[15px] italic text-bone-dim">Seçilmeyen bir kart {nextReader} için miras kaldı…</p>
       )}
+
+      {g.rateable && view.you && <CardRating mine={g.myRating} />}
     </div>
+  );
+}
+
+// Kart oylaması: isimsiz, oyunu etkilemez; iyi kartlar çoğalır, sıkıcılar desteden çıkar
+function CardRating({ mine }: { mine: -1 | 0 | 1 }) {
+  const send = useRoom((s) => s.send);
+  const opt = (v: 1 | -1, label: string) => {
+    const on = mine === v;
+    return (
+      <button
+        type="button"
+        aria-pressed={on}
+        onClick={() => send({ t: 'rate', v: on ? 0 : v })}
+        className={`min-h-[44px] flex-1 rounded-[12px] px-3 text-[16px] font-bold transition-colors ${
+          on ? 'bg-parchment-200 text-ink-text' : 'bg-ink-800/80 text-bone-100 shadow-[inset_0_0_0_1px_var(--ash-500)]'
+        }`}
+      >
+        {label}
+      </button>
+    );
+  };
+  return (
+    <section aria-label="Kartı oyla" className="mt-1 flex flex-col gap-2 rounded-[14px] p-2">
+      <p className="text-center text-[14px] text-bone-dim">Bu kart nasıldı? Oyun isimsiz, desteyi birlikte düzeltiyoruz.</p>
+      <div className="flex gap-2">
+        {opt(1, 'Güldürdü')}
+        {opt(-1, 'Sıktı')}
+      </div>
+    </section>
   );
 }
 

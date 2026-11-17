@@ -9,6 +9,7 @@ import { IntentError, type Fx, type GameState, type Intent } from '../engine/typ
 import { viewFor } from '../engine/viewFor';
 import { botDecide, botJoinIntents } from './bots';
 import type { Env } from './worker';
+import type { CardDelta } from './CardStatsDO';
 
 interface Attachment {
   pid: string | null;
@@ -219,7 +220,8 @@ export class RoomDO extends DurableObject<Env> {
     try {
       const { state, fx } = reduce(this.game, intent, { now: Date.now(), rng, catalog: loadCatalog() });
       this.game = state;
-      this.pendingFx.push(...fx.filter((f) => f.kind !== 'expired' && f.kind !== 'botDue'));
+      this.collectStats(fx);
+      this.pendingFx.push(...fx.filter((f) => f.kind !== 'expired' && f.kind !== 'botDue' && f.kind !== 'rated'));
       if (flush) await this.flush();
       return fx;
     } catch (e) {
@@ -231,6 +233,36 @@ export class RoomDO extends DurableObject<Env> {
       if (from) this.sendError(from, 'INTERNAL', 'Bir şeyler ters gitti.');
       return null;
     }
+  }
+
+  // Kart istatistiği: açılan kartlar ve "güldürdü / sıktı" oyları global sayaca gider (isimsiz)
+  private collectStats(fx: Fx[]) {
+    const g = this.game;
+    if (!g) return;
+    const house = new Set((g.houseCards ?? []).map((h) => h.card.id));
+    const out: CardDelta[] = [];
+    for (const f of fx) {
+      const p = f.payload as { cardId?: string; prev?: number; v?: number } | undefined;
+      const id = p?.cardId;
+      if (!id || id.startsWith('sys-') || id.startsWith('house-') || house.has(id)) continue;
+      if (f.kind === 'reveal') out.push({ id, shown: 1 });
+      if (f.kind === 'rated') {
+        const d: CardDelta = { id, up: 0, down: 0 };
+        if (p.prev === 1) d.up! -= 1;
+        if (p.prev === -1) d.down! -= 1;
+        if (p.v === 1) d.up! += 1;
+        if (p.v === -1) d.down! += 1;
+        out.push(d);
+      }
+    }
+    if (!out.length) return;
+    if (!this.env.STATS) { console.error('STATS bağlı değil'); return; }
+    const stub = this.env.STATS.get(this.env.STATS.idFromName('global'));
+    // Beklemeden gönder: istatistik yazılamazsa oyun etkilenmez
+    void stub
+      .fetch('https://stats/add', { method: 'POST', body: JSON.stringify(out) })
+      .then(() => undefined)
+      .catch((e) => console.error('kart istatistiği gönderilemedi', e));
   }
 
   private pendingFx: Fx[] = [];

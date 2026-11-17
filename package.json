@@ -8,6 +8,7 @@
     "build": "npm run validate:cards && tsc -b && vite build",
     "preview": "vite preview",
     "validate:cards": "tsx scripts/validate-cards.ts",
+    "report:cards": "NODE_USE_ENV_PROXY=1 tsx scripts/card-report.ts",
     "split:seed": "tsx scripts/split-seed.ts",
     "convert:art": "tsx scripts/convert-art.ts",
     "gen:voice": "NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt tsx scripts/gen-voice.ts",

@@ -128,6 +128,8 @@ export interface GameView {
   options: string[];
   optionPlayers: boolean;
   secret: string | null; // gizli kelime/görev: yalnızca hedefe
+  rateable: boolean; // sonuç ekranında kart oylanabilir mi (ev ve sistem kartları hariç)
+  myRating: -1 | 0 | 1;
   waitingOn: string[]; // girdisi beklenenler (isimleri göstermek için)
   answers: string[]; // itiraf: karışık cevaplar (yazarsız)
   spotlight: number | null; // itiraf: spot ışığındaki cevabın sırası
@@ -260,6 +262,8 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         ? s.players.filter((p) => !p.left && p.id !== t.readerId && consentsFor(s, p.id, card) && !cursedFor(s, p.id, card)).map((p) => p.id)
         : [],
     card: cardVisible ? card : null,
+    rateable: s.phase === 'resolve' && !!t && !t.system && !!card && !card.tags?.includes('ev'),
+    myRating: (me && t?.ratings?.[me]) || 0,
     // Gizli görevin ajanı kimseye gitmez (kendisine de: görevi effects üzerinden görür)
     targets: cardVisible && !mission ? t?.targets ?? [] : [],
     tokens: cardVisible ? t?.tokens ?? {} : {},

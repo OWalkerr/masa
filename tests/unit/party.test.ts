@@ -546,3 +546,28 @@ describe('Rövanş ve anılar', () => {
     expect(sim.s.series).toBeUndefined();
   });
 });
+
+describe('kart oylaması', () => {
+  it('yalnızca sonuçta oylanır, değiştirilebilir, geri alınabilir; fx sayaç farkını taşır', () => {
+    const qs = only(card('q1', { type: 'question' }), card('q2', { type: 'question', text: '{secilen}, yine anlat.' }));
+    const sim = relaxed(qs);
+    expect(() => sim.as('p1', { t: 'rate', v: 1 })).toThrow(); // kart seçilirken oylanmaz
+    playForce(sim, sim.turn.hand[0]!);
+    sim.timeout();
+    sim.as(sim.turn.readerId, { t: 'judge', done: true });
+    expect(sim.s.phase).toBe('resolve');
+    expect(viewFor(sim.s, 'p1', qs).game!.rateable).toBe(true);
+    let fx = sim.as('p1', { t: 'rate', v: 1 });
+    expect(fx.find((f) => f.kind === 'rated')?.payload).toMatchObject({ prev: 0, v: 1 });
+    expect(viewFor(sim.s, 'p1', qs).game!.myRating).toBe(1);
+    expect(viewFor(sim.s, 'p2', qs).game!.myRating).toBe(0);
+    fx = sim.as('p1', { t: 'rate', v: -1 });
+    expect(fx.find((f) => f.kind === 'rated')?.payload).toMatchObject({ prev: 1, v: -1 });
+    expect(sim.as('p1', { t: 'rate', v: -1 })).toEqual([]); // aynı oy tekrar sayılmaz
+    sim.as('p1', { t: 'rate', v: 0 });
+    expect(viewFor(sim.s, 'p1', qs).game!.myRating).toBe(0);
+    // oylama oyunu etkilemez: bedeller aynı kalır, host ilerletir
+    sim.as('p0', { t: 'advance' });
+    expect(sim.s.phase).toBe('choose');
+  });
+});

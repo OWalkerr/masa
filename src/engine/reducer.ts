@@ -2,7 +2,7 @@
 import { addHouseCard, removeHouseCard, roomCatalog } from './house';
 import {
   answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
-  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone, sketchDraw, sketchUndo, sketchGuess, galleryFinish, galleryCast,
+  submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone, sketchDraw, sketchUndo, sketchGuess, galleryFinish, galleryCast, rateCard,
 } from './game';
 import { cleanName, uniqueName } from './names';
 import { activePlayers, getPlayer } from './state';
@@ -191,6 +191,9 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       break;
     case 'veto':
       useVeto(s, ctx, fx, intent.by);
+      break;
+    case 'rate':
+      rateCard(s, fx, intent.by, intent.v);
       break;
     case 'drawSeg':
       sketchDraw(s, ctx, fx, intent.by, intent.s, !!intent.n);

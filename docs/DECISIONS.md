@@ -233,3 +233,9 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Yandaki karta dokununca yalnızca o kart 0,26 sn'de yumuşakça öne ve biraz ortaya süzülür. Diğer kartlar yerinden oynamaz, yalnızca hafifçe kararır.
     - Kaldırılanlar: üç kartın birlikte kayması, yay sekmesi, her dokunuşta tekrarlanan sıralı gecikme, dokunurken küçülme.
     - Sıralı dağıtım yalnızca el ilk geldiğinde var.
+88. **Kart oylaması (2026-11-17):** Sonuç ekranında herkes kartı "Güldürdü" ya da "Sıktı" diye oylayabilir. Oy değiştirilebilir, geri alınabilir ve oyunu etkilemez.
+    - Oylar ve kartların kaç kez açıldığı tek bir global Durable Object'te (`CardStatsDO`, SQLite) toplanır. Saklanan yalnızca kart kimliği ve sayılardır, kişi ya da oda bilgisi tutulmaz.
+    - Ev kartları ve sistem kartları sayılmaz.
+    - `GET /api/card-stats` ham sayıları verir. `npm run report:cards` bunları kart metinleriyle birleştirir; Wilson alt sınırıyla en iyi ve en kötü kartları listeler.
+    - Amaç: birkaç gecelik gerçek oyundan sonra sıkıcı kartları ayıklamak, güldürenlerin benzerlerini yazmak.
+    - Not: Durable Object içinde `ctx.waitUntil` hata veriyordu. İstatistik çağrısı beklenmeden gönderiliyor, hata olursa yalnızca loglanıyor ve oyun etkilenmiyor.

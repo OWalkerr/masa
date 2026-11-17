@@ -64,6 +64,7 @@ export const ClientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('advance'), at: z.string().max(80).optional() }),
   z.object({ t: z.literal('missionDone'), effectId: z.string().max(40) }),
   z.object({ t: z.literal('veto') }),
+  z.object({ t: z.literal('rate'), v: z.union([z.literal(-1), z.literal(0), z.literal(1)]) }),
   z.object({ t: z.literal('leave') }),
   z.object({ t: z.literal('ping'), clientTime: z.number(), rtt: z.number().min(0).max(10_000).optional() }),
   z.object({ t: z.literal('minigameInput'), action: z.enum(['tap', 'throw']), bomb: z.number().int().min(0).max(3).optional() }),

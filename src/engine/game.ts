@@ -1051,6 +1051,21 @@ export function useVeto(s: GameState, ctx: Ctx, fx: Fx[], by: string) {
   fx.push({ kind: 'veto' });
 }
 
+// Kart oylaması: sonuç ekranında herkes kartı "güldürdü" ya da "sıktı" diye işaretler.
+// Oylar oyunu etkilemez; sunucu bunları tüm masalardan toplayıp kart kalitesini ölçer.
+export function rateCard(s: GameState, fx: Fx[], by: string, v: -1 | 0 | 1) {
+  const t = s.game?.turn;
+  if (!t || t.system || !t.cardId || s.phase !== 'resolve') throw new IntentError('BAD_PHASE', 'Kart yalnızca sonuç ekranında oylanır.');
+  const p = getPlayer(s, by);
+  if (!p || p.left) throw new IntentError('NO_SEAT', 'Masada değilsin.');
+  const prev = t.ratings?.[by] ?? 0;
+  if (prev === v) return;
+  t.ratings ??= {};
+  if (v === 0) delete t.ratings[by];
+  else t.ratings[by] = v;
+  fx.push({ kind: 'rated', payload: { cardId: t.cardId, prev, v } });
+}
+
 // --- masa olayları, Su Molası, final ---
 
 function startSystemEvent(s: GameState, ctx: Ctx, fx: Fx[], kind: 'water' | 'table'): boolean {

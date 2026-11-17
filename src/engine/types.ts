@@ -195,6 +195,7 @@ export interface Turn {
   sk: SketchState | null; // Karakalem çizimi
   gal: GalleryState | null; // Sergi
   secret: string | null; // gizli kelime/görev (yalnızca hedefe gider)
+  ratings?: Record<string, 1 | -1>; // kart oylaması: güldürdü (+1) / sıktı (-1)
 }
 
 // Karakalem: çizgiler [x1,y1,x2,y2,…] (0..1000). Kelime turun `secret` alanındadır.
@@ -325,6 +326,7 @@ export type ClientIntent =
   | { t: 'decree'; text: string }
   | { t: 'pass' }
   | { t: 'veto' }
+  | { t: 'rate'; v: -1 | 0 | 1 } // kartı oyla (0 = oyu geri al)
   | { t: 'drawSeg'; s: number[]; n?: boolean } // çizen: çizgi parçası (n: yeni çizgi)
   | { t: 'drawUndo' }
   | { t: 'drawClear' }

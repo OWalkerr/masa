@@ -1,9 +1,11 @@
 // Worker: API yönlendirme. Statik dosyalar Workers Static Assets ile sunulur.
 import { ROOM_CODE_ALPHABET } from '../engine/types';
 export { RoomDO } from './RoomDO';
+export { CardStatsDO } from './CardStatsDO';
 
 export interface Env {
   ROOMS: DurableObjectNamespace;
+  STATS: DurableObjectNamespace;
   ASSETS: Fetcher;
 }
 
@@ -37,6 +39,11 @@ export default {
         if (res.status === 201) return json({ code }, 201);
       }
       return json({ error: 'NO_CODE', message: 'Boş masa bulunamadı, tekrar dene.' }, 503);
+    }
+
+    // Kart istatistikleri (isimsiz sayılar): güldürdü / sıktı / açıldı
+    if (path === '/api/card-stats' && req.method === 'GET') {
+      return env.STATS.get(env.STATS.idFromName('global')).fetch('https://stats/all');
     }
 
     const m = path.match(/^\/api\/room\/([A-Za-z]{4})(\/exists)?$/);
