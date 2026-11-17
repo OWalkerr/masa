@@ -492,3 +492,39 @@ describe('Kazan ve Merhamet', () => {
     expect(sim.s.stats[target]!.powers).toContain('shield');
   });
 });
+
+describe('Ev Kartları', () => {
+  it('lobide yazılır, yazar gizli kalır, oyunda çıkar; güvenlik kuralı uygulanır; kişi başı 3', async () => {
+    const { catalog: base } = await import('./sim');
+    const sim = new Sim(createRoom('ABCD', 0, 3), base);
+    for (let i = 0; i < 4; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0, consent: { ageOk: true } });
+    sim.as('p1', { t: 'houseAdd', kind: 'question', text: 'Geçen yaz Bodrum’da gerçekte ne oldu?' });
+    sim.as('p1', { t: 'houseAdd', kind: 'mostLikely', text: 'yine tatil planını son dakika iptal eder' });
+    sim.as('p1', { t: 'houseAdd', kind: 'neverHave', text: 'bu masadan birinin doğum gününü unutmadım' });
+    expect(() => sim.as('p1', { t: 'houseAdd', kind: 'dare', text: 'bir şey daha yazayım dedim' })).toThrow();
+    expect(() => sim.as('p2', { t: 'houseAdd', kind: 'dare', text: 'Hemen sokağa çık ve bağır' })).toThrow();
+    const cards = sim.s.houseCards!.map((h) => h.card);
+    expect(cards.map((c) => c.text)).toEqual([
+      '{secilen}, geçen yaz Bodrum’da gerçekte ne oldu?',
+      'Kim yine tatil planını son dakika iptal eder?',
+      'Hiç bu masadan birinin doğum gününü unutmadım.',
+    ]);
+    // başkası kendi kartlarını görmez, sayı görünür; yazar kimliği hiçbir görünümde yok
+    const v2 = viewFor(sim.s, 'p2', base);
+    expect(v2.houseCards.mine).toEqual([]);
+    expect(v2.houseCards.total).toBe(3);
+    expect(JSON.stringify(v2)).not.toContain('Bodrum');
+    expect(viewFor(sim.s, 'p1', base).houseCards.mine).toHaveLength(3);
+    // oyunda ev kartları ele gelir
+    sim.as('p0', { t: 'updateSettings', patch: { pace: 'timed' } });
+    sim.as('p0', { t: 'start' });
+    sim.timeout();
+    let seen = false;
+    for (let i = 0; i < 12 && !seen && sim.s.phase !== 'summary'; i++) {
+      if (sim.turn.hand.some((id) => id.startsWith('house-'))) seen = true;
+      do sim.timeout(); while ((sim.s.phase as string) !== 'choose' && (sim.s.phase as string) !== 'summary');
+    }
+    expect(seen).toBe(true);
+    expect(() => sim.as('p1', { t: 'houseRemove', id: cards[0]!.id })).toThrow(); // oyun başladı
+  });
+});

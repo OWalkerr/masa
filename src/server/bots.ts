@@ -1,5 +1,6 @@
 // Sunucu botları: masaya otururlar, kart seçer, hedef seçer, oylar, hüküm verir, itiraf yazar, Yakala! oylar.
 // Saf fonksiyonlardır; motor yalnızca "botun sırası geldi" sinyali verir (1–4 sn gecikmeyle).
+import { roomCatalog } from '../engine/house';
 import { needsPick, targetPool } from '../engine/deck';
 import { actionKind, catchVoters, expectedInputs, nextReaderId } from '../engine/game';
 import { currentHolder } from '../engine/minigames';
@@ -38,7 +39,8 @@ const BOT_CONFESSIONS = [
 ];
 
 // Botun şu anki karar anı için niyeti (yoksa null)
-export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalog): ClientIntent | null {
+export function botDecide(s: GameState, botId: string, rng: Rng, baseCatalog: Catalog): ClientIntent | null {
+  const catalog = roomCatalog(s, baseCatalog);
   const g = s.game;
   if (!g) return null;
   // Yakala! oylaması her şeyden önce

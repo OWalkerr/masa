@@ -6,6 +6,7 @@ import {
   consents, dealHand, hasToken, isSensitive, modePool, needsPick, neighbor, pickInherit, targetPool, weightedRandomPlayer,
 } from './deck';
 import { currentHolder, minigameInput, scoreMinigame, startMinigame, tickMinigame } from './minigames';
+import { cleanText } from './text';
 import { clearSketch, drawSegment, guessWord, newSketch, scoreSketch, SKETCH, undoStroke } from './sketch';
 import { GALLERY, galleryDone, galleryDraw, galleryUndo, galleryVote, newGallery, scoreGallery, toVote } from './gallery';
 import { applyPayment, emptyStats, revertPayment } from './penalties';
@@ -408,10 +409,7 @@ export function answerText(s: GameState, ctx: Ctx, fx: Fx[], by: string, raw: st
   maybeComplete(s, ctx, fx);
 }
 
-export function cleanText(raw: string, max: number): string {
-  const s = raw.replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮]/g, ' ').replace(/\s+/g, ' ').trim();
-  return [...s].slice(0, max).join('').trim();
-}
+export { cleanText } from './text';
 
 function maybeComplete(s: GameState, ctx: Ctx, fx: Fx[]) {
   const t = s.game!.turn!;

@@ -79,6 +79,7 @@ export interface GameState {
   startedAt: number | null;
   game: GameRun | null;
   stats: Record<string, PlayerStats>;
+  houseCards?: import('./house').HouseCard[]; // Ev Kartları (yazar gizli)
 }
 
 // --- Oyun içi durum ---
@@ -317,6 +318,8 @@ export type ClientIntent =
   | { t: 'guess'; text: string } // Karakalem tahmini
   | { t: 'galDone' } // Sergi: eserimi teslim ettim
   | { t: 'galVote'; index: number } // Sergi: en kötü eser
+  | { t: 'houseAdd'; kind: 'question' | 'dare' | 'mostLikely' | 'neverHave'; text: string } // Ev kartı yaz (lobi)
+  | { t: 'houseRemove'; id: string }
   | { t: 'advance'; at?: string } // host: beklemeden sonraki adıma geç (at: istemcinin gördüğü adım)
   | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }

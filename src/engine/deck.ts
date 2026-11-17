@@ -1,4 +1,5 @@
 // Çekiliş: deste havuzu, tür ağırlıkları, 3 kartlık el, miras, uygunluk (flört/temas katılımı).
+import { isHouse } from './house';
 import type { Card, CardType } from './cards';
 import { modeById } from './modes';
 import type { Rng } from './rng';
@@ -97,7 +98,8 @@ export function modePool(s: GameState, catalog: Catalog): Card[] {
   const mode = modeById(s.settings.deck);
   const decks = new Set(mode.pools);
   if (s.settings.adult && s.settings.deck !== 'clean') decks.add('spicy');
-  return [...catalog.values()].filter((c) => decks.has(c.deck));
+  // Ev kartları her modda oyuna karışır
+  return [...catalog.values()].filter((c) => decks.has(c.deck) || isHouse(c));
 }
 
 export function cardWeight(s: GameState, card: Card): number {
@@ -109,6 +111,7 @@ export function cardWeight(s: GameState, card: Card): number {
   if (g.act === 3 && card.type === 'curse') w *= 1.4;
   if (g.recentTypes.includes(card.type)) w *= 0.5; // son 2 turda oynanan tür yarı ağırlık
   let r: number = RARITY_W[card.rarity];
+  if (isHouse(card)) r *= 2.5; // masanın kendi kartları daha sık
   if (card.rarity === 'legendary' && g.act === 3) r *= 2;
   return w * r;
 }
@@ -127,7 +130,7 @@ export function dealHand(s: GameState, catalog: Catalog, rng: Rng, readerId: str
   const intensities = ACT_INTENSITY[act];
   const maxI = Math.max(...intensities);
 
-  let cands = base.filter((c) => !used.has(c.id) && intensities.includes(c.intensity));
+  let cands = base.filter((c) => !used.has(c.id) && (intensities.includes(c.intensity) || isHouse(c)));
   if (cands.length < 3 - hand.length) cands = base.filter((c) => !used.has(c.id) && c.intensity <= maxI);
   // Havuz tükenen türler için o türün en eski kartı geri döner — yalnızca taze kart çeşitliliği yetmiyorsa
   // (az kartlı türler, örn. Sergi, elde yeterince taze kart varken kullanılmış kartı geri getirmesin)

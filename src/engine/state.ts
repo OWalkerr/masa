@@ -20,6 +20,7 @@ export function createRoom(code: string, now: number, seed: number, bots = 0): G
     startedAt: null,
     game: null,
     stats: {},
+    houseCards: [],
   };
 }
 

@@ -9,6 +9,7 @@ export const TYPE_LABEL: Record<CardType, string> = {
 // Etikete göre özel ad (aynı motor türünün farklı oyunları)
 export function cardLabel(card: { type: CardType; tags?: string[] }): string {
   const tags = card.tags ?? [];
+  if (tags.includes('ev')) return 'Ev Kartı';
   if (card.type === 'mirror' && tags.includes('yalan')) return 'Yalan Makinesi';
   if (card.type === 'mirror' && tags.includes('olcek')) return 'Ölçek';
   if (card.type === 'dare' && tags.includes('anlat')) return 'Anlat Bakalım';

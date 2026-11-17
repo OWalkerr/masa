@@ -1,4 +1,5 @@
 // Saf, deterministik reducer: reduce(state, intent, ctx) -> { state, fx }
+import { addHouseCard, removeHouseCard, roomCatalog } from './house';
 import {
   answerText, decree, ensureStats, judge, onPhaseTimeout, pendingActors, pickTarget, playCard, resolveCatch, startCatch, startGame,
   submitInput, useVeto, usePass, usePower, voteCatch, playMinigame, advance, missionDone, sketchDraw, sketchUndo, sketchGuess, galleryFinish, galleryCast,
@@ -16,6 +17,8 @@ export interface ReduceResult {
 }
 
 export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult {
+  // Odanın kataloğu = desteler + bu masanın ev kartları
+  ctx = { ...ctx, catalog: roomCatalog(prev, ctx.catalog) };
   // Durumu kopyalayıp kopyayı değiştiriyoruz; hata fırlarsa orijinal bozulmaz
   const s: GameState = structuredClone(prev);
   const fx: Fx[] = [];
@@ -206,6 +209,16 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       break;
     case 'galVote':
       galleryCast(s, ctx, fx, intent.by, intent.index);
+      break;
+    case 'houseAdd': {
+      requirePhase(s, 'lobby');
+      mustPlayer(s, intent.by);
+      addHouseCard(s, intent.by, intent.kind, intent.text);
+      break;
+    }
+    case 'houseRemove':
+      requirePhase(s, 'lobby');
+      removeHouseCard(s, intent.by, intent.id);
       break;
     case 'advance':
       advance(s, ctx, fx, intent.by, intent.at);

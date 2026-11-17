@@ -1,4 +1,5 @@
 // Oyuncuya özel görünüm. Gizli bilgiler (secret, başkalarının katılım tercihleri) asla gitmez.
+import { roomCatalog } from './house';
 import type { Card } from './cards';
 import { actionKind, expectedInputs, type ActionKind } from './game';
 import { isSober } from './penalties';
@@ -157,13 +158,15 @@ export interface View {
   players: PublicPlayer[];
   order: string[];
   settings: Settings;
+  houseCards: { mine: { id: string; type: string; text: string }[]; total: number }; // ev kartları: yalnızca kendi kartların
   you: YouView | null; // null = izleyici (henüz katılmamış ya da TV)
   startedAt: number | null;
   game: GameView | null;
   stats: Record<string, PublicStats>;
 }
 
-export function viewFor(s: GameState, playerId: string | null, catalog?: Catalog): View {
+export function viewFor(s: GameState, playerId: string | null, baseCatalog?: Catalog): View {
+  const catalog = baseCatalog ? roomCatalog(s, baseCatalog) : undefined;
   const me = playerId ? s.players.find((p) => p.id === playerId && !p.left) : undefined;
   return {
     code: s.code,
@@ -193,6 +196,10 @@ export function viewFor(s: GameState, playerId: string | null, catalog?: Catalog
         }
       : null,
     startedAt: s.startedAt,
+    houseCards: {
+      mine: me ? (s.houseCards ?? []).filter((h) => h.author === me.id).map((h) => ({ id: h.card.id, type: h.card.type, text: h.card.text })) : [],
+      total: (s.houseCards ?? []).length,
+    },
     game: catalog ? gameView(s, me?.id ?? null, catalog) : null,
     stats: Object.fromEntries(
       Object.entries(s.stats).map(([id, st]) => [

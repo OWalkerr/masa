@@ -1,4 +1,5 @@
 // Lobi: meyhane masası, QR + link, ayarlar (yalnızca host), kişisel tercihler, "Başlat".
+import { HouseCards } from './HouseCards';
 import { keyItem, useManifest } from '../art/manifest';
 import { tikLine } from '../tik/lines';
 import { TikSays } from '../tik/TikSays';
@@ -162,6 +163,7 @@ export function LobbyScreen({ view }: { view: View }) {
 
       <ConsentPanel view={view} />
 
+      <HouseCards view={view} />
       <TikSays text={tikLine('lobby', view.code)} drinking={view.settings.drinking} className="mx-auto" />
       <div className="text-center">
         <InkButton variant="ghost" onClick={() => { send({ t: 'leave' }); navigate('/'); }}>

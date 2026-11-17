@@ -188,3 +188,9 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Ölçüm (6 kişi, 40 oyun/mod, botlar): turların %30–60'ında kimse içmiyordu; bu turlar artık gerilim biriktiriyor.
 76. **Merhamet:** En az 6 birim içmiş ve diğerlerinin ortalamasının 1,6 katına ulaşmış oyuncu, perde başına bir kez cebine Kalkan alır (cebinde Kalkan yoksa). Sistemin rastgele hedef seçiminde az içmiş oyuncu biraz daha sık seçilir (ağırlık 0,5–2 arası). Ölçümde gecenin en çok içeni 20'den 15–17'ye indi.
 77. **Tür ağırlıkları:** 2. perdeden itibaren kural ×1,8, gizli görev ×1,8, düello ×1,3, lanet ×1,3 (3. perdede lanet ek ×1,4). Kurallar Klasik'te %5'ten %7'ye, Kaos'ta %13'ten %16'ya çıktı.
+78. **Ev Kartları:** Lobide her oyuncu en fazla 3, masa toplam 30 kart yazar.
+    - Türler: Soru, Cesaret, Kim Daha?, Hiç Yapmadım. Metin türüne göre otomatik kalıba girer ("{seçilen}, …", "Kim …?", "Hiç …").
+    - Yazar hiçbir görünümde yer almaz. Diğer oyuncular yalnızca kart sayısını görür, metinler oyunda sürpriz olur.
+    - Güvenlik kalıpları (bölüm 9) ev kartlarına da uygulanır; takılan kart açıklamayla reddedilir.
+    - Ev kartları her modda ve her perdede ele gelebilir (yoğunluk filtresinden muaf), ağırlıkları ×2,5. Kartın üstünde "Ev Kartı" yazar.
+    - Oda kataloğu = desteler + ev kartları (`roomCatalog`); "Tekrar Oyna"da kartlar korunur.
