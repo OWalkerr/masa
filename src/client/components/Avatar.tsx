@@ -6,8 +6,9 @@ const S = 'var(--bone-100)';
 const D = 'var(--ink-950)';
 
 export const AVATAR_NAMES = [
-  'Hayalet', 'Kara Kedi', 'Baykuş', 'Kuzgun', 'Kabak', 'Kemik Kukla',
-  'Mum', 'Örümcek', 'Ay Yüzlü', 'Yarasa', 'Fesli Bebek', 'Çizgili Kukla',
+  // İlk 7'si çizilmiş görsellere göre adlandırıldı (assets-raw/avatar-01…07)
+  'Garson İskelet', 'Kara Kedi', 'Simitçi', 'Çaycı Nine', 'Bereli Martı', 'Kemençeci İskelet',
+  'Atkılı Çocuk', 'Örümcek', 'Ay Yüzlü', 'Yarasa', 'Fesli Bebek', 'Çizgili Kukla',
 ];
 
 // Ortak oyuk göz
@@ -155,7 +156,8 @@ export function Avatar({ index, size = 56, dim = false, className = '', label }:
         src={img.w400}
         width={size}
         height={size}
-        alt={label ?? AVATAR_NAMES[i]}
+        // Avatar hep bir ismin yanında durur: yalnızca açık etiket verildiyse okunur, yoksa süs
+        alt={label ?? ''}
         className={`rounded-full object-cover shadow-[0_0_0_2px_var(--ash-500)] ${className} ${dim ? 'opacity-40 grayscale' : ''}`}
         style={{ width: size, height: size }}
       />

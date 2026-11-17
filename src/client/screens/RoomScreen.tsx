@@ -58,7 +58,7 @@ export function RoomScreen({ code }: { code: string }) {
 
   return (
     <div className="relative min-h-full">
-      <NightScene seed={code.charCodeAt(0) + code.charCodeAt(3)} />
+      <NightScene seed={code.charCodeAt(0) + code.charCodeAt(3)} lobby={!view || view.phase === 'lobby' || !view.you} />
       {(!online || ((status === 'reconnecting' || status === 'connecting') && view)) && <ConnBanner online={online} />}
       {status === 'closed' && <NotFound title="Masa kapandı" text="Bu masa uzun süre boş kaldığı için kaldırıldı." />}
       {/* içerik partikül katmanının (z-1) üstünde: efektler kart metnine binmez */}

@@ -54,7 +54,6 @@ export function TopBar({ view }: { view: View }) {
                     <path d="M10,4 l8,6 M18,4 l-8,6" stroke="var(--bone-100)" strokeWidth="1" />
                   </svg>
                 )}
-                <span className="sr-only">{p!.name}</span>
               </li>
             );
           })}

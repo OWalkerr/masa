@@ -63,7 +63,7 @@ export function Home() {
 
   return (
     <main className="relative flex min-h-full flex-col items-center px-4 pt-[8vh] safe-bottom" data-deck="classic">
-      <NightScene />
+      <NightScene lobby />
       <Tik size={118} className="tik-bob mb-1" />
       <Logo />
       <p className="mt-3 max-w-xs text-center text-[17px] text-bone-dim">

@@ -117,3 +117,8 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     Görseli olmayan tür (Gizli Görev) Ayna görselini kullanıyor. Görseli olmayan mod (Ateşli, Memleket) lobide vurgu renginde bir şeritle görünüyor.
 60. **TIK çizimi:** Poz sayfasından önden ve yarı yandan pozlar (rakı + çay) 200:260 kesiliyor. Arka plan parşömen olduğu için TIK gotik kemer biçimli, kenarı yumuşak bir madalyonda gösteriliyor. "smirk" ruh hâli yarı yandan pozu kullanıyor. Görsel yoksa eski SVG TIK çiziliyor.
 61. **Service worker görsel listesini (`/art/manifest.json`) her açılışta ağdan alıyor.** Görseller önbellekten hemen geliyor ve arka planda tazeleniyor; aynı adla güncellenen görsel bir sonraki açılışta görünüyor.
+62. **İkinci görsel teslimi (13 dosya):**
+    - Kart arkası, telefon ve TV arka planı ile `bg-lobby` geldi. `bg-lobby` uzun meyhane masası; giriş, katılım ve lobi ekranlarında kullanılıyor.
+    - 7 avatar geldi. Avatar adları çizimlere göre değişti: Garson İskelet, Kara Kedi, Simitçi, Çaycı Nine, Bereli Martı, Kemençeci İskelet, Atkılı Çocuk. 8–12 numaralı avatarlar şimdilik SVG.
+    - Ateşli ve Memleket mod görselleri geldi.
+    - Arka plan çizimleri açık tonlu olduğu için yazılar okunsun diye karartılıyor (telefonda %42, TV'de %55 parlaklık) ve üst-alt kenarı koyulaşıyor.

@@ -1,6 +1,83 @@
 {
-  "version": 1794897580416,
+  "version": 1794910864647,
   "items": {
+    "avatar-01": {
+      "w800": "/art/avatar-01-800.webp",
+      "w400": "/art/avatar-01-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 49146
+    },
+    "avatar-02": {
+      "w800": "/art/avatar-02-800.webp",
+      "w400": "/art/avatar-02-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 53186
+    },
+    "avatar-03": {
+      "w800": "/art/avatar-03-800.webp",
+      "w400": "/art/avatar-03-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 56592
+    },
+    "avatar-04": {
+      "w800": "/art/avatar-04-800.webp",
+      "w400": "/art/avatar-04-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 63842
+    },
+    "avatar-05": {
+      "w800": "/art/avatar-05-800.webp",
+      "w400": "/art/avatar-05-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 63220
+    },
+    "avatar-06": {
+      "w800": "/art/avatar-06-800.webp",
+      "w400": "/art/avatar-06-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 52504
+    },
+    "avatar-07": {
+      "w800": "/art/avatar-07-800.webp",
+      "w400": "/art/avatar-07-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 66734
+    },
+    "bg-lobby": {
+      "w800": "/art/bg-lobby-800.webp",
+      "w400": "/art/bg-lobby-400.webp",
+      "width": 800,
+      "height": 1433,
+      "bytes": 121326
+    },
+    "bg-phone": {
+      "w800": "/art/bg-phone-800.webp",
+      "w400": "/art/bg-phone-400.webp",
+      "width": 800,
+      "height": 1433,
+      "bytes": 81704
+    },
+    "bg-tv": {
+      "w800": "/art/bg-tv-800.webp",
+      "w400": "/art/bg-tv-400.webp",
+      "width": 800,
+      "height": 446,
+      "bytes": 53018
+    },
+    "card-back": {
+      "w800": "/art/card-back-800.webp",
+      "w400": "/art/card-back-400.webp",
+      "width": 800,
+      "height": 1072,
+      "bytes": 118406
+    },
     "deck-chaos": {
       "w800": "/art/deck-chaos-800.webp",
       "w400": "/art/deck-chaos-400.webp",
@@ -28,6 +105,20 @@
       "width": 800,
       "height": 597,
       "bytes": 71696
+    },
+    "deck-homeland": {
+      "w800": "/art/deck-homeland-800.webp",
+      "w400": "/art/deck-homeland-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 80414
+    },
+    "deck-spicy": {
+      "w800": "/art/deck-spicy-800.webp",
+      "w400": "/art/deck-spicy-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 66028
     },
     "deck-who": {
       "w800": "/art/deck-who-800.webp",
@@ -288,7 +379,17 @@
     "classic": "deck-classic",
     "clean": "deck-clean",
     "confess": "deck-confess",
+    "homeland": "deck-homeland",
+    "spicy": "deck-spicy",
     "who": "deck-who"
   },
-  "avatars": {}
+  "avatars": {
+    "0": "avatar-01",
+    "1": "avatar-02",
+    "2": "avatar-03",
+    "3": "avatar-04",
+    "4": "avatar-05",
+    "5": "avatar-06",
+    "6": "avatar-07"
+  }
 }

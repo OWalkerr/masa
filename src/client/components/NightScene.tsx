@@ -56,10 +56,11 @@ function makeHouses(seed: number, baseY: number, count: number, width: number, m
   return houses;
 }
 
-export function NightScene({ seed = 7, tv = false }: { seed?: number; tv?: boolean }) {
+export function NightScene({ seed = 7, tv = false, lobby = false }: { seed?: number; tv?: boolean; lobby?: boolean }) {
   const reduce = useReducedMotion();
   const m = useManifest();
-  const bg = keyItem(m, tv ? 'bg-tv' : 'bg-phone') ?? keyItem(m, tv ? 'bg-phone' : 'bg-tv');
+  // Giriş ve lobi: uzun meyhane masası; oyun: telefon/TV gecesi
+  const bg = (lobby && !tv ? keyItem(m, 'bg-lobby') : null) ?? keyItem(m, tv ? 'bg-tv' : 'bg-phone') ?? keyItem(m, tv ? 'bg-phone' : 'bg-tv');
   const ref = useRef<HTMLDivElement>(null);
   const W = 1200;
   const far = useMemo(() => makeHouses(seed, 560, 18, W, 120, 260), [seed]);
@@ -115,7 +116,11 @@ export function NightScene({ seed = 7, tv = false }: { seed?: number; tv?: boole
   return (
     <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-ink-950">
       {bg && (
-        <img src={bg.w800} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover" style={layer(10)} />
+        <>
+          {/* Çizimler açık tonlu: yazılar okunsun diye karartılır, üst ve alt kenar koyulaşır */}
+          <img src={bg.w800} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover" style={{ ...layer(10), filter: `brightness(${tv ? 0.55 : 0.42}) saturate(0.9)` }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #0D0B10cc 0%, #0D0B1033 22%, #0D0B1022 60%, #0D0B10dd 100%)' }} />
+        </>
       )}
       <svg className={`absolute inset-0 h-full w-full ${bg ? 'hidden' : ''}`} viewBox={`0 0 ${W} 700`} preserveAspectRatio="xMidYMax slice">
         <defs>
