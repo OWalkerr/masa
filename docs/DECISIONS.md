@@ -229,3 +229,7 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
       - TV'de suçlu damgası: suçlama; efsanevi kart: sevinç;
       - 404 sayfası: ağlama.
     - `kazan` görseli TV'deki "Kazan devrildi!" anında SVG kazanın yerini aldı.
+87. **El yelpazesi sakinleştirildi (2026-11-17):** Eldeki kartlar artık yerinde sabit bir yelpazede duruyor.
+    - Yandaki karta dokununca yalnızca o kart 0,26 sn'de yumuşakça öne ve biraz ortaya süzülür. Diğer kartlar yerinden oynamaz, yalnızca hafifçe kararır.
+    - Kaldırılanlar: üç kartın birlikte kayması, yay sekmesi, her dokunuşta tekrarlanan sıralı gecikme, dokunurken küçülme.
+    - Sıralı dağıtım yalnızca el ilk geldiğinde var.

@@ -61,6 +61,7 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
             key={c.id + (g.turnNo ?? 0)}
             card={c}
             index={i}
+            slot={i - (hand.length - 1) / 2}
             offset={i - focus}
             width={w}
             names={names}
@@ -93,19 +94,29 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
 }
 
 function FanCard(props: {
-  card: HandItem; index: number; offset: number; width: number; names: Record<string, string>; sober: boolean;
+  card: HandItem; index: number; slot: number; offset: number; width: number; names: Record<string, string>; sober: boolean;
   inherited: boolean; played: string | null; reduce: boolean; onFocus(): void; onPlay(): void;
 }) {
-  const { card, index, offset, width, played, reduce } = props;
+  const { card, index, slot, offset, width, played, reduce } = props;
   const y = useMotionValue(0);
   const lift = useTransform(y, [-160, 0], [1.04, 1]);
   const isFocus = offset === 0;
   const gone = played && played !== card.id;
   const chosen = played === card.id;
-  const x = offset * width * 0.62;
+  // Yelpaze sabit: kartlar yerinde durur, seçilen kart hafifçe ortaya doğru süzülüp öne çıkar.
+  const baseX = slot * width * 0.3;
+  const x = isFocus ? slot * width * 0.1 : baseX;
+  const rotate = reduce || isFocus ? 0 : slot * 5;
+  // İlk dağıtımda sırayla gelir; sonraki dokunuşlarda gecikme yok
+  const [dealt, setDealt] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDealt(true), 700);
+    return () => window.clearTimeout(t);
+  }, []);
+  const ease = { duration: reduce ? 0 : 0.26, ease: [0.25, 0.8, 0.3, 1] as const, delay: dealt || reduce ? 0 : index * 0.07 };
 
   useEffect(() => {
-    if (!isFocus) void animate(y, 0, SPRING);
+    if (!isFocus) void animate(y, 0, { duration: 0.2 });
   }, [isFocus, y]);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
@@ -115,22 +126,29 @@ function FanCard(props: {
 
   return (
     <motion.div
-      className="absolute left-1/2 top-2"
-      style={{ marginLeft: -width / 2, zIndex: isFocus ? 3 : 2 - Math.abs(offset), y, scale: lift, touchAction: 'none' }}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 420, rotate: 0, x: 0 }}
+      className="absolute left-1/2 top-3"
+      style={{ marginLeft: -width / 2, zIndex: isFocus ? 10 : 5 - Math.abs(offset), y, scale: lift, touchAction: 'none' }}
+      initial={reduce ? { opacity: 0 } : { opacity: 0, x: baseX, rotate, scale: 0.9, top: 40 }}
       animate={
         gone
-          ? { opacity: 0, y: 160, filter: 'blur(6px)', transition: { duration: 0.5 } } // sise batar
+          ? { opacity: 0, scale: 0.9, transition: { duration: 0.35 } }
           : chosen
-            ? { x: 0, rotate: 0, scale: 1.02, y: -40, transition: SPRING }
-            : { opacity: 1, x, y: 0, rotate: reduce ? 0 : offset * 6, scale: isFocus ? 1 : 0.84, transition: { ...SPRING, delay: reduce ? 0 : index * 0.08 } }
+            ? { opacity: 1, x: 0, rotate: 0, scale: 1, top: -18, filter: 'brightness(1)', transition: { duration: 0.3 } }
+            : {
+                opacity: 1,
+                x,
+                rotate,
+                top: isFocus ? 0 : 12,
+                scale: isFocus ? 1 : 0.9,
+                filter: isFocus ? 'brightness(1)' : 'brightness(0.62)',
+                transition: ease,
+              }
       }
       drag={isFocus && !played ? 'y' : false}
       dragConstraints={{ top: -220, bottom: 0 }}
       dragElastic={0.2}
       onDragEnd={onDragEnd}
       onClick={() => (isFocus ? undefined : props.onFocus())}
-      whileTap={isFocus ? undefined : { scale: 0.8 }}
       role="button"
       tabIndex={0}
       aria-label={isFocus ? 'Seçili kart, oynamak için yukarı kaydır ya da Oyna düğmesine bas' : 'Bu karta geç'}
