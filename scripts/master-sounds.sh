@@ -5,7 +5,7 @@ set -euo pipefail
 cd public/sfx
 for f in *.mp3; do
   name="${f%.mp3}"
-  case "$name" in waltz|fuse) target=-26; trim=0 ;; *) target=-20; trim=1 ;; esac
+  case "$name" in waltz*|fuse) target=-26; trim=0 ;; *) target=-20; trim=1 ;; esac
   src="$f"
   if [ "$trim" = 1 ]; then
     ffmpeg -v error -y -i "$f" -af "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.01,areverse,silenceremove=start_periods=1:start_threshold=-55dB:start_silence=0.12,areverse" /tmp/_m.wav

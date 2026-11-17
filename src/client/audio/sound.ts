@@ -47,7 +47,7 @@ async function loadFiles() {
 async function build() {
   await loadFiles();
   for (const [name, src] of Object.entries(files)) {
-    if (name === 'music' || name === 'waltz') continue;
+    if (name === 'music' || name.startsWith('waltz')) continue; // müzikler ayrı ve yalnızca gerektiğinde yüklenir
     howls.set(name as SoundName, new Howl({ src: [src], format: ['mp3'], volume: 0.75, preload: true }));
   }
   if (typeof OfflineAudioContext !== 'undefined') {
@@ -60,17 +60,67 @@ async function build() {
   if (musicWanted) await buildMusic();
 }
 
+// Perde müzikleri: 1 = vals (müzik kutusu), 2 = gerilim (tik tak), 3 = kaos karnavalı. Olmayan perde öncekine düşer.
+const tracks = new Map<number, Howl>();
+let musicAct = 1;
+let musicVol = 0.45;
+let synthMusic: Howl | null = null;
+
+function trackFor(act: number): Howl | null {
+  if (tracks.has(act)) return tracks.get(act)!;
+  const src = act === 3 ? files.waltz3 ?? files.waltz2 ?? files.waltz : act === 2 ? files.waltz2 ?? files.waltz : files.music ?? files.waltz;
+  if (!src) return null;
+  const h = new Howl({ src: [src], format: ['mp3'], loop: true, volume: 0 });
+  tracks.set(act, h);
+  return h;
+}
+
 async function buildMusic() {
   if (music) return;
-  const track = files.music ?? files.waltz;
-  if (track) {
-    music = new Howl({ src: [track], format: ['mp3'], loop: true, volume: 0.45 });
+  music = trackFor(musicAct);
+  if (music) return;
+  if (typeof OfflineAudioContext === 'undefined') return;
+  if (!synthMusic) {
+    const buf = await renderBuffer(MUSIC.dur, MUSIC.draw, 22050);
+    synthMusic = new Howl({ src: [toWavUrl(buf)], format: ['wav'], loop: true, volume: 0.35 });
+  }
+  music = synthMusic;
+}
+
+function startMusic() {
+  if (!music || music.playing()) return;
+  music.volume(0);
+  music.play();
+  music.fade(0, musicVol, 1200);
+}
+
+// Perde değişince yumuşak geçiş (1,5 sn)
+export function setMusicAct(act: number) {
+  if (act === musicAct) return;
+  musicAct = act;
+  if (!music || !musicWanted || !unlocked) {
+    music = null;
     return;
   }
-  if (typeof OfflineAudioContext === 'undefined') return;
-  const buf = await renderBuffer(MUSIC.dur, MUSIC.draw, 22050);
-  music = new Howl({ src: [toWavUrl(buf)], format: ['wav'], loop: true, volume: 0.35 });
+  const next = trackFor(act);
+  if (!next || next === music) return;
+  const prev = music;
+  prev.fade(prev.volume(), 0, 1500);
+  window.setTimeout(() => prev.stop(), 1600);
+  music = next;
+  next.volume(0);
+  next.play();
+  next.fade(0, musicVol, 1500);
 }
+
+// Önemli anlarda (kart açılışı, TIK konuşurken) müzik kısılır, sonra geri gelir
+export function duckMusic(ms = 2200, level = 0.12) {
+  if (!music || !music.playing()) return;
+  music.fade(music.volume(), level, 250);
+  window.clearTimeout(duckTimer);
+  duckTimer = window.setTimeout(() => music?.playing() && music.fade(music.volume(), musicVol, 700), ms);
+}
+let duckTimer = 0;
 
 // İlk kullanıcı dokunuşunda çağrılır (tarayıcılar sesi ancak bir hareketten sonra açar)
 export function installUnlock() {
@@ -79,7 +129,7 @@ export function installUnlock() {
     unlocked = true;
     Howler.mute(isMuted());
     building = build().then(() => {
-      if (musicWanted) music?.play();
+      if (musicWanted) startMusic();
     });
     window.removeEventListener('pointerdown', go);
     window.removeEventListener('keydown', go);
@@ -97,7 +147,7 @@ export function play(name: SoundName) {
 }
 
 // Müzik: TV ve host telefonu
-export function useMusic(on: boolean) {
+export function useMusic(on: boolean, act = 1) {
   useEffect(() => {
     musicWanted = on;
     if (!on) {
@@ -107,11 +157,14 @@ export function useMusic(on: boolean) {
     if (!unlocked) return;
     void (building ?? Promise.resolve()).then(async () => {
       await buildMusic();
-      if (musicWanted && !music?.playing()) music?.play();
+      if (musicWanted) startMusic();
     });
     return () => {
       musicWanted = false;
       music?.pause();
     };
   }, [on]);
+  useEffect(() => {
+    setMusicAct(act);
+  }, [act]);
 }

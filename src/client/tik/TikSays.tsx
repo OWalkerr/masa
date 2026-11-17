@@ -1,10 +1,13 @@
 // TIK konuşma balonu: küçük TIK + tek satır kara mizah.
+import { useEffect } from 'react';
+import { speak } from '../audio/voice';
 import { motion } from 'motion/react';
 import { Tik } from '../components/Tik';
 import { useReducedMotion } from '../fx/motionPref';
 
 export function TikSays({ text, drinking = true, size = 56, className = '' }: { text: string; drinking?: boolean; size?: number; className?: string }) {
   const reduce = useReducedMotion();
+  useEffect(() => speak(text), [text]);
   return (
     <motion.div
       key={text}

@@ -9,5 +9,5 @@
     "noEmit": false,
     "outDir": "node_modules/.tmp/node"
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "tests", "src/engine", "src/server/bots.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "tests", "src/engine", "src/server/bots.ts", "src/client/tik/lines.ts"]
 }

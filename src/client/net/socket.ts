@@ -23,7 +23,7 @@ export class RoomConnection {
   connect() {
     this.stopped = false;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${proto}://${location.host}/api/room/${this.code}`);
+    const ws = new WebSocket(`${proto}://${location.host}/api/room/${this.code}${this.spectator ? '?tv=1' : ''}`);
     this.ws = ws;
     this.h.onStatus(this.retry === 0 ? 'connecting' : 'reconnecting');
 

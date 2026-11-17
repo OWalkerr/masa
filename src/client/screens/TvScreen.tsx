@@ -1,5 +1,8 @@
 // Ana Ekran (/tv/KOD): büyük kart, masa sahnesi, skor ve katılım QR'ı. Telefonlar kumanda olur.
 // Koltuğa oturmaz (izleyici); ortam müziği burada çalar.
+import { speak } from '../audio/voice';
+import { tikLine, type TikMoment } from '../tik/lines';
+import { useVoiceRole } from '../audio/voice';
 import { GalleryTv, GalleryWall } from './game/Gallery';
 import { SketchBoard, SketchTv } from './game/Sketch';
 import { useEffect, useState } from 'react';
@@ -39,7 +42,8 @@ export function TvScreen({ code }: { code: string }) {
     document.documentElement.style.setProperty('--deck-accent', modeById(deck).accent);
   }, [deck]);
   useWakeLock(true);
-  useMusic(true);
+  useMusic(true, view?.game?.act ?? 1);
+  useVoiceRole('tv');
 
   if (status === 'missing') return <NotFound title="Masa kalkmış" text={`${code} kodlu masa bulunamadı.`} />;
   return (
@@ -118,6 +122,7 @@ function TvGame({ view }: { view: View }) {
           <div className="flex flex-col items-center gap-4">
             <Tik size={260} className="tik-bob" variant={drinking ? 'raki' : 'tea'} />
             <p className="font-gothic text-[80px] text-accent">{ACT_NAMES[g.act]}</p>
+            <TvActLine act={g.act} />
           </div>
         )}
         {view.phase === 'choose' && (
@@ -276,4 +281,10 @@ function TvStage({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
+}
+
+function TvActLine({ act }: { act: number }) {
+  const text = tikLine(`act${act}` as TikMoment, `perde${act}`);
+  useEffect(() => speak(text), [text]);
+  return <p className="max-w-[900px] text-center text-[34px] italic text-bone-dim">“{text}”</p>;
 }

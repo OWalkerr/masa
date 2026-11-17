@@ -33,6 +33,20 @@ export const SOUNDS: Record<string, Sfx> = {
     influence: 0.7,
     loop: true,
   },
+  // 2. perde (Kızışma): gerilim, tik tak saat
+  waltz2: {
+    prompt: 'Instrumental tense gothic waltz loop, accordion and pizzicato strings over a ticking clock, music box countermelody, slightly faster, D minor, playful suspense, background music, no vocals',
+    sec: 30,
+    influence: 0.7,
+    loop: true,
+  },
+  // 3. perde (Kaos): çılgın karanlık karnaval
+  waltz3: {
+    prompt: 'Instrumental chaotic dark carnival waltz loop, fast accordion, oompah tuba, wild pizzicato and glitchy music box, frantic but fun, D minor, party background music, no vocals',
+    sec: 30,
+    influence: 0.7,
+    loop: true,
+  },
 };
 
 const MUSIC_PROMPT =

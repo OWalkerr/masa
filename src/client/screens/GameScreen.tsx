@@ -1,11 +1,12 @@
 // Oyun ekranı (telefon): üst çubuk, ortada kart sahnesi, altta bağlama göre tek birincil eylem.
+import { useVoiceRole } from '../audio/voice';
 import { motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import type { View } from '../../engine/viewFor';
 import { Avatar } from '../components/Avatar';
 import { Tik } from '../components/Tik';
 import { useReducedMotion } from '../fx/motionPref';
-import { play, useMusic } from '../audio/sound';
+import { duckMusic, play, useMusic } from '../audio/sound';
 import { emit, emitAt } from '../fx/particles';
 import { useRoom } from '../store/room';
 import { ActCurtain } from './game/ActCurtain';
@@ -22,7 +23,8 @@ import { TopBar } from './game/TopBar';
 export function GameScreen({ view }: { view: View }) {
   useWakeLock(view.phase !== 'summary');
   useFxFeedback(view);
-  useMusic(!!view.you?.isHost);
+  useMusic(!!view.you?.isHost, view.game?.act ?? 1);
+  useVoiceRole(view.you?.isHost && !view.tv ? 'host' : null);
   const g = view.game;
   if (!g) return null;
   if (view.phase === 'summary') return <Summary view={view} />;
@@ -153,6 +155,7 @@ export function useFxFeedback(view: View) {
       if (f.kind === 'reveal') {
         const rarity = (f.payload as { rarity: string }).rarity;
         play(rarity === 'legendary' ? 'organ' : 'flip');
+        duckMusic(2400);
         window.setTimeout(() => {
           const card = document.querySelector('[role=group][aria-label$="kartı"]');
           if (rarity === 'legendary') emitAt('dust', card, 70);

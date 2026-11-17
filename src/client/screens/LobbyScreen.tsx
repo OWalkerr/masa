@@ -1,4 +1,5 @@
 // Lobi: meyhane masası, QR + link, ayarlar (yalnızca host), kişisel tercihler, "Başlat".
+import { useVoiceRole } from '../audio/voice';
 import { HouseCards } from './HouseCards';
 import { keyItem, useManifest } from '../art/manifest';
 import { tikLine } from '../tik/lines';
@@ -164,6 +165,7 @@ export function LobbyScreen({ view }: { view: View }) {
       <ConsentPanel view={view} />
 
       <HouseCards view={view} />
+      <LobbyVoice view={view} />
       <TikSays text={tikLine('lobby', view.code)} drinking={view.settings.drinking} className="mx-auto" />
       <div className="text-center">
         <InkButton variant="ghost" onClick={() => { send({ t: 'leave' }); navigate('/'); }}>
@@ -224,4 +226,9 @@ function DeckBanner({ deck, accent }: { deck: string; accent: string }) {
   ) : (
     <span aria-hidden className="mb-1 block h-[60px] w-full rounded-[8px]" style={{ background: `radial-gradient(circle at 50% 120%, ${accent}55, transparent 70%), var(--ink-800)` }} />
   );
+}
+
+function LobbyVoice({ view }: { view: View }) {
+  useVoiceRole(view.you?.isHost && !view.tv ? 'host' : null);
+  return null;
 }

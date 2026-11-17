@@ -194,3 +194,13 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Güvenlik kalıpları (bölüm 9) ev kartlarına da uygulanır; takılan kart açıklamayla reddedilir.
     - Ev kartları her modda ve her perdede ele gelebilir (yoğunluk filtresinden muaf), ağırlıkları ×2,5. Kartın üstünde "Ev Kartı" yazar.
     - Oda kataloğu = desteler + ev kartları (`roomCatalog`); "Tekrar Oyna"da kartlar korunur.
+79. **TIK'in sesi:**
+    - 47 replik ElevenLabs'in hazır "Callum" sesiyle (boğuk, yoğun; ücretsiz planda API'den kullanılabiliyor) `eleven_multilingual_v2` modeliyle seslendirildi (`npm run gen:voice`).
+    - Ses tasarımı (ffmpeg): perde %6 aşağı (tempo korunur), kısa taş oda yankısı, -18 LUFS. Mono 64 kbps; toplam ≈1,5 MB, yalnızca çalınacak replik iner.
+    - Dosya adı metnin özetidir; istemci aynı özeti hesaplar, metin değişince yeniden üretilir.
+    - Tek cihaz konuşur: sunucu masaya bağlı Ana Ekran olup olmadığını görünüme ekler (`view.tv`). TV varsa TV konuşur, yoksa host telefonu.
+    - Host menüden kapatabilir. Aynı replik 8 sn içinde tekrar konuşmaz; konuşurken müzik kısılır.
+80. **Perde müzikleri:**
+    - 1. perde müzik kutulu vals, 2. perde tik tak saatli gerilim valsi, 3. perde kaos karnavalı; her biri 30 sn'lik döngü, -26 dB fon seviyesi.
+    - Perde değişince 1,5 sn'lik geçiş; kart açılırken müzik kısılır.
+    - Müzikler yalnızca çalacak cihazda (TV / host) ve gerektiğinde yüklenir.

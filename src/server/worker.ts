@@ -46,7 +46,7 @@ export default {
       const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
       if (m[2]) return stub.fetch(`https://room/exists?code=${code}`);
       if (req.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return json({ error: 'EXPECTED_WS' }, 426);
-      return stub.fetch(new Request(`https://room/ws?code=${code}`, req));
+      return stub.fetch(new Request(`https://room/ws?code=${code}${url.searchParams.get('tv') === '1' ? '&tv=1' : ''}`, req));
     }
 
     if (path.startsWith('/api/')) return json({ error: 'NOT_FOUND' }, 404);

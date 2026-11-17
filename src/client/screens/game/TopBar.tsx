@@ -1,4 +1,5 @@
 // Üst çubuk: eriyen mum olarak perde ilerlemesi, sıra şeridi (avatarlar), menü.
+import { setVoiceOn, voiceOn } from '../../audio/voice';
 import { Cauldron } from '../../components/Cauldron';
 import { useState } from 'react';
 import type { View } from '../../../engine/viewFor';
@@ -77,12 +78,14 @@ export function TopBar({ view }: { view: View }) {
 function Menu({ view, onClose }: { view: View; onClose: () => void }) {
   const send = useRoom((s) => s.send);
   const [rm, setRm] = useState(getReduceMotion);
+  const [tikVoice, setTikVoice] = useState(voiceOn);
   const [muted, setMuted] = useMuted();
   const you = view.you!;
   return (
     <div className="ink-panel mt-2 flex flex-col gap-1 p-4">
       <Toggle label="Sessiz" checked={muted} onChange={setMuted} />
       <Toggle label="Hareketi azalt" checked={rm} onChange={(v) => { setReduceMotion(v); setRm(v); }} />
+      {you.isHost && <Toggle label="TIK'in sesi (TV yoksa bu telefondan)" checked={tikVoice} onChange={(v) => { setVoiceOn(v); setTikVoice(v); }} />}
       {view.settings.drinking && !you.sober && (
         <button type="button" className="min-h-[56px] rounded-[12px] bg-ink-950 px-4 text-left shadow-[inset_0_0_0_1px_var(--ash-500)]" onClick={() => { send({ t: 'quitDrinking' }); onClose(); }}>
           Ben bıraktım <span className="text-bone-dim">· bundan sonra içmek yok, ceza var</span>

@@ -12,6 +12,7 @@ import type { Env } from './worker';
 
 interface Attachment {
   pid: string | null;
+  tv?: boolean; // Ana Ekran soketi (TIK'in sesi TV'de çalar, host telefonu susar)
   rtt?: number; // istemcinin ölçtüğü gidiş-dönüş süresi (ms), mini oyun gecikme düzeltmesi için
 }
 
@@ -61,9 +62,12 @@ export class RoomDO extends DurableObject<Env> {
       const pair = new WebSocketPair();
       const [client, server] = [pair[0], pair[1]];
       this.ctx.acceptWebSocket(server);
-      server.serializeAttachment({ pid: null } satisfies Attachment);
+      const tv = url.searchParams.get('tv') === '1';
+      server.serializeAttachment({ pid: null, tv } satisfies Attachment);
       // Katılmadan önce izleyici görünümü gönder (giriş ekranı için)
-      this.send(server, { t: 'snapshot', view: viewFor(this.game, null, loadCatalog()), rev: this.game.rev });
+      this.send(server, { t: 'snapshot', view: { ...viewFor(this.game, null, loadCatalog()), tv: tv || this.hasTv() }, rev: this.game.rev });
+      // Ana Ekran bağlandı: herkes öğrensin (host telefonu TIK'i susturur)
+      if (tv) await this.flush();
       return new Response(null, { status: 101, webSocket: client });
     }
 
@@ -188,8 +192,19 @@ export class RoomDO extends DurableObject<Env> {
 
   // --- iç yardımcılar ---
 
+  private hasTv(except?: WebSocket): boolean {
+    return this.ctx.getWebSockets().some((s) => s !== except && s.readyState === WebSocket.OPEN && (s.deserializeAttachment() as Attachment | null)?.tv);
+  }
+
   private async onGone(ws: WebSocket) {
     const att = ws.deserializeAttachment() as Attachment | null;
+    if (att?.tv && this.game) {
+      // TV ayrıldı: host telefonu yeniden konuşabilir
+      this.closingTv = ws;
+      await this.flush();
+      this.closingTv = null;
+      return;
+    }
     if (!att?.pid || !this.game) return;
     const stillOpen = this.ctx
       .getWebSockets()
@@ -220,6 +235,7 @@ export class RoomDO extends DurableObject<Env> {
 
   private pendingFx: Fx[] = [];
   private lastDrawSnap = 0;
+  private closingTv: WebSocket | null = null;
 
   // Yalnızca olayları gönder (kaydetmeden, görünüm göndermeden)
   private flushFx() {
@@ -239,9 +255,10 @@ export class RoomDO extends DurableObject<Env> {
     if (!this.game) return;
     await this.persist();
     const sockets = this.ctx.getWebSockets();
+    const tv = this.hasTv(this.closingTv ?? undefined);
     for (const ws of sockets) {
       const att = ws.deserializeAttachment() as Attachment | null;
-      this.send(ws, { t: 'snapshot', view: viewFor(this.game, att?.pid ?? null, loadCatalog()), rev: this.game.rev });
+      this.send(ws, { t: 'snapshot', view: { ...viewFor(this.game, att?.pid ?? null, loadCatalog()), tv }, rev: this.game.rev });
     }
     for (const f of this.pendingFx) {
       for (const ws of sockets) {

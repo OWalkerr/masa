@@ -70,3 +70,10 @@ export function tikLine(moment: TikMoment, seed: string): string {
   for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
   return list[(h >>> 0) % list.length]!;
 }
+
+// Seslendirme dosyasının anahtarı (scripts/gen-voice.ts ile aynı hesap)
+export function voiceKey(text: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}

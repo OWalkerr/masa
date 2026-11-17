@@ -159,6 +159,7 @@ export interface View {
   order: string[];
   settings: Settings;
   houseCards: { mine: { id: string; type: string; text: string }[]; total: number }; // ev kartları: yalnızca kendi kartların
+  tv?: boolean; // masaya bağlı bir Ana Ekran var mı (sunucu ekler)
   you: YouView | null; // null = izleyici (henüz katılmamış ya da TV)
   startedAt: number | null;
   game: GameView | null;

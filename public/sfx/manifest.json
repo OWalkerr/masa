@@ -1,5 +1,5 @@
 {
-  "version": 1794914936799,
+  "version": 1794924884434,
   "files": {
     "paper": "/sfx/paper.mp3",
     "flip": "/sfx/flip.mp3",
@@ -16,6 +16,8 @@
     "right": "/sfx/right.mp3",
     "wrong": "/sfx/wrong.mp3",
     "bell": "/sfx/bell.mp3",
-    "waltz": "/sfx/waltz.mp3"
+    "waltz": "/sfx/waltz.mp3",
+    "waltz2": "/sfx/waltz2.mp3",
+    "waltz3": "/sfx/waltz3.mp3"
   }
 }
