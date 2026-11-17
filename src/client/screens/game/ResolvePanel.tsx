@@ -1,4 +1,5 @@
 // Hüküm: bedeller (sayılı bal mumu mührü), cesaret puanları, oy sayımı, mini cezalar, Su Molası.
+import { SketchFinal } from './Sketch';
 import { tikLine } from '../../tik/lines';
 import { TikSays } from '../../tik/TikSays';
 import { motion } from 'motion/react';
@@ -49,6 +50,15 @@ export function ResolvePanel({ view }: { view: View }) {
             {effect.kind === 'mission' ? 'Kim olduğunu yalnızca ajan biliyor. Şüphelendiğin an “Yakala!”' : 'Üstteki tabelada duruyor. Bozanı gören “Yakala!” desin.'}
           </span>
         </p>
+      )}
+      {r.sketch && (
+        <div className="flex flex-col items-center gap-2">
+          <SketchFinal strokes={r.sketch.strokes} word={r.sketch.word} />
+          <p className="text-center text-[16px]">
+            Ressam: <b>{name(r.sketch.drawer)}</b> ·{' '}
+            {r.sketch.correct.length ? `Bilenler: ${r.sketch.correct.map(name).join(', ')}` : 'Kimse bilemedi'}
+          </p>
+        </div>
       )}
       {r.note && <p className="ink-panel p-3 text-center text-[17px] italic">{r.note}</p>}
       {r.mg && r.mg.kind !== 'bomb' && (

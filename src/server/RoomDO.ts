@@ -135,6 +135,19 @@ export class RoomDO extends DurableObject<Env> {
         return;
       }
 
+      case 'drawSeg': {
+        // Çizim parçaları sık gelir: herkese yalnızca parça (fx) gider, tam görünüm en fazla 2,5 sn'de bir.
+        // Arada bağlanan telefon da en geç bir sonraki tam görünümde çizimi eksiksiz alır.
+        if (!att.pid) return this.sendError(ws, 'NO_SEAT', 'Önce masaya otur.');
+        const fx = await this.dispatch({ ...parsed, by: att.pid } as Intent, ws, false);
+        if (!fx) return;
+        if (now - this.lastDrawSnap > 2500) {
+          this.lastDrawSnap = now;
+          await this.flush();
+        } else this.flushFx();
+        return;
+      }
+
       default: {
         if (!att.pid) return this.sendError(ws, 'NO_SEAT', 'Önce masaya otur.');
         await this.dispatch({ ...parsed, by: att.pid } as Intent, ws);
@@ -206,6 +219,20 @@ export class RoomDO extends DurableObject<Env> {
   }
 
   private pendingFx: Fx[] = [];
+  private lastDrawSnap = 0;
+
+  // Yalnızca olayları gönder (kaydetmeden, görünüm göndermeden)
+  private flushFx() {
+    const sockets = this.ctx.getWebSockets();
+    for (const f of this.pendingFx) {
+      for (const ws of sockets) {
+        const pid = (ws.deserializeAttachment() as Attachment | null)?.pid ?? null;
+        if (f.to && (!pid || !f.to.includes(pid))) continue;
+        this.send(ws, { t: 'fx', kind: f.kind, payload: f.payload });
+      }
+    }
+    this.pendingFx = [];
+  }
 
   // Kaydet, alarmı kur, herkese kendi görünümünü gönder
   private async flush() {

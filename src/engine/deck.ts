@@ -8,14 +8,14 @@ import type { Catalog, GameState, Player } from './types';
 export const ACT_INTENSITY: Record<1 | 2 | 3, number[]> = { 1: [1], 2: [1, 2], 3: [2, 3] };
 
 export const ACT_TYPES: Record<1 | 2 | 3, CardType[]> = {
-  1: ['question', 'dare', 'mostLikely', 'neverHave'],
-  2: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'mission'],
-  3: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'curse', 'minigame', 'mission'],
+  1: ['question', 'dare', 'mostLikely', 'neverHave', 'sketch'],
+  2: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'mission', 'sketch'],
+  3: ['question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'golden', 'curse', 'minigame', 'mission', 'sketch'],
 };
 
 // Motorda çözümü yazılmış türler (M2/M3'te genişleyecek)
 export const IMPLEMENTED_TYPES: ReadonlySet<CardType> = new Set([
-  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden', 'minigame', 'mission',
+  'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel', 'mirror', 'confession', 'curse', 'golden', 'minigame', 'mission', 'sketch',
 ]);
 
 const RARITY_W = { common: 1, rare: 0.35, legendary: 0.06 } as const;
@@ -63,7 +63,7 @@ export function feasible(s: GameState, card: Card, readerId: string): boolean {
   if (card.type === 'rule' && (s.game?.effects ?? []).filter((e) => e.kind !== 'curse' && e.kind !== 'mission').length >= 3) return false;
   // Aynı anda tek gizli görev
   if (card.type === 'mission' && (s.game?.effects ?? []).some((e) => e.kind === 'mission')) return false;
-  if ((card.type === 'confession' || card.type === 'mirror' || card.type === 'duel' || card.type === 'mission') && activePlayers(s).length < 3) return false;
+  if ((card.type === 'confession' || card.type === 'mirror' || card.type === 'duel' || card.type === 'mission' || card.type === 'sketch') && activePlayers(s).length < 3) return false;
   const pool = targetPool(s, card, readerId);
   let need = 0;
   switch (card.target) {

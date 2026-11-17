@@ -6,6 +6,7 @@ import {
   consents, dealHand, hasToken, isSensitive, modePool, needsPick, neighbor, pickInherit, targetPool, weightedRandomPlayer,
 } from './deck';
 import { currentHolder, minigameInput, scoreMinigame, startMinigame, tickMinigame } from './minigames';
+import { clearSketch, drawSegment, guessWord, newSketch, scoreSketch, SKETCH, undoStroke } from './sketch';
 import { applyPayment, emptyStats, revertPayment } from './penalties';
 import { activePlayers, getPlayer } from './state';
 import { getCard, TAG } from './systemCards';
@@ -62,7 +63,7 @@ function newTurn(readerId: string, over: Partial<Turn> = {}): Turn {
     readerId, hand: [], inherited: null, cardId: null, step: 'choose', targets: [], tokens: {}, inputs: {},
     judgedPayers: null, result: null, pickedTop: false, rest: [], swapped: false, sabotagedBy: null, passed: [],
     vetoed: false, stage: 'main', texts: {}, spotlightAuthor: null, shuffled: [], system: false, blind: false,
-    options: [], optionPlayers: false, mg: null, secret: null, ...over,
+    options: [], optionPlayers: false, mg: null, sk: null, secret: null, ...over,
   };
 }
 
@@ -263,7 +264,7 @@ function ensureAndBump(s: GameState, id: string) {
 
 // --- eylem fazı ---
 
-export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'minigame' | 'none';
+export type ActionKind = 'judge' | 'votePlayer' | 'yesNo' | 'choice' | 'text' | 'minigame' | 'draw' | 'none';
 
 export function actionKind(c: Card): ActionKind {
   switch (c.type) {
@@ -276,6 +277,8 @@ export function actionKind(c: Card): ActionKind {
       return 'choice';
     case 'minigame':
       return 'minigame';
+    case 'sketch':
+      return 'draw';
     case 'confession':
       return 'text';
     case 'duel':
@@ -315,6 +318,10 @@ export function expectedInputs(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[
     case 'text':
       ids = t.stage === 'guess' ? active.filter((id) => id !== t.spotlightAuthor) : active;
       break;
+    case 'draw':
+      // Henüz bilemeyen tahminciler
+      ids = t.sk ? active.filter((id) => id !== t.sk!.drawer && !t.sk!.correct.includes(id)) : [];
+      break;
     default:
       return [];
   }
@@ -331,6 +338,14 @@ function beginAction(s: GameState, ctx: Ctx, fx: Fx[]) {
     t.mg = state;
     setPhase(s, ctx, 'action', nextAt - ctx.now);
     fx.push({ kind: 'mgStart', payload: { kind: state.kind } });
+    return;
+  }
+  if (k === 'draw') {
+    // Karakalem: süre oyunun parçasıdır, tempo ne olursa olsun geri sayım işler
+    const drawer = t.targets[0] ?? t.readerId;
+    t.sk = newSketch(ctx.now, c.timer ?? SKETCH.defaultSec, drawer);
+    setPhase(s, ctx, 'action', t.sk.endsAt - ctx.now);
+    fx.push({ kind: 'sketchStart', payload: { drawer } });
     return;
   }
   if (k === 'text') t.stage = 'write';
@@ -515,6 +530,18 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
     }
     case 'minigame': {
       if (t.mg) payers = scoreMinigame(s, t.mg, result);
+      break;
+    }
+    case 'sketch': {
+      if (!t.sk || !t.secret) break;
+      if (t.passed.includes(t.sk.drawer)) {
+        result.sketch = { word: t.secret.split('/')[0]!.trim(), drawer: t.sk.drawer, correct: [], strokes: t.sk.strokes };
+        result.note = 'Ressam fırçayı bıraktı. Bu tur kimse içmiyor.';
+        break;
+      }
+      const guessers = activePlayers(s).map((p) => p.id).filter((id) => id !== t.sk!.drawer);
+      payers = scoreSketch(t.sk, guessers, result, t.secret);
+      if (!t.sk.correct.length) result.note = 'Kimse bilemedi. Sanatçı anlaşılmamanın bedelini öder.';
       break;
     }
     case 'golden': {
@@ -1115,7 +1142,8 @@ export function onPhaseTimeout(s: GameState, ctx: Ctx, fx: Fx[]) {
       break;
     case 'action': {
       const t = g.turn!;
-      if (t.mg) {
+      if (t.sk) resolveTurn(s, ctx, fx);
+      else if (t.mg) {
         const next = tickMinigame(s, ctx, fx);
         if (next === null) resolveTurn(s, ctx, fx);
         else setPhase(s, ctx, 'action', Math.max(0, next - ctx.now));
@@ -1148,6 +1176,10 @@ export function pendingActors(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[]
   if (s.phase === 'choose' && !t.system) out.add(t.readerId);
   if (s.phase === 'action' && t.mg) {
     for (const id of mgActors(s, t.mg)) out.add(id);
+  } else if (s.phase === 'action' && t.sk) {
+    // Bot ressam birkaç çizgi çizer; tahminciler bilene kadar dener
+    if (t.sk.strokes.length < 5) out.add(t.sk.drawer);
+    for (const id of expectedInputs(s, ctx)) out.add(id);
   } else if (s.phase === 'action') {
     for (const id of expectedInputs(s, ctx)) {
       const done = t.stage === 'write' ? t.texts[id] !== undefined : !!t.inputs[id];
@@ -1173,4 +1205,35 @@ export function playMinigame(s: GameState, ctx: Ctx, fx: Fx[], by: string, actio
     s.game!.turn!.mg!.stage = 'done';
     resolveTurn(s, ctx, fx);
   }
+}
+
+// --- Karakalem ---
+
+function requireSketch(s: GameState, ctx: Ctx): { t: Turn; c: Card } {
+  const t = requireTurn(s, 'action');
+  const c = card(ctx, t.cardId!);
+  if (c.type !== 'sketch' || !t.sk || !t.secret) throw new IntentError('BAD_INPUT', 'Şu an çizim yok.');
+  return { t, c };
+}
+
+export function sketchDraw(s: GameState, ctx: Ctx, fx: Fx[], by: string, nums: number[], fresh: boolean) {
+  const { t, c } = requireSketch(s, ctx);
+  fx.push(drawSegment(t.sk!, ctx.now, by, nums, fresh, (c.tags ?? []).includes('tekcizgi')));
+}
+
+export function sketchUndo(s: GameState, ctx: Ctx, fx: Fx[], by: string, clear: boolean) {
+  const { t, c } = requireSketch(s, ctx);
+  const single = (c.tags ?? []).includes('tekcizgi');
+  if (clear) clearSketch(t.sk!, by, single);
+  else undoStroke(t.sk!, by, single);
+  fx.push({ kind: 'drawReset' });
+}
+
+export function sketchGuess(s: GameState, ctx: Ctx, fx: Fx[], by: string, raw: string) {
+  const { t } = requireSketch(s, ctx);
+  const p = getPlayer(s, by);
+  if (!p || p.left) throw new IntentError('NO_SEAT', 'Masada değilsin.');
+  guessWord(t.sk!, t.secret!, ctx.now, by, raw, cleanText, fx);
+  // Herkes bildiyse beklemeye gerek yok
+  if (expectedInputs(s, ctx).length === 0) resolveTurn(s, ctx, fx);
 }

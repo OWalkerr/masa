@@ -44,6 +44,10 @@ export function howTo(card: Card, view: View): string {
       return 'Altın kart: kartın dediği olur.';
     case 'tableEvent':
       return 'Masa olayı: herkesi ilgilendirir.';
+    case 'sketch':
+      if (tags.includes('tekcizgi')) return `Tek çizgi: kalem kalkarsa çizim biter. Bilemeyen ${v}; kimse bilemezse çizen ${v}.`;
+      if (tags.includes('kor')) return `Çizen kendi çizdiğini göremez. Bilemeyen ${v}; kimse bilemezse çizen ${v}.`;
+      return `Çizen gizli kelimeyi çizer, herkes yazarak tahmin eder. Bilemeyen ${v}; kimse bilemezse çizen ${v}.`;
   }
 }
 
@@ -74,6 +78,11 @@ export function nowLine(view: View): NowLine | null {
       return { text: g.system ? 'Masaya bir olay düştü!' : `${reader} kartı açtı!`, mine: false };
     case 'action': {
       if (g.mg) return { text: g.mg.stage === 'wait' ? 'Hazır ol…' : 'Şimdi!', mine: true };
+      if (g.sketch) {
+        if (me === g.sketch.drawer) return { text: 'Çiz! Harf, rakam yazmak yok.', mine: true };
+        if (me && g.sketch.correct.includes(me)) return { text: 'Bildin! Diğerlerinin acı çekmesini izle.', mine: false };
+        return { text: `${name(g.sketch.drawer)} çiziyor. Tahminini yaz!`, mine: true };
+      }
       const mineToDo = !!me && g.waitingOn.includes(me);
       if (g.input === 'judge') {
         if (isReader) return { text: 'Görev bitince hükmünü ver.', mine: true };

@@ -1,0 +1,193 @@
+# Kart üretici, bölüm A: classic + who
+# Satır: (tür, yoğunluk, hedef, metin, ceza, ekstra)
+LIE = ["1. söz", "2. söz", "3. söz"]
+
+classic = [
+  # --- question (judge) ---
+  ("question", 1, "picked", "{secilen}, telefonunda en son neyi Google'da arattın? Dürüstçe oku.", 1, {"tags": ["telefon"], "quip": "Arama geçmişi, modern çağın günah defteridir."}),
+  ("question", 1, "picked", "{secilen}, hayatında attığın en büyük kazık neydi ve kime?", 1, {}),
+  ("question", 1, "picked", "{secilen}, bu masada kimin evinde bir hafta kalmak istemezdin, neden?", 1, {"quip": "Ben mezarlıkta kalıyorum, şikâyetim yok."}),
+  ("question", 1, "picked", "{secilen}, son yalanın neydi ve kime söyledin? Bu masadaysa bak yüzüne.", 1, {}),
+  ("question", 1, "picked", "{secilen}, maaşın yarın ikiye katlansa ilk kimi arayıp hava atarsın?", 1, {}),
+  ("question", 1, "all", "Herkes sırayla: Sarhoşken yaptığın en pişmanlık verici şey. Anlatmayan içer.", 1, {"quip": "Ben hiç sarhoş olmam. Sadece içim doludur."}),
+  ("question", 1, "all", "Herkes sırayla: Hâlâ kendini ele vermemek için sakladığın bir zevk. (Dizi, şarkı, yemek…)", 1, {}),
+  ("question", 2, "picked", "{secilen}, eski sevgililerinden hangisine bugün 'haklıydın' demen gerekir?", 2, {"quip": "Eski sevgililer de ölü sayılır. Bazen geri gelirler."}),
+  ("question", 2, "picked", "{secilen}, bu masadan birine bir iş verecek olsan kime, hangi işi? Kime asla?", 2, {}),
+  ("question", 2, "picked", "{secilen}, ailenin senden hâlâ bilmediği en büyük şey ne? Detay vermek zorunda değilsin.", 2, {}),
+  ("question", 2, "picked", "{secilen}, {sag} hakkında herkesin bilip ona söylemediği bir şey söyle.", 2, {"quip": "Masa sessizleşti. Mükemmel."}),
+  ("question", 2, "picked", "{secilen}, son ayrılığında gerçek sebep neydi? Resmî açıklamayı değil.", 2, {}),
+  ("question", 2, "picked", "{secilen}, bu masada en çok kimin hayatını yaşamak isterdin, bir haftalığına?", 1, {}),
+  ("question", 2, "all", "Herkes sırayla: Bu masadaki birine dair ilk izlenimin. İsim ver, kaçmak yok.", 2, {}),
+  ("question", 2, "picked", "{secilen}, ekranındaki son 5 mesajlaşmadan birini seç, kiminle ne konuştuğunu özetle.", 2, {"tags": ["telefon"]}),
+  ("question", 3, "picked", "{secilen}, bu masadan biriyle tartışsan kimin haklı çıkacağını bilirsin ama yine de inat edersin?", 2, {}),
+  ("question", 3, "picked", "{secilen}, şimdiye kadar kimseye söylemediğin bir pişmanlığını anlat.", 3, {"quip": "Masa mezar gibidir. Sessiz ama her şeyi saklar."}),
+  ("question", 3, "picked", "{secilen}, buradaki herkesin seninle ilgili yanıldığı bir şey söyle.", 2, {}),
+  ("question", 3, "picked", "{secilen}, bu masada kim sence bir gün seni satar? Sebebiyle.", 3, {}),
+
+  # --- dare (judge) ---
+  ("dare", 1, "picked", "{secilen}, masadaki herhangi bir eşyayı 20 saniyede gece kuşağı ürün satışı gibi sat.", 1, {"timer": 20}),
+  ("dare", 1, "picked", "{secilen}, {sag} kişisini bir tanışma uygulaması profili gibi tanıt. 3 cümle, yalan serbest.", 1, {}),
+  ("dare", 1, "picked", "{secilen}, son attığın sesli mesajı ezberden, aynı tonla tekrar et.", 1, {"tags": ["telefon"]}),
+  ("dare", 1, "picked", "{secilen}, bir belgesel spikeri ağzıyla {rastgele} kişisinin bu akşamki hareketlerini anlat.", 1, {"timer": 30}),
+  ("dare", 2, "picked", "{secilen}, {rastgele} kişisinin taklidini yap. Masa 5 saniyede bulamazsa iç.", 2, {}),
+  ("dare", 2, "picked", "{secilen}, galerinden en son çektiğin ekran görüntüsünü göster ve neden çektiğini açıkla.", 2, {"tags": ["telefon"], "quip": "Ekran görüntüsü delildir. Mahkemede de, masada da."}),
+  ("dare", 2, "picked", "{secilen}, bu masaya 30 saniyelik bir veda konuşması yap; sanki yarın ülkeyi terk ediyorsun.", 2, {"timer": 30}),
+  ("dare", 2, "picked", "{secilen}, {sag} ile bir dizi finali sahnesi oynayın: biri itiraf eder, öbürü bayılır.", 2, {}),
+  ("dare", 2, "picked", "{secilen}, 1 dakika boyunca masadaki herkesin yaptığı her şeye maç spikeri gibi yorum yap.", 2, {"timer": 60}),
+  ("dare", 3, "picked", "{secilen}, 1 dakika boyunca gülmeden stand-up yap. Masadan biri bile gülmezse sen iç.", 3, {"timer": 60, "quip": "Ben güldüm bile. Ama ben sayılmam."}),
+  ("dare", 3, "picked", "{secilen}, {rastgele} ile 20 saniye göz göze bak. Önce gülen ya da bakışını kaçıran iç.", 2, {"timer": 20, "tags": ["sessiz"]}),
+  ("dare", 3, "picked", "{secilen}, telefonunun klavyesinde 'Seni' yaz, önerilen kelimelerle cümleyi bitir ve oku.", 2, {"tags": ["telefon"]}),
+  # Anlat Bakalım (gizli kelime)
+  ("dare", 1, "picked", "{secilen}, ekrandaki gizli şeyi o kelimeleri söylemeden 60 sn'de anlat. Bilinmezse iç.", 1, {"timer": 60, "tags": ["anlat"], "secret": "Kayınvalide|Akşamdan kalma|Aile WhatsApp grubu|Ev sahibi zammı|Pazartesi sendromu|Bekarlığa veda|Sesli mesaj|İş görüşmesi|Doğum günü sürprizi|Düğün takısı"}),
+  ("dare", 2, "picked", "{secilen}, ekrandaki gizli şeyi tek kelime etmeden, sadece hareketle anlat. 60 sn. Bilinmezse iç.", 2, {"timer": 60, "tags": ["anlat"], "secret": "Eski sevgiliye gece mesajı|Kredi kartı borcu|Görüldü atmak|Taksiciyle siyaset|Sabah alarmını ertelemek|Kombi arızası|Kayınpederle maç izlemek|Uçakta ağlayan bebek"}),
+  ("dare", 2, "picked", "{secilen}, ekrandaki ünlü kişiyi sadece onun gibi davranarak anlat. Ad yok. 60 sn.", 2, {"timer": 60, "tags": ["anlat"], "secret": "Bir haber spikeri|Bir maç yorumcusu|Bir hava durumu sunucusu|Bir yemek yarışması jürisi|Bir düğün DJ'i|Bir pazarcı|Bir taksi şoförü|Bir kişisel gelişim koçu"}),
+  ("dare", 3, "picked", "{secilen}, ekrandaki durumu sadece 3 kelimeyle anlat. Masa bilemezse iç.", 3, {"tags": ["anlat"], "secret": "Yanlış kişiye attığın mesaj|İlk buluşmada hesap anı|Toplantıda mikrofonun açık kalması|Patrona yanlışlıkla 'anne' demek|Eski sevgiliyle düğünde karşılaşmak|Kiracının taşınma günü"}),
+
+  # --- mostLikely ---
+  ("mostLikely", 1, "all", "Kim sarhoşken eski sevgilisine 'nasılsın' yazar ve sabah inkâr eder?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir gün ünlü olur ama tamamen yanlış bir sebepten?", 1, {"quip": "Ben de ünlüyüm. Mezar taşımda ismim var."}),
+  ("mostLikely", 1, "all", "Kim bir düğünde mikrofonu kapıp kimsenin istemediği bir konuşma yapar?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir tartışmayı kaybettiğini anlayınca konuyu değiştirir?", 1, {}),
+  ("mostLikely", 1, "all", "Kim faturaları son gün öder ve bununla gurur duyar?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir korku filminde 'Ben bakıp geleyim' diyen ilk kurbandır?", 1, {}),
+  ("mostLikely", 2, "all", "Kim bu masadaki herkesin sırrını bilir ama hiçbir şey bilmiyormuş gibi yapar?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir ilişkiyi mesajla bitirir, üstüne bir de emoji koyar?", 2, {}),
+  ("mostLikely", 2, "all", "Kim 'Bir tane içip kalkacağım' deyip sabah son kalan olur?", 2, {}),
+  ("mostLikely", 2, "all", "Kim patronuna en büyük yalanı söylemiştir ve hâlâ yakalanmamıştır?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir cinayet işlese en uzun süre yakalanmaz?", 2, {"quip": "İyi seçim. Ben de oy verirdim."}),
+  ("mostLikely", 3, "all", "Kim bu masadan birine gizlice aşık olmuştur?", 3, {}),
+  ("mostLikely", 3, "all", "Kim bu masadaki birinin eski sevgilisiyle çıkar ve 'ama siz bitmiştiniz' der?", 3, {}),
+  ("mostLikely", 3, "all", "Kim bu gece birine söylememesi gereken bir şeyi söyleyecek?", 2, {}),
+
+  # --- neverHave ---
+  ("neverHave", 1, "all", "Hiç birinin mesajını okuyup bilerek görüldüde bırakmadım.", 1, {}),
+  ("neverHave", 1, "all", "Hiç hasta numarası yapıp bir plandan, düğünden ya da işten kaçmadım.", 1, {}),
+  ("neverHave", 1, "all", "Hiç bir hediyeyi beğenmiş gibi yapıp sonra başkasına hediye etmedim.", 1, {}),
+  ("neverHave", 1, "all", "Hiç toplantıda kameramı kapatıp başka bir iş yapmadım.", 1, {}),
+  ("neverHave", 1, "all", "Hiç bir restoranda hesabı ödemekten kaçmak için tuvalete gitmedim.", 1, {}),
+  ("neverHave", 2, "all", "Hiç gece yarısı eski sevgilimin profilini incelemedim.", 2, {"quip": "Ben de eskilerimi ziyaret ederim. Mezarlıkta."}),
+  ("neverHave", 2, "all", "Hiç sarhoşken birine 'seni seviyorum' deyip sabah bunu unutmuş gibi yapmadım.", 2, {}),
+  ("neverHave", 2, "all", "Hiç bu masadaki biri hakkında arkasından konuşmadım.", 2, {"quip": "Sıradaki cümle: 'Ama kötü bir şey demedim ki.'"}),
+  ("neverHave", 2, "all", "Hiç birinin telefonunu gizlice karıştırmadım.", 2, {}),
+  ("neverHave", 2, "all", "Hiç bir ilişkide aynı anda başka biriyle de yazışmadım.", 2, {}),
+  ("neverHave", 3, "all", "Hiç bu masadaki birine karşı bir an bile bir şey hissetmedim.", 2, {}),
+  ("neverHave", 3, "all", "Hiç bir sırrı söyleyeceğime yemin edip ilk fırsatta başkasına anlatmadım.", 2, {}),
+
+  # --- rule ---
+  ("rule", 2, "all", "Kural: Kimse kimseye ismiyle seslenemez. Bozanı yakala!", 1, {"duration": 6}),
+  ("rule", 2, "all", "Kural: İçmeden önce kadeh kaldırıp bir şeye ithaf etmek zorunlu. Unutanı yakala!", 1, {"duration": 6}),
+  ("rule", 2, "all", "Kural: Oyun dışında telefonuna bakan yakalanır. Bildirim bahane değil.", 1, {"duration": 6}),
+  ("rule", 1, "all", "Kural: 'Aynen', 'kesinlikle' ve 'yani' yasak. Ağzından kaçanı yakala!", 1, {"duration": 5}),
+  ("rule", 2, "all", "Kural: Okuyucu kartı okurken kimse konuşamaz. Lafa gireni yakala!", 1, {"duration": 6}),
+  ("rule", 3, "all", "Kural: Gülen herkes 'Ben zayıfım' demek zorunda. Demeyeni yakala!", 1, {"duration": 5}),
+
+  # --- curse ---
+  ("curse", 3, "random", "Lanet: {rastgele} 3 tur boyunca yalnızca soru cümlesiyle konuşabilir.", 1, {"duration": 3}),
+  ("curse", 2, "picked", "Lanet: {secilen} 3 tur boyunca her cümlesine 'Benim zamanımda…' diye başlar.", 1, {"duration": 3}),
+  ("curse", 3, "picked", "Lanet: {secilen} 3 tur boyunca kendinden üçüncü şahıs olarak bahseder.", 1, {"duration": 3, "quip": "TIK bunu çok sevdi. TIK hep böyle konuşur."}),
+  ("curse", 2, "random", "Lanet: {rastgele} 3 tur boyunca kimseyle göz göze gelemez.", 1, {"duration": 3, "tags": ["sessiz"]}),
+
+  # --- duel ---
+  ("duel", 2, "twoPicked", "Düello: {secilen} ve {ikinci} birbirine soru soruyor. İlk 'evet' ya da 'hayır' diyen kaybeder.", 2, {}),
+  ("duel", 2, "twoPicked", "Düello: {secilen} ve {ikinci} 30 saniye boyunca birbirini tanıtım filmiyle sat. Masa seçer.", 2, {"timer": 30}),
+  ("duel", 2, "twoPicked", "Düello: {secilen} ve {ikinci} sırayla bahane uydursun: 'Neden geç kaldım?' İlk takılan kaybeder.", 2, {}),
+  ("duel", 3, "twoPicked", "Düello: {secilen} ve {ikinci} bir ayrılık konuşması yapsın. Daha acımasız olan kazanır.", 2, {}),
+  ("duel", 1, "twoPicked", "Düello: {secilen} ve {ikinci} en iyi kötü adam kahkahasını atsın. Masa kazananı seçsin.", 1, {}),
+
+  # --- mirror ---
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: Bu masadan kiminle bir ıssız adada mahsur kalmak ister?", 2, {"choices": "$players"}),
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: Bu masadan kimin hayatı bir dizi olsa en çok izlenir?", 2, {"choices": "$players"}),
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: Hangisi olmadan bir yıl yaşayamaz?", 1, {"choices": ["Telefon", "Kahve", "Alkol", "Sosyal medya", "Seks", "Uyku"], "tags": ["flort"]}),
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: En son hangisi yüzünden kavga etti?", 1, {"choices": ["Para", "Kıskançlık", "Aile", "Bulaşık", "Geç kalmak", "Siyaset"]}),
+  # Yalan Makinesi
+  ("mirror", 1, "picked", "Yalan Makinesi: {secilen}, çocukluğunla ilgili 2 doğru 1 yalan söyle. Masa yalanı bulsun.", 1, {"choices": LIE, "tags": ["yalan"]}),
+  ("mirror", 2, "picked", "Yalan Makinesi: {secilen}, eski ilişkilerinle ilgili 2 doğru 1 yalan söyle.", 2, {"choices": LIE, "tags": ["yalan"], "quip": "Benim tüm ilişkilerim yalan. Toprak altında kaldılar."}),
+  ("mirror", 2, "picked", "Yalan Makinesi: {secilen}, iş hayatınla ilgili 2 doğru 1 yalan söyle.", 2, {"choices": LIE, "tags": ["yalan"]}),
+  ("mirror", 3, "picked", "Yalan Makinesi: {secilen}, sarhoş anılarınla ilgili 2 doğru 1 yalan söyle.", 2, {"choices": LIE, "tags": ["yalan"]}),
+  # Ölçek
+  ("mirror", 2, "picked", "Ölçek: {secilen}, 10 üzerinden kıskançlık seviyen kaç? Herkes tahmin etsin.", 2, {"choices": "$scale", "tags": ["olcek"]}),
+  ("mirror", 2, "picked", "Ölçek: {secilen}, 10 üzerinden işinden ne kadar nefret ediyorsun?", 2, {"choices": "$scale", "tags": ["olcek"], "quip": "Benim işim mezar bekçiliği. 10 üzerinden 11 seviyorum."}),
+  ("mirror", 2, "picked", "Ölçek: {secilen}, 10 üzerinden bu gece eski sevgiline yazma ihtimalin kaç?", 2, {"choices": "$scale", "tags": ["olcek"]}),
+  ("mirror", 3, "picked", "Ölçek: {secilen}, 10 üzerinden annen hayatına ne kadar karışıyor?", 2, {"choices": "$scale", "tags": ["olcek"]}),
+  ("mirror", 3, "picked", "Ölçek: {secilen}, 10 üzerinden şu an ne kadar sarhoşsun? Yalan söyleme, masa görüyor.", 2, {"choices": "$scale", "tags": ["olcek"]}),
+
+  # --- confession ---
+  ("confession", 2, "all", "Herkes anonim yazsın: Bu masada kimseye söylemediğin bir sır.", 2, {}),
+  ("confession", 2, "all", "Herkes anonim yazsın: Başına gelen en kötü buluşma, tek cümlede.", 2, {}),
+  ("confession", 2, "all", "Herkes anonim yazsın: İş yerinde yaptığın ve kimsenin bilmediği bir şey.", 2, {}),
+  ("confession", 3, "all", "Herkes anonim yazsın: Bu masadaki biri hakkındaki gizli düşüncen (isim vermeden).", 3, {}),
+
+  # --- mission (gizli görev) ---
+  ("mission", 2, "random", "Gizli Görev: Biri 3 tur içinde bir şey çevirecek. Tuhaflık sezen Yakala!", 2, {"duration": 3, "secret": "Birine 'haklısın' dedirt. Ama sorarak değil.|Sohbeti kedilere getir ve birine kedi hikâyesi anlattır.|Birine bardağını doldurt (su da olur).|Birine senin adını 3 kez söylet."}),
+  ("mission", 2, "random", "Köstebek: Masada bir ajan var. 3 tur boyunca gözünüz üstünde olsun.", 2, {"duration": 3, "secret": "Konuşurken 'kesinlikle' kelimesini 4 kez kullan.|3 farklı kişiye 'canım' de, fark ettirme.|Bir kişiyle el sıkış; sebebini sorarsa uydur.|Birini sana iltifat etmeye ikna et, ama iltifat isteme."}),
+  ("mission", 3, "random", "Çifte Ajan: Biri 3 tur içinde masayı kandıracak. Sezersen Yakala!", 2, {"duration": 3, "secret": "Bir tartışma çıkar: ananas pizzaya yakışır mı? En az 2 kişi katılsın.|Birine sana bir sırrını fısıldat.|Birini telefonunu sana uzatmaya ikna et.|Birine 'ben de tam bunu diyecektim' dedirt."}),
+  ("mission", 2, "random", "Sahte Hikâye: Biri 3 tur içinde uydurma bir anı anlatacak. Yalanı yakala!", 2, {"duration": 3, "secret": "Tamamen uydurma bir çocukluk anısı anlat; biri 'gerçekten mi?' desin.|Hiç gitmediğin bir şehirden bir hikâye anlat, inandır.|Hiç olmayan bir eski sevgilinden bahset, en az 2 cümle.|Uydurma bir ünlüyle tanıştığını anlat."}),
+  ("mission", 3, "random", "Gölge: Biri 3 tur boyunca birini taklit edecek. Fark eden Yakala!", 2, {"duration": 3, "secret": "Solundakinin oturuşunu ve el hareketlerini fark ettirmeden taklit et.|Sağındakinin her güldüğünde sen de aynı şekilde gül.|Okuyucunun son cümlesini her seferinde onaylayıp tekrarla.|Birinin kullandığı bir kelimeyi kendi cümlelerine sok, 3 kez."}),
+
+  # --- minigame ---
+  ("minigame", 3, "all", "Bomba! Fitil yandı. Dokun, bombayı başkasına at. Elinde patlayan iç.", 2, {"minigame": "bomb", "quip": "Ben burada değildim."}),
+  ("minigame", 2, "all", "Refleks: TIK'in bardağı dolunca dokun. En geç kalan da erken atlayan da iç.", 1, {"minigame": "reflex"}),
+  ("minigame", 2, "all", "İçinden 10 saniye say ve dokun. 10'a en uzak kalan iç.", 1, {"minigame": "countdown", "quip": "Ben hep 9'da dururum. Sonrası karanlık."}),
+
+  # --- golden ---
+  ("golden", 2, "reader", "Sultan Kedi: Perde sonuna kadar istediğin an masaya bir kural koyabilirsin.", 0, {"rarity": "legendary", "tags": ["ferman"], "id": "gold-01"}),
+  ("golden", 2, "reader", "Kemik Bilet: Cebine bir Kalkan ve bir Ayna ekle. Mezardan torpil.", 0, {"rarity": "legendary", "tags": ["cep"], "id": "gold-02"}),
+  ("golden", 2, "all", "Masa Senin: Herkes sırayla sana içten bir iltifat etsin. Gevelen ya da gülen iç.", 1, {"rarity": "legendary", "id": "gold-03"}),
+
+  # --- tableEvent ---
+  ("tableEvent", 1, "all", "Sol El Turu: Bir sonraki kart bitene kadar herkes sol eliyle içer. Unutanı yakala!", 1, {"input": "catch", "duration": 1, "id": "event-01"}),
+  ("tableEvent", 1, "all", "Sıra ters döndü! Oyun artık öbür yönden devam ediyor.", 0, {"tags": ["yon"], "id": "event-02"}),
+  ("tableEvent", 2, "all", "Fısıltı Turu: Bir sonraki kart bitene kadar herkes fısıldar. Sesli konuşanı yakala!", 1, {"input": "catch", "duration": 1, "id": "event-03"}),
+  ("tableEvent", 2, "all", "Ay Tutulması: Bu gece en çok içen cebine bir Ayna alır. Sıra sende, intikam.", 0, {"rarity": "rare", "tags": ["tutulma"], "id": "event-04"}),
+  ("tableEvent", 1, "all", "Su Molası: Herkes bir bardak su içer. Karaciğerler alkışlıyor.", 0, {"id": "event-05"}),
+  ("tableEvent", 2, "all", "Hayalet Saati: Sonraki 2 turda okuyucu kartları kapalı görür ve körlemesine seçer.", 0, {"rarity": "rare", "tags": ["hayalet"], "id": "event-06"}),
+  ("tableEvent", 1, "all", "Yer Değiştirme: Herkes bir sandalye sağa kayar. Telefonlar ve kadehler sahibinde kalır.", 0, {"id": "event-07"}),
+  ("tableEvent", 2, "all", "Kadeh Turu: Herkes masadan birine kadeh kaldırıp tek cümlelik bir şey söyler, sonra içer.", 1, {"id": "event-08"}),
+]
+
+who = [
+  ("mostLikely", 1, "all", "Kim izlemediği bir diziyi izlemiş gibi konuşur, sonunu da yanlış anlatır?", 1, {}),
+  ("mostLikely", 1, "all", "Kim grup sohbetine 4 dakikalık sesli mesaj atar ve 'kısaca' diye başlar?", 1, {}),
+  ("mostLikely", 1, "all", "Kim alarmı 7 kez erteler ve yine de işe 'trafik' bahanesiyle geç kalır?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir iş görüşmesinde 'en büyük kusurum mükemmeliyetçiliğim' der?", 1, {}),
+  ("mostLikely", 1, "all", "Kim taksiciyle 10 dakikada siyaset kavgasına girer?", 1, {}),
+  ("mostLikely", 1, "all", "Kim yemekten önce fotoğrafını çekmeden kimsenin yemesine izin vermez?", 1, {}),
+  ("mostLikely", 1, "all", "Kim düğünde halayı başlatır ve kimseye mendili vermez?", 1, {}),
+  ("mostLikely", 1, "all", "Kim tatilde ilk gün güneşte yanıp kalan 6 günü otelde geçirir?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir tartışmayı kaybedince 'neyse, boş ver' deyip üç gün küser?", 1, {}),
+  ("mostLikely", 1, "all", "Kim 'Ben hiç kıskanç değilim' der ve en kıskancı odur?", 1, {}),
+  ("mostLikely", 1, "all", "Kim bir AVM'de kaybolur ve anonsla bulunur, 30 yaşında?", 1, {}),
+  ("mostLikely", 1, "all", "Kim 3 gün telefonsuz kalırsa kendini doğaya adayıp bir dağa çekilir?", 1, {}),
+  ("mostLikely", 2, "all", "Kim parasını en saçma yatırıma yatırıp 'uzun vadeli düşünüyorum' der?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir ilk buluşmada eski sevgilisinden 40 dakika bahseder?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir sırrı 24 saatten fazla tutamaz? Ve şu an bir tane taşıyor?", 2, {}),
+  ("mostLikely", 2, "all", "Kim patronuna yanlışlıkla arkadaşına yazacağı mesajı atar?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir kavgada haklı olduğu halde özür diler, sonra yıllarca hatırlatır?", 2, {}),
+  ("mostLikely", 2, "all", "Kim ilişkisini bitirmek için karşı tarafın bitirmesini bekler?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir cenazede yanlışlıkla gülme krizine girer?", 2, {"quip": "Cenazelerde ben de gülerim. Ev sahibi benim çünkü."}),
+  ("mostLikely", 2, "all", "Kim kayınvalidesiyle anlaşmak için gizlice onun dizilerini izler?", 2, {}),
+  ("mostLikely", 2, "all", "Kim maaş günü zengin, ayın 10'unda makarnacı olur?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bu gece ilk uyuyakalır ve yüzüne bir şey çizilir?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir gece dışarıda kalıp sabah nerede uyandığını anlamaz?", 2, {}),
+  ("mostLikely", 2, "all", "Kim bir eski sevgiliyle 'arkadaş kalalım' deyip gerçekten arkadaş kalabilen tek kişidir?", 2, {}),
+  ("mostLikely", 3, "all", "Kim bu masadaki birinin sevgilisine bir an bile olsa göz koymuştur?", 3, {}),
+  ("mostLikely", 3, "all", "Kim bir gün bu masadaki herkesi bir kitapta rezil eder?", 2, {}),
+  ("mostLikely", 3, "all", "Kim en çok kalp kırmıştır ve bundan hiç pişman değildir?", 3, {}),
+  ("mostLikely", 3, "all", "Kim bu oyunda en çok yalan söyledi?", 2, {"quip": "Ben söylemedim. Ben sadece eksik anlattım."}),
+  ("mostLikely", 3, "all", "Kim bu masadan birinin mesajlarını okuyabilse ilk onu okur?", 3, {}),
+  ("neverHave", 1, "all", "Hiç bir sınavda kopya çekmedim. (Ehliyet dahil.)", 1, {}),
+  ("neverHave", 1, "all", "Hiç bir doğum gününü unutup son dakika marketten hediye kurtarmadım.", 1, {}),
+  ("neverHave", 1, "all", "Hiç bir öğretmenime ya da patronuma yanlışlıkla 'anne' veya 'baba' demedim.", 1, {}),
+  ("neverHave", 1, "all", "Hiç komşunun Wi-Fi şifresini bulup kullanmadım.", 1, {}),
+  ("neverHave", 1, "all", "Hiç birinin yemeğini gizlice yiyip suçu başkasına atmadım.", 1, {}),
+  ("neverHave", 2, "all", "Hiç bir randevudan kaçmak için arkadaşıma 'beni acil ara' demedim.", 2, {}),
+  ("neverHave", 2, "all", "Hiç biriyle sırf canım sıkıldığı için çıkmadım.", 2, {}),
+  ("neverHave", 2, "all", "Hiç bir yalanı o kadar çok tekrarladım ki ona kendim de inanmadım.", 2, {}),
+  ("neverHave", 2, "all", "Hiç bir arkadaşımın sevgilisini ondan önce beğenmedim.", 2, {}),
+  ("neverHave", 2, "all", "Hiç işte tuvalette 20 dakikadan fazla telefonla oyalanmadım.", 2, {}),
+  ("neverHave", 3, "all", "Hiç bu masadaki birinin hakkında bir dedikoduyu ilk ben yaymadım.", 2, {}),
+  ("neverHave", 3, "all", "Hiç bir ilişkiyi hiç açıklama yapmadan, sırra kadem basarak bitirmedim.", 2, {}),
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: Bu masadan kim en çok kalp kırmıştır?", 2, {"choices": "$players"}),
+  ("mirror", 2, "picked", "{secilen} gizlice seçsin: Bu masadan kime bir sırrını asla söylemez?", 2, {"choices": "$players"}),
+  ("mirror", 3, "picked", "Ölçek: {secilen}, 10 üzerinden bu masaya ne kadar güveniyorsun?", 2, {"choices": "$scale", "tags": ["olcek"]}),
+]

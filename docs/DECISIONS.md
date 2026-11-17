@@ -122,3 +122,20 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - 7 avatar geldi. Avatar adları çizimlere göre değişti: Garson İskelet, Kara Kedi, Simitçi, Çaycı Nine, Bereli Martı, Kemençeci İskelet, Atkılı Çocuk. 8–12 numaralı avatarlar şimdilik SVG.
     - Ateşli ve Memleket mod görselleri geldi.
     - Arka plan çizimleri açık tonlu olduğu için yazılar okunsun diye karartılıyor (telefonda %42, TV'de %55 parlaklık) ve üst-alt kenarı koyulaşıyor.
+
+## 2026-11-17 — Karakalem (çizim modu)
+
+63. **Yeni mod ve kart türü: Karakalem** (`sketch`, `input: draw`). Çizen gizli kelimeyi telefonuna çizer; çizim herkesin telefonunda ve Ana Ekran'da canlı akar, diğerleri yazarak tahmin eder.
+    - Yanlış tahminler masaya balon olarak düşer. Neredeyse doğru olan yalnızca tahmin edene "Çok yakın!" olarak söylenir.
+    - Puanlama: bilemeyen içer; kimse bilemezse çizen içer. Bilinirse çizen +2, ilk bilen +1 cesaret alır. Herkes bilince süre beklenmez.
+    - Süre oyunun parçası olduğu için rahat tempoda da işler: 3 sn hazırlık + kartın `timer` değeri (varsayılan 75 sn).
+    - Kelime kartın `secret` listesinden seçilir; "/" ile ayrılan yazımlar da doğru sayılır (`Kayınvalide/Kaynana`).
+    - Tahmin karşılaştırması büyük/küçük harf, Türkçe karakter ve noktalama farkını yok sayar. 6+ harfli kelimede tek harf hatası kabul edilir.
+    - Etiketler:
+      - `tekcizgi`: tek çizgi; kalem kalkınca biter, geri alma yok (sunucu uygular).
+      - `kor`: çizen kendi çizgisini görmez.
+      - `tersel`: ters el (onur sistemi).
+      - `hizli`: kısa süre.
+    - Karakalem modu: `sketch` + `classic` havuzu, çizim ağırlığı 7. Çizim kartları her perdede gelir. Deyim ve atasözü çizimleri yoğunluk 3'tür.
+64. **Çizim verisi:** noktalar 0..1000 tam sayı (ekrandan bağımsız). Çizen 160 ms'de bir en fazla 80 noktalık parça gönderir. Sunucu parçayı herkese yalnızca olay olarak iletir; tam görünüm en fazla 2,5 sn'de bir gider (her parçada tam görünüm göndermek trafiği şişirirdi). Arada bağlanan telefon çizimi bir sonraki tam görünümde eksiksiz alır. Üst sınır: 6000 nokta, 200 çizgi.
+65. **Kart yazımı artık depoda:** `content/authoring/` (Python). `gen.py` desteleri `content/cards/*.json`'a yazar; JSON hâlâ oyunun kaynağıdır ve doğrulamadan geçer.

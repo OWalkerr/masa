@@ -4,6 +4,7 @@ import { actionKind, expectedInputs, type ActionKind } from './game';
 import { isSober } from './penalties';
 import { catchVoters, nextReaderId, stepKey } from './game';
 import { currentHolder } from './minigames';
+import { displayWord, hintOf } from './sketch';
 import { getCard } from './systemCards';
 import type { CatchResult, Catalog, GameState, InputValue, Phase, PowerKind, Settings, TokenKey, TurnLog, TurnResult } from './types';
 
@@ -73,6 +74,20 @@ export interface MinigameView {
   myTapped: boolean;
 }
 
+export interface SketchView {
+  drawer: string;
+  startAt: number;
+  endsAt: number;
+  strokes: number[][];
+  correct: string[];
+  wrong: { id: string; text: string }[];
+  word: string | null; // yalnızca çizene (sonuçta herkese result.sketch'te)
+  hint: string; // tahmin edenlere harf sayısı
+  myGuesses: number;
+  singleLine: boolean;
+  blind: boolean; // Kör Ressam: çizen kendi çizgisini görmez
+}
+
 export interface GameView {
   act: 1 | 2 | 3;
   actTurn: number;
@@ -111,6 +126,7 @@ export interface GameView {
   catchVote: CatchVoteView | null;
   lastCatch: (Omit<CatchResult, 'votes'>) | null;
   mg: MinigameView | null;
+  sketch: SketchView | null;
   stepKey: string; // "ilerlet" isteğinin hangi adım için olduğunu sunucuya bildirmek için
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
@@ -223,7 +239,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
     stage: t?.stage ?? 'main',
     options: cardVisible ? t?.options ?? [] : [],
     optionPlayers: !!t?.optionPlayers,
-    secret: t?.secret && me && !mission && t.targets.includes(me) && s.phase !== 'choose' ? t.secret : null,
+    secret: t?.secret && me && !mission && card?.type !== 'sketch' && t.targets.includes(me) && s.phase !== 'choose' ? t.secret : null,
     waitingOn: expected.filter((id) => (t?.stage === 'write' ? t.texts[id] === undefined : !t?.inputs[id])),
     // İtiraf: cevaplar yazarsız ve karışık; yazar yalnızca sonuçta açılır
     answers: guess && t ? t.shuffled.map((id) => t.texts[id] ?? '').filter((x) => x) : [],
@@ -271,6 +287,22 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         }
       : null,
     stepKey: stepKey(s),
+    sketch:
+      t?.sk && t.secret && s.phase === 'action'
+        ? {
+            drawer: t.sk.drawer,
+            startAt: t.sk.startAt,
+            endsAt: t.sk.endsAt,
+            strokes: t.sk.strokes,
+            correct: t.sk.correct,
+            wrong: t.sk.wrong.map((w) => ({ id: w.id, text: w.text })),
+            word: me === t.sk.drawer ? displayWord(t.secret) : null,
+            hint: hintOf(t.secret),
+            myGuesses: me ? t.sk.guessed[me] ?? 0 : 0,
+            singleLine: !!card?.tags?.includes('tekcizgi'),
+            blind: !!card?.tags?.includes('kor'),
+          }
+        : null,
     restCards: canSabotage && t ? t.rest.map((id) => getCard(catalog, id)!).filter(Boolean) : [],
     log: s.phase === 'summary' ? g.log : [],
   };

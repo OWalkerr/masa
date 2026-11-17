@@ -1,13 +1,13 @@
 // Kart şeması: zod ile doğrulanır. Hem doğrulama scripti hem motor bunu kullanır.
 import { z } from 'zod';
 
-export const DECK_IDS = ['classic', 'who', 'confess', 'chaos', 'duel', 'spicy', 'clean', 'homeland'] as const;
+export const DECK_IDS = ['classic', 'who', 'confess', 'chaos', 'duel', 'spicy', 'clean', 'homeland', 'sketch'] as const;
 export const CARD_TYPES = [
   'question', 'dare', 'mostLikely', 'neverHave', 'rule', 'duel',
-  'mirror', 'confession', 'curse', 'minigame', 'golden', 'tableEvent', 'mission',
+  'mirror', 'confession', 'curse', 'minigame', 'golden', 'tableEvent', 'mission', 'sketch',
 ] as const;
 export const TARGETS = ['all', 'reader', 'picked', 'twoPicked', 'random', 'right', 'left'] as const;
-export const INPUTS = ['none', 'judge', 'votePlayer', 'yesNo', 'choice', 'text', 'catch', 'minigame'] as const;
+export const INPUTS = ['none', 'judge', 'votePlayer', 'yesNo', 'choice', 'text', 'catch', 'minigame', 'draw'] as const;
 export const RARITIES = ['common', 'rare', 'legendary'] as const;
 export const MINIGAMES = ['bomb', 'reflex', 'countdown'] as const;
 
@@ -69,7 +69,9 @@ export function lintCard(card: Card): string[] {
   if (card.type !== 'minigame' && card.minigame) problems.push('minigame alanı yalnızca minigame kartında olur');
   if ((card.type === 'rule' || card.type === 'curse' || card.type === 'mission') && card.duration === undefined)
     problems.push('rule/curse kartı duration ister');
-  if (card.secret && card.type !== 'dare' && card.type !== 'mission') problems.push('secret yalnızca dare/mission kartında olur');
+  if (card.secret && card.type !== 'dare' && card.type !== 'mission' && card.type !== 'sketch') problems.push('secret yalnızca dare/mission/sketch kartında olur');
+  if (card.type === 'sketch' && !card.secret) problems.push('sketch kartı secret (kelime listesi) ister');
+  if (card.type === 'sketch' && !['picked', 'random', 'reader', 'right', 'left'].includes(card.target)) problems.push('sketch kartını tek kişi çizer');
   if (card.secret && card.type === 'dare' && !['picked', 'random', 'reader', 'right', 'left'].includes(card.target))
     problems.push('gizli kelimeli cesaret tek kişiye gider');
   if (card.secret?.split('|').some((x) => x.trim().length < 2 || x.length > 110)) problems.push('secret seçenekleri 2–110 karakter olmalı');
@@ -84,7 +86,7 @@ export function lintCard(card: Card): string[] {
   const expectedInput: Partial<Record<CardType, Input[]>> = {
     question: ['judge'], dare: ['judge'], mostLikely: ['votePlayer'], neverHave: ['yesNo'],
     rule: ['catch'], duel: ['votePlayer'], mirror: ['choice'], confession: ['text'],
-    curse: ['catch'], minigame: ['minigame'], tableEvent: ['none', 'catch'], mission: ['catch'],
+    curse: ['catch'], minigame: ['minigame'], tableEvent: ['none', 'catch'], mission: ['catch'], sketch: ['draw'],
   };
   const allowed = expectedInput[card.type];
   if (allowed && !allowed.includes(card.input)) problems.push(`${card.type} için input ${allowed.join('/')} olmalı`);

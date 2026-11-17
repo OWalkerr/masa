@@ -1,4 +1,5 @@
 // Eylem: kart türüne göre herkesin telefonunda tek bir girdi.
+import { SketchPanel } from './Sketch';
 import { useEffect, useState } from 'react';
 import { DUR } from '../../../engine/types';
 import type { View } from '../../../engine/viewFor';
@@ -24,6 +25,15 @@ export function ActionPanel({ view }: { view: View }) {
   const passed = g.passed.includes(me);
   const word = drinkWord(view);
   const tags = card.tags ?? [];
+
+  if (card.type === 'sketch' && g.sketch) {
+    return (
+      <div className="flex w-full max-w-[560px] flex-col items-center gap-3">
+        {passed ? <Info>Pas geçtin.</Info> : <SketchPanel view={view} />}
+        <PassVeto view={view} />
+      </div>
+    );
+  }
 
   if (card.type === 'minigame' && g.mg) {
     return (

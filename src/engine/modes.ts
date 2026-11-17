@@ -22,6 +22,7 @@ export const MODES: ModeDef[] = [
   { id: 'duel', name: 'Düello Ligi', blurb: 'v2 ile geliyor.', accent: '#8E6CD8', pools: ['classic'], weights: { duel: 5 }, available: false },
   { id: 'spicy', name: 'Ateşli 18+', blurb: 'Yalnızca katılımı açık olanlar.', accent: '#E0457B', pools: ['spicy', 'classic'], weights: {}, available: true, adultOnly: true },
   { id: 'clean', name: 'Temiz', blurb: 'Aile ve ofis. Hep alkolsüz.', accent: '#5ED6B4', pools: ['clean'], weights: {}, available: true, forceSober: true },
+  { id: 'sketch', name: 'Karakalem', blurb: 'Biri çizer, masa tahmin eder. Bilemeyen içer.', accent: '#B8C4D6', pools: ['sketch', 'classic'], weights: { sketch: 7 }, available: true },
   { id: 'homeland', name: 'Memleket', blurb: 'Teyzeler, düğünler, çay ocakları.', accent: '#F28C28', pools: ['homeland', 'classic'], weights: {}, available: true },
 ];
 

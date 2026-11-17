@@ -26,6 +26,8 @@ export function botJoinIntents(s: GameState, count: number, rng: Rng): SystemInt
   return out;
 }
 
+const BOT_GUESSES = ['kedi', 'mezar', 'ay', 'ev', 'rakı', 'balık', 'kayınvalide', 'iskelet', 'fener', 'patates', 'bu ne ya'];
+
 const BOT_CONFESSIONS = [
   'Bulaşık makinesini hiç doğru dizemedim.',
   'Gizlice çizgi film izliyorum.',
@@ -66,6 +68,24 @@ export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalo
       return i >= 0 ? { t: 'minigameInput', action: 'throw', bomb: i } : null;
     }
     return t.mg.taps[botId] === undefined ? { t: 'minigameInput', action: 'tap' } : null;
+  }
+  if (t.sk && t.secret) {
+    // Ressam bot: rastgele kıvrımlı bir çizgi
+    if (t.sk.drawer === botId) {
+      if (t.sk.strokes.length >= 5) return null;
+      const pts: number[] = [];
+      let x = 200 + rng.int(600), y = 200 + rng.int(600);
+      for (let i = 0; i < 24; i++) {
+        x = Math.max(0, Math.min(1000, x + rng.int(81) - 40));
+        y = Math.max(0, Math.min(1000, y + rng.int(81) - 40));
+        pts.push(x, y);
+      }
+      return { t: 'drawSeg', s: pts, n: true };
+    }
+    if (t.sk.correct.includes(botId) || (t.sk.guessed[botId] ?? 0) >= 4) return null;
+    // Zaman geçtikçe bilme ihtimali artar
+    const p = Math.min(0.7, ((Date.now() - t.sk.startAt) / Math.max(1, t.sk.endsAt - t.sk.startAt)) * 0.9);
+    return { t: 'guess', text: rng.next() < p ? t.secret.split('/')[0]! : rng.pick(BOT_GUESSES) };
   }
   if (!expectedInputs(s, { catalog }).includes(botId)) return null;
   const card = getCard(catalog, t.cardId)!;

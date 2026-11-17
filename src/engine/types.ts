@@ -114,6 +114,7 @@ export interface TurnResult {
   secret?: number; // ayna: hedefin seçimi
   correct?: string[]; // ayna/itiraf: bilenler
   mg?: { kind: string; times: Record<string, number | null>; early: string[]; losers: string[] };
+  sketch?: { word: string; drawer: string; correct: string[]; strokes: number[][] }; // Karakalem sonucu
   guesses?: Record<string, number>; // ayna/yalan/ölçek: kim neyi tahmin etti (sonuçta açılır)
   author?: string; // itiraf: spot ışığındaki cevabın yazarı (sonuçta açılır)
   spotlight?: string; // itiraf: spot ışığındaki cevap
@@ -174,7 +175,19 @@ export interface Turn {
   options: string[]; // ayna seçenekleri (etiketler ya da oyuncu id'leri)
   optionPlayers: boolean;
   mg: MinigameState | null;
+  sk: SketchState | null; // Karakalem çizimi
   secret: string | null; // gizli kelime/görev (yalnızca hedefe gider)
+}
+
+// Karakalem: çizgiler [x1,y1,x2,y2,…] (0..1000). Kelime turun `secret` alanındadır.
+export interface SketchState {
+  drawer: string;
+  startAt: number;
+  endsAt: number;
+  strokes: number[][];
+  correct: string[]; // bilme sırasına göre
+  wrong: { id: string; text: string; at: number }[]; // masaya uçuşan yanlış tahminler
+  guessed: Record<string, number>; // kişi başı tahmin sayısı
 }
 
 // Mini oyun durumu. Gizli anlar (patlama, dolma) açılana kadar istemciye gitmez.
@@ -279,6 +292,10 @@ export type ClientIntent =
   | { t: 'decree'; text: string }
   | { t: 'pass' }
   | { t: 'veto' }
+  | { t: 'drawSeg'; s: number[]; n?: boolean } // çizen: çizgi parçası (n: yeni çizgi)
+  | { t: 'drawUndo' }
+  | { t: 'drawClear' }
+  | { t: 'guess'; text: string } // Karakalem tahmini
   | { t: 'advance'; at?: string } // host: beklemeden sonraki adıma geç (at: istemcinin gördüğü adım)
   | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }
