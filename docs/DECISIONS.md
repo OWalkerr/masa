@@ -181,3 +181,10 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Mum ışığında yükselen toz zerreleri ve köşelerde titreyen sıcak ışık.
     - İçme sırası sana gelince ekran kenarı şarap kırmızısı nabız atar. Karakalem'de doğru bilince altın toz saçılır.
     - Önizleme: adrese `?spider=1` eklenirse örümcek hemen iner.
+
+## 2026-11-17 — Üst düzey deneyim turu
+
+75. **Kazan:** Kimsenin içmediği her normal turda (kural, lanet, görev, altın kart ve masa olayı hariç) kazana 1 yudum düşer; kazan en fazla 4 yudum biriktirir (güvenlik). Sonraki turda cezalılar varsa aralarından biri rastgele kazanı da içer ("Kazan devrildi!") ve kazan boşalır. Kalkan, kazanla birleşik bu cezayı da iptal eder. Kazan üst çubukta ve sonuç ekranında görünür.
+    - Ölçüm (6 kişi, 40 oyun/mod, botlar): turların %30–60'ında kimse içmiyordu; bu turlar artık gerilim biriktiriyor.
+76. **Merhamet:** En az 6 birim içmiş ve diğerlerinin ortalamasının 1,6 katına ulaşmış oyuncu, perde başına bir kez cebine Kalkan alır (cebinde Kalkan yoksa). Sistemin rastgele hedef seçiminde az içmiş oyuncu biraz daha sık seçilir (ağırlık 0,5–2 arası). Ölçümde gecenin en çok içeni 20'den 15–17'ye indi.
+77. **Tür ağırlıkları:** 2. perdeden itibaren kural ×1,8, gizli görev ×1,8, düello ×1,3, lanet ×1,3 (3. perdede lanet ek ×1,4). Kurallar Klasik'te %5'ten %7'ye, Kaos'ta %13'ten %16'ya çıktı.

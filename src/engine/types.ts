@@ -114,6 +114,9 @@ export interface TurnResult {
   secret?: number; // ayna: hedefin seçimi
   correct?: string[]; // ayna/itiraf: bilenler
   mg?: { kind: string; times: Record<string, number | null>; early: string[]; losers: string[] };
+  potAdd?: number; // kazana düşen (yeni toplam)
+  potSpill?: { id: string; units: number }; // kazanı devralan
+  mercy?: string[]; // merhamet Kalkanı alanlar
   sketch?: { word: string; drawer: string; correct: string[]; strokes: number[][] }; // Karakalem sonucu
   gallery?: { prompt: string; items: { author: string; strokes: number[][]; votes: number }[]; worst: string[] }; // Sergi sonucu
   guesses?: Record<string, number>; // ayna/yalan/ölçek: kim neyi tahmin etti (sonuçta açılır)
@@ -257,6 +260,7 @@ export interface GameRun {
   blindTurns: number; // Hayalet Saati: kalan kör tur
   pendingEvent: 'table' | 'water' | null;
   lastCatch?: CatchResult;
+  pot: number; // Kazan: kimsenin içmediği turlarda biriken yudumlar
 }
 
 export interface PlayerStats {
@@ -278,6 +282,7 @@ export interface PlayerStats {
   lastCatchAt: number;
   catches: number; // doğru yakalamalar
   decree: boolean; // Sultan Kedi: perde sonuna kadar kural koyabilir
+  mercyAct: number; // TIK'in merhamet Kalkanı verdiği perde (0 = hiç)
 }
 
 export type Catalog = ReadonlyMap<string, Card>;
@@ -383,6 +388,7 @@ export const DUR = {
   netGrace: 400, // ağ gecikmesi payı
 } as const;
 export const MAX_RULES = 3;
+export const POT_MAX = 4; // kazan en fazla 4 yudum biriktirir (güvenlik)
 export const MAX_CONFESSION = 80;
 export const DRINK_LIMIT_UNITS = 12; // 1 saatte
 export const DRINK_WINDOW_MS = 60 * 60 * 1000;

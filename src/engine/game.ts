@@ -12,7 +12,7 @@ import { applyPayment, emptyStats, revertPayment } from './penalties';
 import { activePlayers, getPlayer } from './state';
 import { getCard, TAG } from './systemCards';
 import {
-  DUR, IntentError, MAX_CONFESSION, MAX_POCKET, MAX_RULES, ROUNDS_PER_ACT,
+  DUR, IntentError, MAX_CONFESSION, MAX_POCKET, MAX_RULES, POT_MAX, ROUNDS_PER_ACT,
   type ActiveEffect, type Ctx, type MinigameState, type Fx, type GameState, type InputValue, type Phase, type PowerKind, type TokenKey,
   type Turn, type TurnResult,
 } from './types';
@@ -26,7 +26,7 @@ export function startGame(s: GameState, ctx: Ctx, fx: Fx[]) {
   s.game = {
     act: 1, actTurn: 0, actTurns: 0, turnNo: 0, readerIdx: 0, phaseEndsAt: null, turn: null,
     nextInherit: null, used: [], recentTypes: [], log: [], endedAt: null,
-    direction: 1, effects: [], catchVote: null, blindTurns: 0, pendingEvent: null,
+    direction: 1, effects: [], catchVote: null, blindTurns: 0, pendingEvent: null, pot: 0,
   };
   beginAct(s, ctx, fx, 1);
 }
@@ -613,12 +613,26 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
   // Pas kullanan bedelsiz geçer
   if (t.passed.length) result.passed = [...t.passed];
   const ordered = s.order.filter((id) => payers.includes(id) && !t.passed.includes(id));
+  // Kazan: boş geçen her turda bir yudum birikir; sonraki ilk cezalı kişi kazanı da içer (cezalılardan biri, rastgele)
+  const feedsPot = !t.system && !['rule', 'curse', 'mission', 'golden', 'tableEvent'].includes(c.type);
+  let potTaker: string | null = null;
+  if (feedsPot && ordered.length === 0 && units > 0) {
+    g.pot = Math.min(POT_MAX, (g.pot ?? 0) + 1);
+    result.potAdd = g.pot;
+    fx.push({ kind: 'potAdd', payload: { pot: g.pot } });
+  } else if (ordered.length > 0 && (g.pot ?? 0) > 0) {
+    potTaker = ctx.rng.pick(ordered);
+    result.potSpill = { id: potTaker, units: g.pot };
+    fx.push({ kind: 'potSpill', payload: { id: potTaker, units: g.pot } });
+  }
   for (const id of ordered) {
     const p = getPlayer(s, id);
     if (!p) continue;
     ensureStats(s, id);
-    applyPayment(s, ctx.rng, ctx.now, p, units, result);
+    applyPayment(s, ctx.rng, ctx.now, p, units + (id === potTaker ? g.pot : 0), result);
   }
+  if (potTaker) g.pot = 0;
+  grantMercy(s, ctx, fx, ordered, result);
   t.result = result;
   t.texts = {}; // anonim cevaplar tur bitince silinir (yalnızca spot ışığındaki sonuçta kalır)
   finishTurn(s, ctx, fx, c, ordered);
@@ -1314,4 +1328,24 @@ export function galleryCast(s: GameState, ctx: Ctx, fx: Fx[], by: string, index:
   galleryVote(t.gal!, by, index);
   fx.push({ kind: 'inputIn', payload: { playerId: by } });
   if (expectedInputs(s, ctx).length === 0) resolveTurn(s, ctx, fx);
+}
+
+// Merhamet: masanın ortalamasının çok üstünde içen (en az 6 birim ve diğerlerinin ortalamasının 1,6 katı)
+// perde başına bir kez cebine Kalkan alır. Şanssız kişi gecenin kurbanına dönüşmesin.
+function grantMercy(s: GameState, ctx: Ctx, fx: Fx[], payers: string[], result: TurnResult) {
+  const g = s.game!;
+  const act = activePlayers(s);
+  if (act.length < 3) return;
+  for (const id of payers) {
+    const st = s.stats[id];
+    if (!st || st.mercyAct === g.act || st.powers.includes('shield')) continue;
+    const others = act.filter((p) => p.id !== id).map((p) => s.stats[p.id]?.paidUnits ?? 0);
+    const avg = others.reduce((a, b) => a + b, 0) / Math.max(1, others.length);
+    if (st.paidUnits >= 6 && st.paidUnits >= avg * 1.6) {
+      st.mercyAct = g.act;
+      givePower(s, fx, id, 'shield', true);
+      result.mercy = [...(result.mercy ?? []), id];
+    }
+  }
+  void ctx;
 }

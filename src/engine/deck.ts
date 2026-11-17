@@ -5,6 +5,9 @@ import type { Rng } from './rng';
 import { activePlayers } from './state';
 import type { Catalog, GameState, Player } from './types';
 
+// 2. perdeden itibaren tür çarpanları (denge ölçümüne göre: kurallar %5'te kalıyordu)
+const ACT_BOOST: Partial<Record<CardType, number>> = { rule: 1.8, mission: 1.8, duel: 1.3, curse: 1.3 };
+
 export const ACT_INTENSITY: Record<1 | 2 | 3, number[]> = { 1: [1], 2: [1, 2], 3: [2, 3] };
 
 export const ACT_TYPES: Record<1 | 2 | 3, CardType[]> = {
@@ -101,6 +104,9 @@ export function cardWeight(s: GameState, card: Card): number {
   const g = s.game!;
   const mode = modeById(s.settings.deck);
   let w = mode.weights[card.type] ?? 1;
+  // Masayı en çok güldüren kural/Yakala! mekanikleri ilerleyen perdelerde daha sık
+  if (g.act >= 2) w *= ACT_BOOST[card.type] ?? 1;
+  if (g.act === 3 && card.type === 'curse') w *= 1.4;
   if (g.recentTypes.includes(card.type)) w *= 0.5; // son 2 turda oynanan tür yarı ağırlık
   let r: number = RARITY_W[card.rarity];
   if (card.rarity === 'legendary' && g.act === 3) r *= 2;
@@ -170,7 +176,13 @@ export function pickInherit(catalog: Catalog, rest: string[], rng: Rng): string 
   return rng.pick(best).id;
 }
 
-// Az hedef olmuş oyuncunun ağırlığı daha yüksek
+// Az hedef olmuş ve az içmiş oyuncunun ağırlığı daha yüksek (çok içen biraz dinlenir)
 export function weightedRandomPlayer(s: GameState, rng: Rng, pool: Player[]): Player | undefined {
-  return rng.weighted(pool, (p) => 1 / (1 + (s.stats[p.id]?.targeted ?? 0)));
+  const paid = pool.map((p) => s.stats[p.id]?.paidUnits ?? 0);
+  const avg = paid.reduce((a, b) => a + b, 0) / Math.max(1, paid.length);
+  return rng.weighted(pool, (p) => {
+    const mine = s.stats[p.id]?.paidUnits ?? 0;
+    const drink = Math.max(0.5, Math.min(2, (avg + 2) / (mine + 2)));
+    return drink / (1 + (s.stats[p.id]?.targeted ?? 0));
+  });
 }

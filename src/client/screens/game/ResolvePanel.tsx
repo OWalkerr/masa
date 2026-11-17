@@ -1,4 +1,5 @@
 // Hüküm: bedeller (sayılı bal mumu mührü), cesaret puanları, oy sayımı, mini cezalar, Su Molası.
+import { Cauldron } from '../../components/Cauldron';
 import { GalleryResult } from './Gallery';
 import { SketchFinal } from './Sketch';
 import { tikLine } from '../../tik/lines';
@@ -140,8 +141,38 @@ export function ResolvePanel({ view }: { view: View }) {
         </p>
       )}
 
+      {r.potAdd !== undefined && (
+        <div className="ink-panel flex items-center gap-3 p-3">
+          <Cauldron n={r.potAdd} size={52} label={false} />
+          <p className="text-[17px]">
+            Kimse içmedi, kazana bir yudum düştü. <b>Kazanda {r.potAdd}.</b>
+            <span className="block text-[14px] text-bone-dim">Sonraki cezalı kazanı da içer.</span>
+          </p>
+        </div>
+      )}
+      {r.potSpill && (
+        <motion.div
+          className="flex items-center gap-3 rounded-[14px] bg-[#23330f] p-3 shadow-[0_0_0_2px_#A3E635,0_0_24px_#A3E63555]"
+          initial={reduce ? { opacity: 0 } : { scale: 1.4, rotate: -8, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 14 }}
+        >
+          <Cauldron n={r.potSpill.units} size={52} label={false} />
+          <p className="text-[17px]">
+            <b className="font-gothic text-[24px]">Kazan devrildi!</b>
+            <span className="block">
+              {name(r.potSpill.id)} kazandaki {r.potSpill.units} {view.settings.drinking ? 'yudumu' : 'cezayı'} da {view.settings.drinking ? 'içiyor' : 'alıyor'}.
+            </span>
+          </p>
+        </motion.div>
+      )}
+      {r.mercy?.map((id) => (
+        <p key={id} className="ink-panel p-3 text-center text-[16px]">
+          TIK, {name(id)} için merhamete geldi: cebine bir <b>Kalkan</b> koydu.
+        </p>
+      ))}
       {r.payments.length === 0 ? (
-        effect ? null : (
+        effect || r.potAdd !== undefined ? null : (
           <>
             <p className="ink-panel p-4 text-center text-[19px]">{view.settings.drinking ? 'Bu tur kimse içmiyor.' : 'Bu tur ceza yok.'}</p>
             <TikSays text={tikLine('nobody', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />

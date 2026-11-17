@@ -451,3 +451,44 @@ describe('botlar güç kartı kullanır', () => {
     expect(sim.turn.result!.payments).toEqual([]);
   });
 });
+
+describe('Kazan ve Merhamet', () => {
+  const qs = only(card('q1', { type: 'question' }), card('q2', { type: 'question', text: '{secilen}, yine anlat.' }), card('q3', { type: 'question', text: '{secilen}, bir daha anlat.' }));
+  function turn(sim: Sim, done: boolean) {
+    playForce(sim, sim.turn.hand[0]!);
+    sim.timeout();
+    sim.as(sim.turn.readerId, { t: 'judge', done });
+  }
+
+  it('boş turda kazana yudum düşer; sonraki cezalı kazanı da içer; en fazla 4', () => {
+    const sim = relaxed(qs);
+    turn(sim, true);
+    expect(sim.s.game!.pot).toBe(1);
+    expect(sim.turn.result!.potAdd).toBe(1);
+    sim.as('p0', { t: 'advance', at: viewFor(sim.s, 'p0', qs).game!.stepKey });
+    turn(sim, true);
+    expect(sim.s.game!.pot).toBe(2);
+    sim.as('p0', { t: 'advance', at: viewFor(sim.s, 'p0', qs).game!.stepKey });
+    turn(sim, false);
+    const r = sim.turn.result!;
+    expect(r.potSpill!.units).toBe(2);
+    expect(r.payments[0]!.units).toBe(1 + 2);
+    expect(sim.s.game!.pot).toBe(0);
+    // üst sınır
+    sim.s.game!.pot = 4;
+    sim.as('p0', { t: 'advance', at: viewFor(sim.s, 'p0', qs).game!.stepKey });
+    turn(sim, true);
+    expect(sim.s.game!.pot).toBe(4);
+  });
+
+  it('masanın çok üstünde içen perde başına bir kez merhamet Kalkanı alır', () => {
+    const sim = relaxed(qs);
+    const target = sim.s.order.find((id) => id !== sim.turn.readerId)!;
+    sim.s.stats[target]!.paidUnits = 8;
+    playForce(sim, sim.turn.hand[0]!, [target]);
+    sim.timeout();
+    sim.as(sim.turn.readerId, { t: 'judge', done: false });
+    expect(sim.turn.result!.mercy).toEqual([target]);
+    expect(sim.s.stats[target]!.powers).toContain('shield');
+  });
+});

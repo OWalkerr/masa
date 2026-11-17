@@ -1,4 +1,5 @@
 // Üst çubuk: eriyen mum olarak perde ilerlemesi, sıra şeridi (avatarlar), menü.
+import { Cauldron } from '../../components/Cauldron';
 import { useState } from 'react';
 import type { View } from '../../../engine/viewFor';
 import { Avatar } from '../../components/Avatar';
@@ -58,6 +59,7 @@ export function TopBar({ view }: { view: View }) {
             );
           })}
         </ol>
+        {g.pot > 0 && <Cauldron n={g.pot} size={38} />}
         <Pocket view={view} />
         <MuteButton />
         <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menü" className="flex h-[48px] w-[48px] items-center justify-center rounded-full ink-tile">

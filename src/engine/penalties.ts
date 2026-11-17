@@ -30,7 +30,7 @@ export function emptyStats(): PlayerStats {
   return {
     courage: 0, paidUnits: 0, soberPenalties: 0, drinkLog: [], autoSober: false, targeted: 0, done: 0, failed: 0,
     readerTurns: 0, missedTurns: 0, powers: [], powersEarned: 0, passAct: 0, vetoUsed: false, paidHistory: [],
-    lastCatchAt: 0, catches: 0, decree: false,
+    lastCatchAt: 0, catches: 0, decree: false, mercyAct: 0,
   };
 }
 

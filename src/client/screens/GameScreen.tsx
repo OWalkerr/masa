@@ -190,6 +190,11 @@ export function useFxFeedback(view: View) {
       if (f.kind === 'sketchStart' || f.kind === 'galleryStart') play('paper');
       if (f.kind === 'galleryOpen') play('curtain');
       if (f.kind === 'guessWrong') play('wrong');
+      if (f.kind === 'potAdd') play('bell');
+      if (f.kind === 'potSpill') {
+        play('organ');
+        if ((f.payload as { id: string }).id === me) buzz([120, 60, 120]);
+      }
       if (f.kind === 'guessRight') {
         play('right');
         const id = (f.payload as { playerId: string }).playerId;

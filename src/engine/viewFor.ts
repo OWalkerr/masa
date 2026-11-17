@@ -143,6 +143,7 @@ export interface GameView {
   mg: MinigameView | null;
   sketch: SketchView | null;
   gallery: GalleryView | null;
+  pot: number; // Kazan
   stepKey: string; // "ilerlet" isteğinin hangi adım için olduğunu sunucuya bildirmek için
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
@@ -303,6 +304,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
         }
       : null,
     stepKey: stepKey(s),
+    pot: g.pot ?? 0,
     gallery:
       t?.gal && s.phase === 'action'
         ? {
