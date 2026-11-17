@@ -204,3 +204,9 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - 1. perde müzik kutulu vals, 2. perde tik tak saatli gerilim valsi, 3. perde kaos karnavalı; her biri 30 sn'lik döngü, -26 dB fon seviyesi.
     - Perde değişince 1,5 sn'lik geçiş; kart açılırken müzik kısılır.
     - Müzikler yalnızca çalacak cihazda (TV / host) ve gerektiğinde yüklenir.
+81. **Ana Ekran'ın büyük anları** (`TvMoments`): olaylar sıraya girer, biri bitince öbürü oynar.
+    - Oy sayımı (kalp atışı → çubuklar tek tek dolar → org, 5 sn).
+    - Kazan devrilmesi (kazan sallanıp devrilir, iksir sıçrar).
+    - Suçlu damgası (Yakala! suçlu çıkınca).
+    - Efsanevi kart (altın huzmeler) ve düello (ekran ikiye bölünür, şimşek).
+    - Telefonlarda bu anlar yok; telefon kişisel ekran, gösteri TV'de.

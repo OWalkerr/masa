@@ -1,5 +1,6 @@
 // Ana Ekran (/tv/KOD): büyük kart, masa sahnesi, skor ve katılım QR'ı. Telefonlar kumanda olur.
 // Koltuğa oturmaz (izleyici); ortam müziği burada çalar.
+import { TvMoments } from './game/TvMoments';
 import { speak } from '../audio/voice';
 import { tikLine, type TikMoment } from '../tik/lines';
 import { useVoiceRole } from '../audio/voice';
@@ -169,6 +170,7 @@ function TvGame({ view }: { view: View }) {
         </div>
       </aside>
       <CatchOverlayTv view={view} />
+      <TvMoments view={view} />
       <CatchResultToast view={view} />
     </main>
   );
