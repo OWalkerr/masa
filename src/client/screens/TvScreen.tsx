@@ -2,7 +2,7 @@
 // Koltuğa oturmaz (izleyici); ortam müziği burada çalar.
 import { GalleryTv, GalleryWall } from './game/Gallery';
 import { SketchBoard, SketchTv } from './game/Sketch';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { modeById } from '../../engine/modes';
 import type { View } from '../../engine/viewFor';
 import { useMusic } from '../audio/sound';
@@ -45,14 +45,14 @@ export function TvScreen({ code }: { code: string }) {
   return (
     <div className="relative min-h-full overflow-hidden">
       <NightScene seed={21} tv />
-      <div className="relative z-[2] min-h-full">{!view ? <TvLoading /> : view.phase === 'lobby' ? <TvLobby view={view} /> : <TvGame view={view} />}</div>
+      <TvStage>{!view ? <TvLoading /> : view.phase === 'lobby' ? <TvLobby view={view} /> : <TvGame view={view} />}</TvStage>
     </div>
   );
 }
 
 function TvLoading() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+    <main className="flex h-[1080px] flex-col items-center justify-center gap-4">
       <Tik size={160} className="tik-bob" />
       <p className="text-[28px] text-bone-dim">Ana Ekran hazırlanıyor…</p>
     </main>
@@ -73,7 +73,7 @@ function TvLobby({ view }: { view: View }) {
   const seated = view.players.filter((p) => !p.left);
   const mode = modeById(view.settings.deck);
   return (
-    <main className="grid min-h-screen grid-cols-[1fr_1fr] items-center gap-10 px-[5vw] py-[4vh]">
+    <main className="grid h-[1080px] grid-cols-[1fr_1fr] items-center gap-10 px-[96px] py-[43px]">
       <section className="flex flex-col items-center gap-6 text-center">
         <Logo size={120} />
         <p className="text-[32px]">Telefonunla masaya otur</p>
@@ -105,11 +105,11 @@ function TvGame({ view }: { view: View }) {
     );
   }
   const reader = view.players.find((p) => p.id === g.readerId);
-  const cardW = Math.round(Math.min(window.innerWidth * 0.36, (window.innerHeight * 0.84) / 1.4));
+  const cardW = Math.round(Math.min(TV_W * 0.36, (TV_H * 0.84) / 1.4));
   const cardPhase = ['reveal', 'action', 'resolve', 'tableEvent', 'finale'].includes(view.phase);
   const drinking = view.settings.drinking;
   return (
-    <main className="grid min-h-screen grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-[3vw] px-[3vw] py-[3vh]">
+    <main className="grid h-[1080px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-[58px] px-[58px] py-[32px]">
       <section className="flex flex-col items-center justify-center gap-4">
         <h1 className="font-gothic text-[40px] font-normal">
           Perde {g.act}: {ACT_NAMES[g.act]} <span className="text-bone-dim">· {Math.min(g.actTurn + 1, g.actTurns)}/{g.actTurns}</span>
@@ -140,10 +140,10 @@ function TvGame({ view }: { view: View }) {
             )}
           </div>
         )}
-        {cardPhase && g.card && g.sketch && <SketchBoard sk={g.sketch} maxPx={Math.round(window.innerHeight * 0.8)} />}
+        {cardPhase && g.card && g.sketch && <SketchBoard sk={g.sketch} maxPx={Math.round(TV_H * 0.78)} fit={false} />}
         {cardPhase && g.card && g.gallery?.stage === 'vote' && <GalleryWall view={view} />}
         {cardPhase && g.card && !g.sketch && !(g.gallery?.stage === 'vote') && <CardStage key={g.card.id + g.turnNo} view={view} card={g.card} width={cardW} />}
-        {cardPhase && g.card && <p className="max-w-[44vw] text-center text-[26px] text-bone-dim">{howTo(g.card, view)}</p>}
+        {cardPhase && g.card && <p className="max-w-[845px] text-center text-[26px] text-bone-dim">{howTo(g.card, view)}</p>}
       </section>
       <aside className="flex min-w-0 flex-col gap-4 py-2 text-[24px]">
         {g.effects.length > 0 && (
@@ -251,6 +251,29 @@ function CatchOverlayTv({ view }: { view: View }) {
   return (
     <div className="scale-[1.4]">
       <CatchOverlay view={view} />
+    </div>
+  );
+}
+
+// Ana Ekran sabit 1920×1080 sahnede çizilir ve pencereye orantılı sığdırılır (küçük ekranda sıkışmaz, büyükte boşalmaz)
+export const TV_W = 1920;
+export const TV_H = 1080;
+function TvStage({ children }: { children: React.ReactNode }) {
+  const [box, setBox] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  useEffect(() => {
+    const on = () => setBox({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  const z = Math.min(box.w / TV_W, box.h / TV_H);
+  return (
+    <div className="relative z-[2] h-screen w-screen overflow-hidden">
+      <div
+        className="absolute left-1/2 top-1/2"
+        style={{ width: TV_W, height: TV_H, transform: `translate(-50%, -50%) scale(${z})`, transformOrigin: 'center' }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

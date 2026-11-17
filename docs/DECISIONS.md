@@ -164,3 +164,10 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - En çok oyu alan(lar) içer, hiç oy alamayanlar "temiz eser" ile +1 cesaret alır. Sonuçta sanatçılar ve oy sayıları açılır, en kötüye "Rezalet Ödülü" bandı takılır.
     - Konular masadaki kişilerin portresi değildir (görünüş üzerinden alay yasağı).
 70. **Çekilişte "türün en eski kartı geri döner" kuralı daraltıldı.** Yalnızca taze kartlar el için yetmediğinde (3 kart, en az 2 tür) uygulanır. Az kartlı türler (Sergi gibi) taze kart varken kullanılmış kartı ele geri getirmesin.
+71. **Botlar güç kartı, Pas ve Veto kullanır** (yalnızca deneme botları):
+    - Cezası gelen bot Kalkan kaldırır ya da Ayna'yı rastgele birine tutar.
+    - Sabotajlı bot sonraki okuyucunun mirasını seçer.
+    - Okuyucu bot %40 ihtimalle Takas yapar.
+    - Kartın hedefiyse %12 ihtimalle pas geçer; yoğunluk 3 kartlarda %3 ihtimalle anonim veto eder.
+    Sonuç anında bu kararlar için bot "eylem bekleyen" sayılır; karar her zaman bir eyleme döner, döngüye girmez.
+72. **Ana Ekran sabit 1920×1080 sahnede çizilir** ve pencereye orantılı ölçeklenir (letterbox; arka plan tüm ekranı kaplar). İç ölçüler artık pencereye değil sahneye göre hesaplanır.

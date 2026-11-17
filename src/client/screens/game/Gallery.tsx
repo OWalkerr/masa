@@ -137,13 +137,13 @@ export function GalleryWall({ view }: { view: View }) {
   const gl = view.game!.gallery!;
   if (gl.stage === 'draw') return null;
   return (
-    <ul className="flex max-w-[46vw] flex-wrap justify-center gap-x-8 gap-y-4">
+    <ul className="flex max-w-[883px] flex-wrap justify-center gap-x-8 gap-y-4">
       {gl.items.map((strokes, i) => (
         <li key={i}>
           <SketchFinal
             strokes={strokes}
             word=""
-            size={Math.round(Math.min(window.innerHeight * (gl.items.length > 6 ? 0.2 : 0.26), window.innerWidth * (gl.items.length > 4 ? 0.1 : 0.13)))}
+            size={Math.round(Math.min(1080 * (gl.items.length > 6 ? 0.2 : 0.26), 1920 * (gl.items.length > 4 ? 0.1 : 0.13)))}
             caption={<span className="text-[28px] font-extrabold text-bone-100">{NO(i)}</span>}
           />
         </li>

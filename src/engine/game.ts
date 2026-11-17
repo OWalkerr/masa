@@ -1201,6 +1201,16 @@ export function pendingActors(s: GameState, ctx: Pick<Ctx, 'catalog'>): string[]
   if (g?.catchVote) for (const id of catchVoters(s)) if (g.catchVote.votes[id] === undefined) out.add(id);
   if (!t) return [...out];
   if (s.phase === 'choose' && !t.system) out.add(t.readerId);
+  // Sonuçta cebinde Kalkan/Ayna olan ceza alanlar ve Sabotaj sahipleri karar verir (botlar için)
+  if (s.phase === 'resolve' && t.result && !t.system) {
+    const next = nextReaderId(s);
+    for (const p of activePlayers(s)) {
+      const pw = s.stats[p.id]?.powers ?? [];
+      const paying = t.result.payments.some((x) => x.id === p.id);
+      if (paying && (pw.includes('shield') || pw.includes('mirror'))) out.add(p.id);
+      else if (pw.includes('sabotage') && !t.sabotagedBy && t.rest.length && next !== p.id) out.add(p.id);
+    }
+  }
   if (s.phase === 'action' && t.mg) {
     for (const id of mgActors(s, t.mg)) out.add(id);
   } else if (s.phase === 'action' && t.gal) {

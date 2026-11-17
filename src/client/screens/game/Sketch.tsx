@@ -49,25 +49,25 @@ function paint(canvas: HTMLCanvasElement, strokes: number[][], hidden = false) {
   for (const s of strokes) drawStroke(ctx, s, k);
 }
 
-function useCanvasSize(maxPx: number) {
+function useCanvasSize(maxPx: number, fit = true) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(320);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const on = () => setSize(Math.round(Math.min(el.clientWidth, maxPx, window.innerHeight * 0.52)));
+    const on = () => setSize(Math.round(Math.min(el.clientWidth, maxPx, fit ? window.innerHeight * 0.52 : Infinity)));
     on();
     const ro = new ResizeObserver(on);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [maxPx]);
+  }, [maxPx, fit]);
   return { ref, size };
 }
 
 // Canlı izleme: tam görünümden gelen çizgiler + aradaki parçalar (fx 'draw')
-export function SketchBoard({ sk, maxPx = 560, className = '' }: { sk: SketchView; maxPx?: number; className?: string }) {
+export function SketchBoard({ sk, maxPx = 560, className = '', fit = true }: { sk: SketchView; maxPx?: number; className?: string; fit?: boolean }) {
   const fx = useRoom((s) => s.fx);
-  const { ref, size } = useCanvasSize(maxPx);
+  const { ref, size } = useCanvasSize(maxPx, fit);
   const canvas = useRef<HTMLCanvasElement>(null);
   const strokes = useRef<number[][]>([]);
   const seen = useRef(fx.at(-1)?.seq ?? 0);

@@ -432,3 +432,22 @@ describe('Sergi', () => {
     expect(sim.turn.gal!.stage).toBe('vote');
   });
 });
+
+describe('botlar güç kartı kullanır', () => {
+  it('cezası gelen bot cebindeki Kalkanı kaldırır; Sabotajlı bot mirası seçer', async () => {
+    const { botDecide: decide } = await import('../../src/server/bots');
+    const { makeRng: mk } = await import('../../src/engine/rng');
+    const vc = only(card('v', { type: 'mostLikely', target: 'all', input: 'votePlayer', text: 'Kim en çok uyur?' }), card('v2', { type: 'mostLikely', target: 'all', input: 'votePlayer', text: 'Kim geç kalır?' }), card('v3', { type: 'question' }));
+    const sim = relaxed(vc);
+    playForce(sim, sim.turn.hand[0]!);
+    sim.timeout();
+    for (const id of sim.s.order) sim.as(id, { t: 'vote', playerId: id === 'p2' ? 'p1' : 'p2' });
+    expect(sim.turn.result!.payments.map((p) => p.id)).toEqual(['p2']);
+    sim.s.stats.p2!.powers = ['shield'];
+    sim.s.players.find((p) => p.id === 'p2')!.isBot = true;
+    const it = decide(sim.s, 'p2', mk(1), vc);
+    expect(it).toEqual({ t: 'usePower', power: 'shield' });
+    sim.as('p2', it!);
+    expect(sim.turn.result!.payments).toEqual([]);
+  });
+});

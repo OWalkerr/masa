@@ -1,7 +1,7 @@
 // Sunucu botları: masaya otururlar, kart seçer, hedef seçer, oylar, hüküm verir, itiraf yazar, Yakala! oylar.
 // Saf fonksiyonlardır; motor yalnızca "botun sırası geldi" sinyali verir (1–4 sn gecikmeyle).
 import { needsPick, targetPool } from '../engine/deck';
-import { actionKind, catchVoters, expectedInputs } from '../engine/game';
+import { actionKind, catchVoters, expectedInputs, nextReaderId } from '../engine/game';
 import { currentHolder } from '../engine/minigames';
 import { BOT_NAMES } from '../engine/names';
 import type { Rng } from '../engine/rng';
@@ -47,7 +47,23 @@ export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalo
   }
   const t = g.turn;
   if (!t) return null;
+  const st = s.stats[botId];
+  const powers = st?.powers ?? [];
+  // Sonuç anı: Kalkan kaldır, Ayna tut ya da Sabotaj yap
+  if (s.phase === 'resolve' && t.result && !t.system) {
+    const paying = t.result.payments.some((x) => x.id === botId);
+    if (paying && powers.includes('shield')) return { t: 'usePower', power: 'shield' };
+    if (paying && powers.includes('mirror')) {
+      const others = s.players.filter((p) => !p.left && p.id !== botId);
+      return others.length ? { t: 'usePower', power: 'mirror', targetId: rng.pick(others).id } : null;
+    }
+    if (powers.includes('sabotage') && !t.sabotagedBy && t.rest.length && nextReaderId(s) !== botId)
+      return { t: 'usePower', power: 'sabotage', cardId: rng.pick(t.rest) };
+    return null;
+  }
   if (s.phase === 'choose' && t.readerId === botId && !t.system) {
+    // Elini beğenmeyen bot Takas kullanır
+    if (t.step === 'choose' && !t.cardId && !t.swapped && powers.includes('swap') && rng.next() < 0.4) return { t: 'usePower', power: 'swap' };
     if (t.step === 'choose') {
       if (t.blind) return { t: 'playCard', cardId: `blind-${rng.int(t.hand.length)}` };
       // Yarı yarıya en yoğun kartı seçer (cesaret puanı peşinde)
@@ -61,6 +77,14 @@ export function botDecide(s: GameState, botId: string, rng: Rng, catalog: Catalo
     return { t: 'pickTarget', playerIds: pool.slice(0, needsPick(card)) };
   }
   if (s.phase !== 'action' || !t.cardId) return null;
+  // Pas (perde başına 1) ve çok nadiren anonim Veto
+  {
+    const c = getCard(catalog, t.cardId);
+    const passable = c && !['rule', 'curse', 'golden', 'mission'].includes(c.type) && !t.system;
+    if (passable && t.targets.includes(botId) && !t.passed.includes(botId) && st && st.passAct !== g.act && !t.mg && rng.next() < 0.12)
+      return { t: 'pass' };
+    if (passable && st && !st.vetoUsed && c!.intensity === 3 && rng.next() < 0.03) return { t: 'veto' };
+  }
   if (t.mg) {
     if (t.mg.stage !== 'live') return null;
     if (t.mg.kind === 'bomb') {
