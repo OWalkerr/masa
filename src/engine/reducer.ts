@@ -367,7 +367,6 @@ export function transferHost(s: GameState, fx: Fx[], fromId: string) {
 
 export function applySettings(cur: Settings, patch: Partial<Settings>): Settings {
   const next: Settings = { ...cur, ...patch };
-  if (next.deck === 'duel') throw new IntentError('NOT_YET', 'Düello Ligi v2 ile gelecek.');
   if (next.deck === 'clean') next.drinking = false; // Temiz deste alkolsüz sabittir
   if (next.deck === 'spicy') next.adult = true; // Ateşli deste 18+ kilidini açar
   if (!next.drinking && next.sip === 'shot') next.sip = 'sip';

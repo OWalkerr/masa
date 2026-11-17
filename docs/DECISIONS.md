@@ -239,3 +239,15 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - `GET /api/card-stats` ham sayıları verir. `npm run report:cards` bunları kart metinleriyle birleştirir; Wilson alt sınırıyla en iyi ve en kötü kartları listeler.
     - Amaç: birkaç gecelik gerçek oyundan sonra sıkıcı kartları ayıklamak, güldürenlerin benzerlerini yazmak.
     - Not: Durable Object içinde `ctx.waitUntil` hata veriyordu. İstatistik çağrısı beklenmeden gönderiliyor, hata olursa yalnızca loglanıyor ve oyun etkilenmiyor.
+89. **Düello Ligi (2026-11-17):** Kilitli olan mod açıldı.
+    - **Deste:** 43 yeni düello kartı (14 hafif, 15 orta, 13 sert, 1 efsanevi final). Aralara klasik desteden nefes kartları karışır. Ligde ilk perdeden itibaren düello gelir ve her elde en az 2 düello olur.
+    - **Eşleştirme:** Rakipleri okuyucu değil sistem seçer: en az maç yapan iki kişi karşılaşır, aynı ikili art arda eşleşmez. Okuyucu hakemdir.
+    - **Puanlama:** Kalanlar oylar. Oylar eşitse hakemin oyu kazananı belirler. Hakem eşitliği bozamazsa maç berabere biter ve ikisi de içer.
+      - Puan: galibiyet 3, beraberlik 1. Hiç oy çıkmazsa maç sayılmaz.
+    - **Tablo:** Lig tablosu (O-G-B-M-Puan) her düellodan sonra telefonda, TV'de ise sürekli görünür.
+      - Sıralama: puan, sonra averaj, sonra cesaret.
+      - Lidere taç verilir. Her şey eşitse taç verilmez.
+    - **Özet:** Gecede "Gecenin Şampiyonu" kartı ve tam tablo var. Afişte şampiyon ilk mezar taşına yazılır.
+    - **TV düzeltmeleri:**
+      - Oy sayımı anı artık içenleri sonuçtan alıyor. Düelloda "en çok oy alan içer" yazıyordu, oysa kaybeden içer. Kazanan da ayrıca duyuruluyor.
+      - Sonuç paneli TV'de `transform: scale` yerine `zoom` ile büyütülüyor. Eskisi taşıp alttaki tabloya biniyordu.

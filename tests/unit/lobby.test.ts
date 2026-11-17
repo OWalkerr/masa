@@ -57,7 +57,8 @@ describe('lobi', () => {
     expect(s.settings.drinking).toBe(false); // Temiz deste alkolsüz sabit
     s = run(s, [{ t: 'updateSettings', by: 'a', patch: { deck: 'spicy' } }]);
     expect(s.settings.adult).toBe(true);
-    expect(() => reduce(s, { t: 'updateSettings', by: 'a', patch: { deck: 'duel' } }, { now: 5, catalog, rng: makeRng(1) })).toThrow();
+    s = run(s, [{ t: 'updateSettings', by: 'a', patch: { deck: 'duel' } }]);
+    expect(s.settings.deck).toBe('duel'); // Düello Ligi artık açık
   });
 
   it('başlatmak için en az 3 oyuncu gerekir; geç katılan sıranın sonuna eklenir', () => {

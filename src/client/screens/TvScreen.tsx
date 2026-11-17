@@ -1,6 +1,7 @@
 // Ana Ekran (/tv/KOD): büyük kart, masa sahnesi, skor ve katılım QR'ı. Telefonlar kumanda olur.
 // Koltuğa oturmaz (izleyici); ortam müziği burada çalar.
 import { TvMoments } from './game/TvMoments';
+import { LeagueTable } from './game/League';
 import { speak } from '../audio/voice';
 import { tikLine, type TikMoment } from '../tik/lines';
 import { useVoiceRole } from '../audio/voice';
@@ -217,8 +218,9 @@ function TvStatus({ view }: { view: View }) {
   }
   if (view.phase === 'resolve' || view.phase === 'tableEvent') {
     return (
-      <div className="origin-top-left scale-[1.25]" style={{ width: '80%' }}>
-        <ResolvePanel view={view} />
+      // zoom yerleşimi de büyütür (transform taşıp alttaki tabloya biniyordu)
+      <div style={{ zoom: 1.12 }}>
+        <ResolvePanel view={view} tv />
       </div>
     );
   }
@@ -226,6 +228,7 @@ function TvStatus({ view }: { view: View }) {
 }
 
 function Scoreboard({ view }: { view: View }) {
+  if (view.settings.deck === 'duel') return <LeagueTable view={view} tv />;
   const players = view.players.filter((p) => !p.left).sort((a, b) => (view.stats[b.id]?.courage ?? 0) - (view.stats[a.id]?.courage ?? 0));
   return (
     <table className="ink-panel w-full text-[24px]">

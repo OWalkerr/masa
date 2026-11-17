@@ -109,7 +109,8 @@ export function cardWeight(s: GameState, card: Card): number {
   // Masayı en çok güldüren kural/Yakala! mekanikleri ilerleyen perdelerde daha sık
   if (g.act >= 2) w *= ACT_BOOST[card.type] ?? 1;
   if (g.act === 3 && card.type === 'curse') w *= 1.4;
-  if (g.recentTypes.includes(card.type)) w *= 0.5; // son 2 turda oynanan tür yarı ağırlık
+  // son 2 turda oynanan tür yarı ağırlık (Düello Ligi'nde düello hariç)
+  if (g.recentTypes.includes(card.type) && !(s.settings.deck === 'duel' && card.type === 'duel')) w *= 0.5;
   let r: number = RARITY_W[card.rarity];
   if (isHouse(card)) r *= 2.5; // masanın kendi kartları daha sık
   if (card.rarity === 'legendary' && g.act === 3) r *= 2;
@@ -125,6 +126,8 @@ export function dealHand(s: GameState, catalog: Catalog, rng: Rng, readerId: str
   if (inherit && feasible(s, inherit, readerId)) hand.push(inherit);
 
   const allowedTypes = new Set(ACT_TYPES[act].filter((t) => IMPLEMENTED_TYPES.has(t)));
+  const league = s.settings.deck === 'duel' && activePlayers(s).length >= 3;
+  if (league) allowedTypes.add('duel'); // Düello Ligi ilk perdeden kapışır
   const base = modePool(s, catalog).filter((c) => allowedTypes.has(c.type) && feasible(s, c, readerId) && !hand.some((h) => h.id === c.id));
   const used = new Set(g.used);
   const intensities = ACT_INTENSITY[act];
@@ -166,6 +169,20 @@ export function dealHand(s: GameState, catalog: Catalog, rng: Rng, readerId: str
     const pick = rng.weighted(opts, (c) => cardWeight(s, c)) ?? opts[0]!;
     hand.push(pick);
     cands = cands.filter((c) => c.id !== pick.id);
+  }
+  // Düello Ligi: elde en az 2 düello olsun (üçüncüsü nefes kartı)
+  if (league) {
+    const duels = () => hand.filter((c) => c.type === 'duel').length;
+    const pool = base.filter((c) => c.type === 'duel' && !hand.includes(c));
+    const fresh = pool.filter((c) => !used.has(c.id) && c.intensity <= maxI);
+    const src = fresh.length ? fresh : g.used.map((id) => catalog.get(id)).filter((c): c is Card => !!c && pool.includes(c));
+    while (duels() < Math.min(2, hand.length) && src.length) {
+      const i = hand.findIndex((c, k) => c.type !== 'duel' && !(k === 0 && c === inherit));
+      if (i < 0) break;
+      const pick = rng.weighted(src, (c) => cardWeight(s, c)) ?? src[0]!;
+      hand[i] = pick;
+      src.splice(src.indexOf(pick), 1);
+    }
   }
   return rng.shuffle(hand.map((c) => c.id));
 }

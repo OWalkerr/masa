@@ -571,3 +571,72 @@ describe('kart oylaması', () => {
     expect(sim.s.phase).toBe('choose');
   });
 });
+
+describe('Düello Ligi', () => {
+  it('ilk perdeden düello gelir, elde en az 2 düello olur, eşleşmeyi sistem adil yapar, lig tablosu tutulur', async () => {
+    const { catalog: base } = await import('./sim');
+    const sim = new Sim(createRoom('ABCD', 0, 11), base);
+    for (let i = 0; i < 5; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0, consent: { ageOk: true } });
+    sim.as('p0', { t: 'updateSettings', patch: { deck: 'duel', length: 'short', pace: 'timed' } });
+    sim.as('p0', { t: 'start' });
+    sim.timeout();
+    let hands = 0, duelsInHand = 0, duelsPlayed = 0;
+    for (let i = 0; i < 40 && sim.s.phase !== 'summary'; i++) {
+      if (sim.s.phase === 'choose' && sim.turn.step === 'choose' && !sim.turn.system) {
+        hands++;
+        const types = sim.turn.hand.map((id) => base.get(id)!.type);
+        duelsInHand += types.filter((t) => t === 'duel').length >= 2 ? 1 : 0;
+        const duel = sim.turn.hand.find((id) => base.get(id)!.type === 'duel');
+        if (duel) {
+          sim.as(sim.turn.readerId, { t: 'playCard', cardId: duel });
+          // eşleşmeyi sistem yaptı: hedef seçme adımı yok, okuyucu düelloda değil
+          expect(sim.turn.step).toBe('choose');
+          expect(sim.turn.targets).toHaveLength(2);
+          expect(sim.turn.targets).not.toContain(sim.turn.readerId);
+          duelsPlayed++;
+          sim.timeout(); // açılış
+          // herkes ilk düellocuya oy verir
+          const [a] = sim.turn.targets;
+          for (const p of sim.s.players) if (!sim.turn.targets.includes(p.id)) sim.as(p.id, { t: 'vote', playerId: a! });
+        }
+      }
+      do sim.timeout(); while ((sim.s.phase as string) !== 'choose' && (sim.s.phase as string) !== 'summary');
+    }
+    expect(hands).toBeGreaterThan(5);
+    expect(duelsInHand).toBe(hands);
+    const games = sim.s.players.map((p) => { const st = sim.s.stats[p.id]!; return (st.duelW ?? 0) + (st.duelD ?? 0) + (st.duelL ?? 0); });
+    expect(games.reduce((x, y) => x + y, 0)).toBe(duelsPlayed * 2);
+    // adil eşleşme: maç sayıları arasında en fazla 2 fark
+    expect(Math.max(...games) - Math.min(...games)).toBeLessThanOrEqual(2);
+    const totalW = sim.s.players.reduce((x, p) => x + (sim.s.stats[p.id]!.duelW ?? 0), 0);
+    expect(totalW).toBe(duelsPlayed);
+    expect(viewFor(sim.s, 'p1', base).stats.p1!.duelW).toBe(sim.s.stats.p1!.duelW ?? 0);
+  });
+});
+
+describe('Düello Ligi hakem oyu', () => {
+  it('oylar eşitse hakemin (okuyucunun) oyu kazananı belirler', () => {
+    const dc = only(
+      card('d1', { type: 'duel', target: 'twoPicked', input: 'votePlayer', text: 'Düello: {secilen} ve {ikinci} kapışsın.' }),
+      card('d2', { type: 'duel', target: 'twoPicked', input: 'votePlayer', text: 'Düello: {secilen} ve {ikinci} yine kapışsın.' }),
+      card('q1', { type: 'question' }),
+    );
+    const sim = new Sim(createRoom('ABCD', 0, 7), dc);
+    for (let i = 0; i < 4; i++) sim.do({ t: 'join', playerId: `p${i}`, secret: 's', name: `O${i}`, avatar: 0, consent: { ageOk: true } });
+    sim.as('p0', { t: 'updateSettings', patch: { deck: 'duel' } });
+    sim.as('p0', { t: 'start' });
+    sim.timeout();
+    const duel = sim.turn.hand.find((id) => id.startsWith('d'))!;
+    playForce(sim, duel);
+    sim.timeout();
+    const [a, b] = sim.turn.targets as [string, string];
+    const reader = sim.turn.readerId;
+    const other = sim.s.players.map((p) => p.id).find((id) => id !== a && id !== b && id !== reader)!;
+    sim.as(other, { t: 'vote', playerId: a });
+    sim.as(reader, { t: 'vote', playerId: b });
+    expect(sim.s.phase).toBe('resolve');
+    expect(sim.s.game!.turn!.result!.winner).toBe(b);
+    expect(sim.s.stats[b]!.duelW).toBe(1);
+    expect(sim.s.stats[a]!.duelL).toBe(1);
+  });
+});

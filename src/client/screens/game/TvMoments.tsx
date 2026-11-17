@@ -12,7 +12,7 @@ import { keyItem, useManifest } from '../../art/manifest';
 import { Tik } from '../../components/Tik';
 
 type Moment =
-  | { k: 'tally'; rows: { id: string; n: number }[]; winners: string[] }
+  | { k: 'tally'; rows: { id: string; n: number }[]; winners: string[]; payers: string[]; duelWinner?: string }
   | { k: 'pot'; id: string; units: number }
   | { k: 'guilty'; id: string }
   | { k: 'legend' }
@@ -37,7 +37,10 @@ export function TvMoments({ view }: { view: View }) {
       if (f.kind === 'resolve' && g?.result?.tally && Object.keys(g.result.tally).length) {
         const rows = Object.entries(g.result.tally).map(([id, n]) => ({ id, n })).sort((a, b) => b.n - a.n);
         const max = rows[0]?.n ?? 0;
-        add.push({ k: 'tally', rows: rows.slice(0, 6), winners: rows.filter((r) => r.n === max).map((r) => r.id) });
+        // İçenler sonuçtan gelir: düelloda kaybeden, oylamada en çok oy alan; hakem kararı da dahil
+        const payers = g.result.payments.map((p) => p.id);
+        const winners = g.card?.type === 'duel' ? payers : rows.filter((r) => r.n === max).map((r) => r.id);
+        add.push({ k: 'tally', rows: rows.slice(0, 6), winners, payers, duelWinner: g.card?.type === 'duel' ? g.result.winner ?? undefined : undefined });
       }
       if (f.kind === 'potSpill') add.push({ k: 'pot', ...(f.payload as { id: string; units: number }) });
       if (f.kind === 'catchResult' && (f.payload as { guilty: boolean }).guilty) add.push({ k: 'guilty', id: (f.payload as { accused: string }).accused });
@@ -118,8 +121,13 @@ function MomentView({ m, view }: { m: Moment; view: View }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: reduce ? 0 : 2.6, type: 'spring', stiffness: 260, damping: 14 }}
           >
-            {m.winners.map(name).join(' ve ')} {drinking ? 'içiyor!' : 'ceza alıyor!'}
+            {m.payers.length ? `${m.payers.map(name).join(' ve ')} ${drinking ? 'içiyor!' : 'ceza alıyor!'}` : 'Kimse içmiyor.'}
           </motion.p>
+          {m.duelWinner && (
+            <motion.p className="text-center text-[40px] font-bold text-[#E8C26A]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 3 }}>
+              Düelloyu {name(m.duelWinner)} kazandı
+            </motion.p>
+          )}
         </div>
       )}
 

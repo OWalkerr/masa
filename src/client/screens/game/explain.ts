@@ -27,6 +27,7 @@ export function howTo(card: Card, view: View): string {
     case 'curse':
       return `Lanetli kuralı bozarsa “Yakala!” ile yakalanır.`;
     case 'duel':
+      if (view.settings.deck === 'duel') return `Lig maçı: eşleşmeyi masa yaptı, okuyucu hakem. Kalanlar oylar, eşitlikte hakemin oyu belirler. Kaybeden ${v}. Galibiyet 3, beraberlik 1 puan.`;
       return `İkisi kapışır, kalanlar kazananı oylar. Kaybeden ${v}.`;
     case 'mirror':
       if (tags.includes('yalan')) return `Hedef 2 doğru 1 yalan söyler, yalanı gizlice işaretler. Bulamayan ${v}; herkes bulursa yalancı ${v}.`;

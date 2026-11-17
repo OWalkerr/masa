@@ -2,7 +2,7 @@
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from cards_a import classic, who
-from cards_b import confess, chaos, homeland, spicy, clean, sketch
+from cards_b import confess, chaos, homeland, spicy, clean, sketch, duel
 
 PREFIX = {"question": "q", "dare": "d", "mostLikely": "w", "neverHave": "n", "rule": "r", "curse": "cu",
           "duel": "du", "mirror": "m", "confession": "c", "minigame": "mg", "golden": "g", "tableEvent": "e", "mission": "gg", "sketch": "k", "gallery": "s"}
@@ -30,7 +30,7 @@ def rare_some(cards, every=7):
     return cards
 
 repo = sys.argv[1]
-for deck, rows in [("classic", classic), ("who", who), ("confess", confess), ("chaos", chaos), ("homeland", homeland), ("spicy", spicy), ("clean", clean), ("sketch", sketch)]:
+for deck, rows in [("classic", classic), ("who", who), ("confess", confess), ("chaos", chaos), ("homeland", homeland), ("spicy", spicy), ("clean", clean), ("sketch", sketch), ("duel", duel)]:
     cards = rare_some(build(deck, rows))
     lines = ",\n".join("    " + json.dumps(c, ensure_ascii=False) for c in cards)
     with open(f"{repo}/content/cards/{deck}.json", "w") as f:

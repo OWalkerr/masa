@@ -157,12 +157,34 @@ export function playCard(s: GameState, ctx: Ctx, fx: Fx[], by: string, rawId: st
   fx.push({ kind: 'cardPlayed', payload: { readerId: by } });
   const need = needsPick(c);
   // Hassas kartlarda (flört/temas) hedefi sistem seçer: okuyucu kimin katılımı açık olduğunu öğrenemez
-  if (need > 0 && !isSensitive(c) && targetPool(s, c, t.readerId).length > need) {
+  // Düello Ligi: eşleşmeyi sistem yapar (en az maç yapanlar karşılaşır), okuyucu hakem olur
+  const league = s.settings.deck === 'duel' && c.type === 'duel';
+  if (need > 0 && !isSensitive(c) && !league && targetPool(s, c, t.readerId).length > need) {
     t.step = 'target';
     setPhase(s, ctx, 'choose', pdur(s, DUR.target));
   } else {
     finalizeTargets(s, ctx, fx, c, null);
   }
+}
+
+// Düello Ligi eşleşmesi: en az maç yapan iki kişi; eşitlikte rastgele, son eşleşme tekrar etmesin
+export function leagueGames(s: GameState, id: string): number {
+  const st = s.stats[id];
+  return st ? (st.duelW ?? 0) + (st.duelD ?? 0) + (st.duelL ?? 0) : 0;
+}
+
+function leaguePair<P extends { id: string }>(s: GameState, rng: Ctx['rng'], pool: P[]): P[] {
+  if (pool.length <= 2) return pool.slice(0, 2);
+  const last = s.game?.log
+    .slice()
+    .reverse()
+    .find((l) => l.type === 'duel')?.targets ?? [];
+  const order = rng.shuffle([...pool]).sort((a, b) => leagueGames(s, a.id) - leagueGames(s, b.id));
+  const first = order[0]!;
+  const rest = order.slice(1);
+  // İlk kişinin bir önceki rakibiyle tekrar eşleşmesinden kaçın
+  const second = rest.find((p) => !(last.includes(first.id) && last.includes(p.id))) ?? rest[0]!;
+  return [first, second];
 }
 
 export function pickTarget(s: GameState, ctx: Ctx, fx: Fx[], by: string, ids: string[]) {
@@ -192,6 +214,10 @@ function finalizeTargets(s: GameState, ctx: Ctx, fx: Fx[], c: Card, picked: stri
     case 'picked':
     case 'twoPicked': {
       const need = needsPick(c);
+      if (!picked && s.settings.deck === 'duel' && c.type === 'duel') {
+        targets = leaguePair(s, rng, pool).map((p) => p.id);
+        break;
+      }
       targets = picked ?? [];
       const rest = pool.filter((p) => !targets.includes(p.id));
       while (targets.length < need && rest.length) {
@@ -484,13 +510,32 @@ function resolveTurn(s: GameState, ctx: Ctx, fx: Fx[]) {
       result.tally = r;
       const [a, b] = t.targets;
       if (a && b) {
-        const va = r[a] ?? 0, vb = r[b] ?? 0;
-        if (va === vb) payers = va > 0 ? [a, b] : [];
-        else {
+        let va = r[a] ?? 0, vb = r[b] ?? 0;
+        // Düello Ligi: eşitliği hakemin (okuyucunun) oyu bozar
+        const refVote = t.inputs[t.readerId];
+        if (s.settings.deck === 'duel' && va === vb && va > 0 && refVote?.k === 'vote' && (refVote.playerId === a || refVote.playerId === b)) {
+          if (refVote.playerId === a) va += 0.5;
+          else vb += 0.5;
+          result.note = 'Oylar eşitti; hakemin oyu kazananı belirledi.';
+        }
+        ensureStats(s, a);
+        ensureStats(s, b);
+        const sa = s.stats[a]!, sb = s.stats[b]!;
+        if (va === vb) {
+          payers = va > 0 ? [a, b] : [];
+          // Lig: oy alan beraberlik sayılır; hiç oy yoksa maç sayılmaz
+          if (va > 0) {
+            sa.duelD = (sa.duelD ?? 0) + 1;
+            sb.duelD = (sb.duelD ?? 0) + 1;
+          }
+        } else {
           const winner = va > vb ? a : b;
+          const loser = winner === a ? b : a;
           result.winner = winner;
-          payers = [winner === a ? b : a];
+          payers = [loser];
           result.courage.push({ id: winner, pts: 2, why: 'düelloyu kazandı' });
+          s.stats[winner]!.duelW = (s.stats[winner]!.duelW ?? 0) + 1;
+          s.stats[loser]!.duelL = (s.stats[loser]!.duelL ?? 0) + 1;
         }
       }
       break;
@@ -658,7 +703,7 @@ function finishTurn(s: GameState, ctx: Ctx, fx: Fx[], c: Card, payers: string[])
   g.used = g.used.filter((id) => id !== c.id);
   if (ctx.catalog.has(c.id)) g.used.push(c.id);
   g.recentTypes = [...g.recentTypes, c.type].slice(-2);
-  g.log.push({ n: g.turnNo + 1, act: g.act, readerId: t.readerId, cardId: c.id, type: c.type, payers });
+  g.log.push({ n: g.turnNo + 1, act: g.act, readerId: t.readerId, cardId: c.id, type: c.type, payers, ...(c.type === 'duel' ? { targets: [...t.targets] } : {}) });
   // Cebinde Kalkan/Ayna olan bir ödeyen varsa karar için süre uzar
   const canReact = (t.result?.payments ?? []).some((p) => s.stats[p.id]?.powers.some((x) => x === 'shield' || x === 'mirror'));
   setPhase(s, ctx, 'resolve', pdur(s, canReact ? DUR.resolvePower : c.type === 'rule' || c.type === 'curse' ? DUR.ruleResolve : DUR.resolve));

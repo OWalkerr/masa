@@ -127,7 +127,7 @@ interface Card {
 | Kim Daha? (`who`) | %50 mostLikely, %20 neverHave | Zehir yeşili #A3E635 |
 | İtiraf Gecesi (`confess`) | question, mirror, confession | Ay mavisi #7FB2E5 |
 | Kaos (`chaos`) | rule, curse, minigame, tableEvent ağırlıklı | Kan kırmızısı #D7263D |
-| Düello Ligi (`duel`) — v2 | duel + takım kartları | Mor #8E6CD8 |
+| Düello Ligi (`duel`) | duel (43 kart) + klasik nefes kartları; lig tablosu, sistem eşleştirmesi, okuyucu hakem | Mor #8E6CD8 |
 | Ateşli 18+ (`spicy`) | flörtöz, yalnızca katılımı açık oyuncular | Gül kızılı #E0457B |
 | Temiz (`clean`) | Aile/ofis, alkolsüz sabit | Nane #5ED6B4 |
 | Memleket (`homeland`) | Karışım destesi, diğer modlara eklenir | Balkabağı #F28C28 |

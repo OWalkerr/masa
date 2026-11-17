@@ -1,6 +1,7 @@
 // Hüküm: bedeller (sayılı bal mumu mührü), cesaret puanları, oy sayımı, mini cezalar, Su Molası.
 import { Cauldron } from '../../components/Cauldron';
 import { GalleryResult } from './Gallery';
+import { LeagueTable } from './League';
 import { SketchFinal } from './Sketch';
 import { tikLine } from '../../tik/lines';
 import { TikSays } from '../../tik/TikSays';
@@ -13,7 +14,7 @@ import { Avatar } from '../../components/Avatar';
 import { WaxSeal } from '../../components/GameCard/GameCard';
 import { useReducedMotion } from '../../fx/motionPref';
 
-export function ResolvePanel({ view }: { view: View }) {
+export function ResolvePanel({ view, tv = false }: { view: View; tv?: boolean }) {
   const g = view.game!;
   const r = g.result;
   const reduce = useReducedMotion();
@@ -233,6 +234,8 @@ export function ResolvePanel({ view }: { view: View }) {
       {g.hasInheritForNext && nextReader && (
         <p className="text-center text-[15px] italic text-bone-dim">Seçilmeyen bir kart {nextReader} için miras kaldı…</p>
       )}
+
+      {!tv && view.settings.deck === 'duel' && g.card?.type === 'duel' && <LeagueTable view={view} highlight={g.targets} />}
 
       {g.rateable && view.you && <CardRating mine={g.myRating} />}
     </div>

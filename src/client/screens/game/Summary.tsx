@@ -1,6 +1,7 @@
 // Gecenin Özeti: ödüller yerden yükselen komik mezar taşları olarak gelir. İstatistikler ve "Tekrar Oyna".
 import { useState } from 'react';
 import { renderPoster } from './Poster';
+import { Champion, LeagueTable, leagueLeader, leagueRows } from './League';
 import { tikLine } from '../../tik/lines';
 import { TikSays } from '../../tik/TikSays';
 import { motion } from 'motion/react';
@@ -26,6 +27,13 @@ const AWARDS: Award[] = [
   { title: 'Temiz Hayalet', epitaph: 'En az içen. Şüpheli derecede ayık.', pick: (s) => s.paidUnits, min: true },
 ];
 
+// Afişte Düello Ligi şampiyonu ilk mezar taşı olur
+function posterAwards(view: View, list: { title: string; epitaph: string; name: string }[]) {
+  if (view.settings.deck !== 'duel') return list;
+  const leader = leagueLeader(leagueRows(view), view);
+  return leader ? [{ title: 'Gecenin Şampiyonu', epitaph: `${leader.pts} puanla tacı aldı.`, name: leader.name }, ...list] : list;
+}
+
 export function Summary({ view }: { view: View }) {
   const send = useRoom((s) => s.send);
   const reduce = useReducedMotion();
@@ -46,6 +54,7 @@ export function Summary({ view }: { view: View }) {
       <Logo size={56} />
       <h1 className="font-gothic text-[40px]">Gecenin Özeti</h1>
       <TikSays pose="cheer" text={tikLine('summary', view.code)} drinking={view.settings.drinking} />
+      {view.settings.deck === 'duel' && <Champion view={view} />}
       <div className="flex w-full flex-wrap items-end justify-center gap-3">
         {awards.map((a, i) => (
           <motion.div
@@ -93,6 +102,7 @@ export function Summary({ view }: { view: View }) {
             })}
         </tbody>
       </table>
+      {view.settings.deck === 'duel' && <LeagueTable view={view} />}
       <p className="text-[14px] text-bone-dim">{view.game?.log.length ?? 0} kart oynandı.</p>
 
       {view.series && view.series.games > 0 && <SeriesTable view={view} />}
@@ -105,7 +115,7 @@ export function Summary({ view }: { view: View }) {
         onClick={async () => {
           setMaking(true);
           try {
-            const blob = await renderPoster(view, awards.map((a) => ({ title: a.title, epitaph: a.epitaph, name: a.winner.name })));
+            const blob = await renderPoster(view, posterAwards(view, awards.map((a) => ({ title: a.title, epitaph: a.epitaph, name: a.winner.name }))));
             setPoster(URL.createObjectURL(blob));
           } catch {
             toast('Afiş çizilemedi.', 'error');

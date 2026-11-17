@@ -40,6 +40,9 @@ export interface PublicStats {
   failed: number;
   readerTurns: number;
   targeted: number;
+  duelW: number;
+  duelD: number;
+  duelL: number;
 }
 
 export interface EffectView {
@@ -210,7 +213,10 @@ export function viewFor(s: GameState, playerId: string | null, baseCatalog?: Cat
     stats: Object.fromEntries(
       Object.entries(s.stats).map(([id, st]) => [
         id,
-        { courage: st.courage, paidUnits: st.paidUnits, done: st.done, failed: st.failed, readerTurns: st.readerTurns, targeted: st.targeted },
+        {
+          courage: st.courage, paidUnits: st.paidUnits, done: st.done, failed: st.failed, readerTurns: st.readerTurns, targeted: st.targeted,
+          duelW: st.duelW ?? 0, duelD: st.duelD ?? 0, duelL: st.duelL ?? 0,
+        },
       ]),
     ),
   };

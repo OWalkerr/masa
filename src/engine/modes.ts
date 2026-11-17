@@ -19,7 +19,7 @@ export const MODES: ModeDef[] = [
   { id: 'who', name: 'Kim Daha?', blurb: 'Parmaklar birbirini gösterir.', accent: '#A3E635', pools: ['who', 'classic'], weights: { mostLikely: 5, neverHave: 2 }, available: true },
   { id: 'confess', name: 'İtiraf Gecesi', blurb: 'Sorular, aynalar, anonim itiraflar.', accent: '#7FB2E5', pools: ['confess', 'classic'], weights: { question: 3, mirror: 3, confession: 3 }, available: true },
   { id: 'chaos', name: 'Kaos', blurb: 'Kurallar, lanetler, bombalar.', accent: '#D7263D', pools: ['chaos', 'classic'], weights: { rule: 3, curse: 3, minigame: 5, tableEvent: 2, mission: 2 }, available: true },
-  { id: 'duel', name: 'Düello Ligi', blurb: 'v2 ile geliyor.', accent: '#8E6CD8', pools: ['classic'], weights: { duel: 5 }, available: false },
+  { id: 'duel', name: 'Düello Ligi', blurb: 'Herkes sırayla kapışır, masa hakem. Lig tablosu tutulur, gecenin şampiyonu taç giyer.', accent: '#8E6CD8', pools: ['duel', 'classic'], weights: { duel: 6 }, available: true },
   { id: 'spicy', name: 'Ateşli 18+', blurb: 'Yalnızca katılımı açık olanlar.', accent: '#E0457B', pools: ['spicy', 'classic'], weights: {}, available: true, adultOnly: true },
   { id: 'clean', name: 'Temiz', blurb: 'Aile ve ofis. Hep alkolsüz.', accent: '#5ED6B4', pools: ['clean'], weights: {}, available: true, forceSober: true },
   { id: 'sketch', name: 'Karakalem', blurb: 'Biri çizer, masa tahmin eder. Bilemeyen içer.', accent: '#B8C4D6', pools: ['sketch', 'classic'], weights: { sketch: 7, gallery: 4 }, available: true },

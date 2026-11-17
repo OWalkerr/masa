@@ -253,6 +253,7 @@ export interface TurnLog {
   cardId: string;
   type: CardType;
   payers: string[];
+  targets?: string[]; // düelloda eşleşme tekrarı önlemek için
 }
 
 export interface GameRun {
@@ -298,6 +299,9 @@ export interface PlayerStats {
   catches: number; // doğru yakalamalar
   decree: boolean; // Sultan Kedi: perde sonuna kadar kural koyabilir
   mercyAct: number; // TIK'in merhamet Kalkanı verdiği perde (0 = hiç)
+  duelW?: number; // Düello Ligi: galibiyet / beraberlik / mağlubiyet
+  duelD?: number;
+  duelL?: number;
 }
 
 export type Catalog = ReadonlyMap<string, Card>;
