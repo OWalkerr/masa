@@ -31,6 +31,7 @@ async function openPage(i, url) {
 
 for (let i = 0; i < 6; i++) {
   ctxs[i] = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await ctxs[i].addInitScript(() => { try { localStorage.setItem('masa:pref:tipsOff', 'true'); } catch {} });
   const p = await openPage(i, `${BASE}/m/${code}?autojoin=1&name=${NAMES[i]}&avatar=${i * 2}`);
   await p.getByText('Masa kodu').waitFor({ timeout: 20000 });
 }

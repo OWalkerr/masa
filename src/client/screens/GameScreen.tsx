@@ -1,4 +1,5 @@
 // Oyun ekranı (telefon): üst çubuk, ortada kart sahnesi, altta bağlama göre tek birincil eylem.
+import { Tips } from './game/Tips';
 import { useVoiceRole } from '../audio/voice';
 import { motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
@@ -46,6 +47,7 @@ export function GameScreen({ view }: { view: View }) {
         {cardPhase && g.card && <Played view={view} />}
       </section>
       <HostBar view={view} />
+      <Tips view={view} />
       <CatchButton view={view} />
       <CatchOverlay view={view} />
       <CatchResultToast view={view} />

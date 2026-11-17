@@ -14,6 +14,7 @@ const { code } = await (await (await browser.newContext()).request.post(`${BASE}
 const pages = [];
 for (let i = 0; i < 3; i++) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('masa:pref:tipsOff', 'true'); } catch {} });
   const p = await ctx.newPage();
   p.setDefaultTimeout(4000);
   p.on('pageerror', (e) => errors.push(`${NAMES[i]}: ${e.message}`));
@@ -38,6 +39,14 @@ while (Date.now() < deadline && drawerIdx < 0) {
     const p = pages[i];
     const t = await p.locator('main').innerText().catch(() => '');
     if (t.includes('Çizeceğin')) { drawerIdx = i; break; }
+    // Önce Sergi gelirse: bir çizgi çiz, teslim et, oyla
+    if (t.includes('Serginin konusu') && !t.includes('Eserin teslim edildi')) {
+      const c = p.locator('canvas[aria-label^="Çizim alanı"]');
+      const b = await c.boundingBox().catch(() => null);
+      if (b) { await p.mouse.move(b.x + 40, b.y + 40); await p.mouse.down(); await p.mouse.move(b.x + 160, b.y + 140, { steps: 8 }); await p.mouse.up(); }
+      await p.getByRole('button', { name: 'Eserimi teslim et' }).click().catch(() => {});
+    }
+    if (t.includes('En kötü eser hangisi?')) await p.locator('ul[aria-label="Galeri"] button:not([disabled])').first().click().catch(() => {});
     if (t.includes('Sıra sende. Bir kart seç')) {
       // Elde Karakalem varsa onu seç
       const sk = p.locator('main [role=button]:has([aria-label$="Karakalem kartı"], [aria-label$="Tek Çizgi kartı"], [aria-label$="Kör Ressam kartı"], [aria-label$="Ters El kartı"])').first();

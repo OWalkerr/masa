@@ -15,6 +15,7 @@ const { code } = await (await (await browser.newContext()).request.post(`${BASE}
 const pages = [];
 for (let i = 0; i < 4; i++) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('masa:pref:tipsOff', 'true'); } catch {} });
   const p = await ctx.newPage();
   p.setDefaultTimeout(4000);
   p.on('pageerror', (e) => errors.push(`${NAMES[i]}: ${e.message}`));

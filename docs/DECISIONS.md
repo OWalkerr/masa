@@ -215,3 +215,6 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Fotoğraf ve kişisel veri yok, yalnızca takma adlar ve çizimler. Anılar (`highlights`) oyun boyunca motorda toplanır, yalnızca özette gönderilir.
 83. **Rövanş:** Özette host "Rövanş" (skorlar toplanır) ya da "Yeni gece" (sıfırdan) seçer. Toplamlar `series` altında tutulur ve özette "Rövanş #N · toplam" tablosunda görünür.
 84. Karakalem destesindeki "masadaki birinin portresini çiz" düellosu "havaya bir vampir çiz" olarak değiştirildi (görünüş üzerinden alay yasağı).
+85. **İlk kez ipuçları (2026-11-17):** Bir rol ya da durum ilk kez başına geldiğinde ekranın üstünde kısa bir ipucu çıkar. Dokuz durum var: host, okuyucu, hedef, kural, lanet, kendi görevin, görev, güç ve kazan.
+    - Her ipucu cihaz başına bir kez gösterilir ve 15 sn sonra kendiliğinden kapanır. "İpucu gösterme" ile tamamen kapatılabilir; ayar `prefs` içinde tutulur (`tipsSeen` / `tipsOff`).
+    - İpucu üstte durur, Pas/Veto/Oyna düğmelerini kapatmaz. Uçtan uca testlerde `masa:pref:tipsOff` ile kapalıdır.
