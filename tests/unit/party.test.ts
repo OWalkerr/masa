@@ -61,6 +61,21 @@ describe('rahat tempo', () => {
     expect(sim.turn.result!.payments.map((p) => p.id)).toEqual(['p2']);
   });
 
+  it('aynı adım için ikinci "ilerlet" yok sayılır (çift dokunma bir adım atlatmaz)', () => {
+    const sim = relaxed(cat);
+    playForce(sim, sim.turn.hand[0]!);
+    sim.timeout();
+    sim.as(sim.turn.readerId, { t: 'judge', done: true });
+    const key = viewFor(sim.s, 'p0', cat).game!.stepKey;
+    sim.as('p0', { t: 'advance', at: key });
+    expect(sim.s.phase).toBe('choose');
+    const turn = sim.s.game!.turnNo;
+    expect(() => sim.as('p0', { t: 'advance', at: key })).toThrow();
+    expect(sim.s.phase).toBe('choose');
+    expect(sim.s.game!.turnNo).toBe(turn);
+    expect(sim.turn.cardId).toBeNull();
+  });
+
   it('host bağlı değilse masadaki herhangi biri ilerletebilir', () => {
     const sim = relaxed(cat);
     sim.do({ t: 'disconnect', playerId: 'p0' });

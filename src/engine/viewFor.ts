@@ -2,7 +2,7 @@
 import type { Card } from './cards';
 import { actionKind, expectedInputs, type ActionKind } from './game';
 import { isSober } from './penalties';
-import { catchVoters, nextReaderId } from './game';
+import { catchVoters, nextReaderId, stepKey } from './game';
 import { currentHolder } from './minigames';
 import { getCard } from './systemCards';
 import type { CatchResult, Catalog, GameState, InputValue, Phase, PowerKind, Settings, TokenKey, TurnLog, TurnResult } from './types';
@@ -111,6 +111,7 @@ export interface GameView {
   catchVote: CatchVoteView | null;
   lastCatch: (Omit<CatchResult, 'votes'>) | null;
   mg: MinigameView | null;
+  stepKey: string; // "ilerlet" isteğinin hangi adım için olduğunu sunucuya bildirmek için
   restCards: Card[]; // Sabotaj: seçilmeyen kartlar (yalnızca cebinde Sabotaj olana)
   log: TurnLog[]; // yalnızca özet ekranında dolu
 }
@@ -269,6 +270,7 @@ function gameView(s: GameState, me: string | null, catalog: Catalog): GameView |
           myTapped: !!me && t.mg.taps[me] !== undefined,
         }
       : null,
+    stepKey: stepKey(s),
     restCards: canSabotage && t ? t.rest.map((id) => getCard(catalog, id)!).filter(Boolean) : [],
     log: s.phase === 'summary' ? g.log : [],
   };

@@ -106,6 +106,12 @@ async function act(p, i) {
   }
   if (t.includes('erken!') || t.includes(' ms') || t.includes('elinde patladı')) await shot(p, 'mgResult');
   if (t.includes('Sıra sende. Bir kart seç') || t.includes('Hayalet Saati')) {
+    // Elde mini oyun varsa onu oyna (Kısa oyunda şansa bırakmamak için)
+    const mgCard = p.locator('main [role=button]:has([aria-label="Mini Oyun kartı"])').first();
+    if (await mgCard.isVisible().catch(() => false)) {
+      if ((await mgCard.getAttribute('aria-label').catch(() => '')) === 'Bu karta geç') await mgCard.click().catch(() => {});
+      await p.waitForTimeout(400);
+    }
     const b = p.getByRole('button', { name: 'Oyna', exact: true });
     if (await b.isEnabled().catch(() => false)) { await p.waitForTimeout(300); await b.click().catch(() => {}); }
   } else if (t.includes('Kart kime gidiyor') || t.includes('iki kişiyi seç')) {

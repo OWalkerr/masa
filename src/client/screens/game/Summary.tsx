@@ -1,4 +1,6 @@
 // Gecenin Özeti: ödüller yerden yükselen komik mezar taşları olarak gelir. İstatistikler ve "Tekrar Oyna".
+import { tikLine } from '../../tik/lines';
+import { TikSays } from '../../tik/TikSays';
 import { motion } from 'motion/react';
 import type { PublicStats, View } from '../../../engine/viewFor';
 import { Avatar } from '../../components/Avatar';
@@ -38,6 +40,7 @@ export function Summary({ view }: { view: View }) {
     <main className="mx-auto flex min-h-full max-w-md flex-col items-center gap-5 px-4 pb-32 pt-6">
       <Logo size={56} />
       <h1 className="font-gothic text-[40px]">Gecenin Özeti</h1>
+      <TikSays text={tikLine('summary', view.code)} drinking={view.settings.drinking} />
       <div className="flex w-full flex-wrap items-end justify-center gap-3">
         {awards.map((a, i) => (
           <motion.div

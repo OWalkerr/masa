@@ -1,4 +1,6 @@
 // Lobi: meyhane masası, QR + link, ayarlar (yalnızca host), kişisel tercihler, "Başlat".
+import { tikLine } from '../tik/lines';
+import { TikSays } from '../tik/TikSays';
 import { useState } from 'react';
 import { MODES, modeById } from '../../engine/modes';
 import { MIN_PLAYERS, type Settings } from '../../engine/types';
@@ -42,7 +44,7 @@ export function LobbyScreen({ view }: { view: View }) {
     <main className="mx-auto flex min-h-full max-w-md flex-col gap-5 px-4 pb-32 pt-4">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[14px] text-bone-dim">Masa kodu</p>
+          <h1 className="text-[14px] font-normal text-bone-dim">Masa kodu</h1>
           <p className="font-extrabold text-[48px] leading-none tracking-[0.18em]" aria-label={`Masa kodu ${view.code.split('').join(' ')}`}>
             {view.code}
           </p>
@@ -158,6 +160,7 @@ export function LobbyScreen({ view }: { view: View }) {
 
       <ConsentPanel view={view} />
 
+      <TikSays text={tikLine('lobby', view.code)} drinking={view.settings.drinking} className="mx-auto" />
       <div className="text-center">
         <InkButton variant="ghost" onClick={() => { send({ t: 'leave' }); navigate('/'); }}>
           Masadan kalk

@@ -1,5 +1,7 @@
 // Seçim: okuyucuya 3 kart tarot gibi yelpaze açar. Kartı yukarı kaydırarak ya da "Oyna" ile oynar.
 // Diğerleri kapalı kartları ve "X kart seçiyor" yazısını görür.
+import { tikLine } from '../../tik/lines';
+import { TikSays } from '../../tik/TikSays';
 import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { Card } from '../../../engine/cards';
@@ -214,6 +216,7 @@ function Waiting({ view, readerName, readerAvatar }: { view: View; readerName: s
           {readerName} kart seçiyor…
         </p>
       </div>
+      <TikSays text={tikLine('waiting', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
       <div className="w-full max-w-[320px]">
         {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={g.step === "target" ? DUR.target : DUR.choose + DUR.deal} />}
       </div>

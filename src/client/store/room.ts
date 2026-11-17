@@ -65,6 +65,7 @@ export const useRoom = create<RoomStore>((set, get) => ({
           set({ resuming: false, you: msg.playerId });
         } else if (msg.t === 'error') {
           if (msg.code === 'NO_SEAT') set({ resuming: false, you: null });
+          else if (msg.code === 'STALE') return; // başkası ya da çift dokunuş zaten ilerletti
           else get().toast(msg.message, 'error');
         } else if (msg.t === 'fx') {
           set({ fx: [...get().fx.slice(-19), { seq: ++fxSeq, kind: msg.kind, payload: msg.payload }] });

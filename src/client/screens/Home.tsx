@@ -1,4 +1,5 @@
 // Giriş: logo, "Masa Kur", "Masaya Katıl" (kod girişi), tek satır sorumluluk notu.
+import { InstallHint } from '../components/InstallHint';
 import { useState } from 'react';
 import { ROOM_CODE_ALPHABET } from '../../engine/types';
 import { InkButton } from '../components/InkButton';
@@ -112,6 +113,8 @@ export function Home() {
           </form>
         )}
       </div>
+
+      <InstallHint />
 
       <p className="mt-auto max-w-sm pt-10 text-center text-[14px] text-bone-dim">
         Alkollü mod 18 yaş üstü içindir. Sorumlu iç. Araba kullanacaksan alkolsüz oyna.

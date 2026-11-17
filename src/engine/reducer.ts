@@ -190,7 +190,7 @@ export function reduce(prev: GameState, intent: Intent, ctx: Ctx): ReduceResult 
       useVeto(s, ctx, fx, intent.by);
       break;
     case 'advance':
-      advance(s, ctx, fx, intent.by);
+      advance(s, ctx, fx, intent.by, intent.at);
       break;
     case 'missionDone':
       missionDone(s, ctx, fx, intent.by, intent.effectId);

@@ -109,9 +109,9 @@ function TvGame({ view }: { view: View }) {
   return (
     <main className="grid min-h-screen grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-[3vw] px-[3vw] py-[3vh]">
       <section className="flex flex-col items-center justify-center gap-4">
-        <p className="font-gothic text-[40px]">
+        <h1 className="font-gothic text-[40px] font-normal">
           Perde {g.act}: {ACT_NAMES[g.act]} <span className="text-bone-dim">· {Math.min(g.actTurn + 1, g.actTurns)}/{g.actTurns}</span>
-        </p>
+        </h1>
         {view.phase === 'actIntro' && (
           <div className="flex flex-col items-center gap-4">
             <Tik size={260} className="tik-bob" variant={drinking ? 'raki' : 'tea'} />

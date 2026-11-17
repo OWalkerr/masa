@@ -279,7 +279,7 @@ export type ClientIntent =
   | { t: 'decree'; text: string }
   | { t: 'pass' }
   | { t: 'veto' }
-  | { t: 'advance' } // host: beklemeden sonraki adıma geç
+  | { t: 'advance'; at?: string } // host: beklemeden sonraki adıma geç (at: istemcinin gördüğü adım)
   | { t: 'missionDone'; effectId: string } // ajan: görevimi yaptım
   | { t: 'minigameInput'; action: 'tap' | 'throw'; bomb?: number; at?: number; lat?: number }
   | { t: 'restart' };

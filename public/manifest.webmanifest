@@ -1,0 +1,17 @@
+{
+  "name": "MASA — Gece Yarısı Meyhanesi",
+  "short_name": "MASA",
+  "description": "Arkadaşlarınla telefonlardan oynanan gotik parti kart oyunu.",
+  "lang": "tr",
+  "start_url": "/?pwa=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0B10",
+  "theme_color": "#0D0B10",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

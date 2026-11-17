@@ -1,5 +1,5 @@
 // /m/KOD — bağlan, koltuğa dön ya da katıl; faza göre ekranı seç.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { modeById } from '../../engine/modes';
 import { NightScene } from '../components/NightScene';
 import { Tik } from '../components/Tik';
@@ -16,6 +16,7 @@ export function RoomScreen({ code }: { code: string }) {
   const resuming = useRoom((s) => s.resuming);
   const send = useRoom((s) => s.send);
   const autoJoined = useRef(false);
+  const online = useOnline();
 
   useEffect(() => {
     open(code);
@@ -58,11 +59,7 @@ export function RoomScreen({ code }: { code: string }) {
   return (
     <div className="relative min-h-full">
       <NightScene seed={code.charCodeAt(0) + code.charCodeAt(3)} />
-      {(status === 'reconnecting' || status === 'connecting') && view && (
-        <div role="status" className="fixed inset-x-0 top-0 z-40 bg-ink-800/95 py-2 text-center text-[15px] text-bone-100 shadow-[0_1px_0_var(--ash-500)]">
-          Bağlantı koptu, yeniden bağlanıyor…
-        </div>
-      )}
+      {(!online || ((status === 'reconnecting' || status === 'connecting') && view)) && <ConnBanner online={online} />}
       {status === 'closed' && <NotFound title="Masa kapandı" text="Bu masa uzun süre boş kaldığı için kaldırıldı." />}
       {/* içerik partikül katmanının (z-1) üstünde: efektler kart metnine binmez */}
       {status !== 'closed' && <div className="relative z-[2] min-h-full">{body}</div>}
@@ -78,5 +75,39 @@ function Loading({ text }: { text: string }) {
         {text}
       </p>
     </main>
+  );
+}
+
+function useOnline(): boolean {
+  const [on, setOn] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const up = () => setOn(true);
+    const down = () => setOn(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  }, []);
+  return on;
+}
+
+// Bağlantı şeridi: 15 sn'den uzun sürerse "Yenile" önerir
+function ConnBanner({ online }: { online: boolean }) {
+  const [long, setLong] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setLong(true), 15_000);
+    return () => window.clearTimeout(t);
+  }, []);
+  return (
+    <div role="status" className="fixed inset-x-0 top-0 z-40 flex items-center justify-center gap-3 bg-ink-800/95 px-3 py-2 text-center text-[15px] text-bone-100 shadow-[0_1px_0_var(--ash-500)]">
+      <span>{online ? 'Bağlantı koptu, yeniden bağlanıyor…' : 'İnternet yok. Bağlanınca kaldığın yerden devam edersin.'}</span>
+      {long && (
+        <button type="button" onClick={() => location.reload()} className="min-h-[40px] rounded-full bg-[var(--accent)] px-3 font-bold text-ink-950">
+          Yenile
+        </button>
+      )}
+    </div>
   );
 }

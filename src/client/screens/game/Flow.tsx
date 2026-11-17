@@ -119,7 +119,7 @@ export function HostBar({ view }: { view: View }) {
     if (!label) return null;
     return (
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md justify-center px-3 pb-3 safe-bottom">
-        <button type="button" onClick={() => send({ t: 'advance' })} className="min-h-[48px] rounded-full bg-ink-800 px-5 text-[16px] text-bone-dim shadow-[inset_0_0_0_1px_var(--ash-500)]">
+        <button type="button" onClick={() => send({ t: 'advance', at: g.stepKey })} className="min-h-[48px] rounded-full bg-ink-800 px-5 text-[16px] text-bone-dim shadow-[inset_0_0_0_1px_var(--ash-500)]">
           {label}
         </button>
       </div>
@@ -133,7 +133,7 @@ export function HostBar({ view }: { view: View }) {
       {canDrive ? (
         <button
           type="button"
-          onClick={() => send({ t: 'advance' })}
+          onClick={() => send({ t: 'advance', at: g.stepKey })}
           className="min-h-[60px] w-full rounded-[16px] bg-[var(--accent)] text-[20px] font-extrabold text-ink-950 shadow-[0_6px_20px_#000c] active:scale-[0.98]"
         >
           {label}

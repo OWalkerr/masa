@@ -85,3 +85,24 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Kart açılışta görselli ve büyük gelir. Eylem ve sonuçta okunaklı kompakt karta döner; altında kartın kuralı tek satır yazar ("En çok oyu alan içer").
     - Sonuç ekranında "İçiyor!" başlığıyla içenler büyük avatarla listelenir. Ana Ekran da aynı kural satırını gösterir.
 51. **Yakala! sonuç kartı takılı kalıyordu.** Her yeni görünümde zamanlayıcı yeniden kuruluyordu ve 6 sn'den sonra kart ekranda kalıyordu. Artık yalnızca yeni sonuçta açılıyor, 6 sn sonra ya da dokununca kapanıyor. Kart alta taşındı, kural tabelalarını örtmüyor.
+
+## 2026-11-17 — M4 (cila)
+
+52. **Erişilebilirlik denetimi axe-core ile yapılır** (`tests/e2e/a11y.e2e.mjs`). Giriş, katılım, lobi, oyunun her fazı ve Ana Ekran denetlenir; WCAG 2.1 AA ve iyi uygulama kurallarında ihlal kalmaz.
+    - Her ekranda bir h1 var. Oyunda bu "Perde N" başlığı, lobide "Masa kodu".
+    - Kaydırılabilir sıra şeridi klavyeyle odaklanabilir.
+    - "Şu an ne oluyor" şeridi `role=status` ile ekran okuyucuya duyurulur.
+    - Odak çerçevesi her yerde görünür (`:focus-visible`).
+53. **PWA:** `manifest.webmanifest` + 192/512 ikon + maskable ikon + Apple ikonu (`scripts/make-icons.ts`, favicon.svg'den üretilir).
+    - Service worker sayfalarda önce ağa gider (her yayın anında görünür); internet yoksa son kabuk açılır. Adı içeriğinin özetiyle değişen `/assets/*`, görseller ve ikonlar önbellekten gelir. `/api` ve WebSocket hiç önbelleğe alınmaz. Yalnızca yayında kaydedilir.
+    - Girişte Android'de "Ana ekrana ekle" düğmesi, iPhone Safari'de kısa bir tarif çıkar; kapatılınca bir daha görünmez.
+54. **TIK replikleri** (`src/client/tik/lines.ts`, 47 satır). Lobi, bekleme, sonuç (kimse içmedi / içti / çok içti / alkolsüz), perde girişleri ve gecenin özetinde çıkar. Oda kodu + tur numarasıyla seçilir; böylece masadaki herkes ve Ana Ekran aynı repliği görür. Kart üstündeki `quip` alanı ayrıca durur.
+55. **Hata durumları:**
+    - Çizim hatasında beyaz ekran yerine "Bir şey devrildi · Yeniden yükle" ekranı çıkar. Oyun sunucuda sürer; yenileyen koltuğuna döner.
+    - İnternet yoksa üst şerit bunu söyler. Yeniden bağlanma 15 sn'yi geçerse "Yenile" düğmesi çıkar.
+56. **"İlerlet" isteği adım anahtarı taşır.** İstemci gördüğü adımı (`faz:tur:perde:aşama:adım:kart`) gönderir; sunucudaki adım farklıysa istek sessizce yok sayılır. Böylece çift dokunma ya da host yokken iki kişinin aynı anda basması bir kartı atlatmaz.
+57. **Dayanıklılık testi** (`tests/e2e/m4.e2e.mjs`). 6 telefon rahat tempoda tam oyun oynar; oyun sırasında:
+    - iki sayfa yenilenir,
+    - bir oyuncu 25 sn kopup döner,
+    - host 15 sn kaybolur (10 sn sonra hostluk devredilir, yeni host ilerletir) ve geri döner.
+    Herkes özete ulaşmalı, sayfa hatası olmamalı.

@@ -815,8 +815,16 @@ function failMission(s: GameState, ctx: Ctx, fx: Fx[], e: ActiveEffect) {
 
 const ADVANCE_PHASES: Phase[] = ['actIntro', 'choose', 'action', 'resolve', 'tableEvent', 'finale'];
 
-export function advance(s: GameState, ctx: Ctx, fx: Fx[], by: string) {
+// Adım anahtarı: aynı ekran için gelen ikinci "ilerlet" (çift dokunma, iki kişi aynı anda) bir adım daha atlatmasın
+export function stepKey(s: GameState): string {
   const g = s.game;
+  const t = g?.turn;
+  return `${s.phase}:${g?.turnNo ?? -1}:${g?.act ?? 0}:${t?.stage ?? ''}:${t?.step ?? ''}:${t?.cardId ?? ''}`;
+}
+
+export function advance(s: GameState, ctx: Ctx, fx: Fx[], by: string, at?: string) {
+  const g = s.game;
+  if (at !== undefined && at !== stepKey(s)) throw new IntentError('STALE', '');
   if (!g || !ADVANCE_PHASES.includes(s.phase)) throw new IntentError('BAD_PHASE', 'Şu an ilerletilecek bir şey yok.');
   const host = s.hostId ? getPlayer(s, s.hostId) : undefined;
   const me = getPlayer(s, by);

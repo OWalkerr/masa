@@ -1,4 +1,6 @@
 // Hüküm: bedeller (sayılı bal mumu mührü), cesaret puanları, oy sayımı, mini cezalar, Su Molası.
+import { tikLine } from '../../tik/lines';
+import { TikSays } from '../../tik/TikSays';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { InkButton } from '../../components/InkButton';
@@ -127,7 +129,12 @@ export function ResolvePanel({ view }: { view: View }) {
       )}
 
       {r.payments.length === 0 ? (
-        effect ? null : <p className="ink-panel p-4 text-center text-[19px]">{view.settings.drinking ? 'Bu tur kimse içmiyor. Şanslı masa.' : 'Bu tur ceza yok.'}</p>
+        effect ? null : (
+          <>
+            <p className="ink-panel p-4 text-center text-[19px]">{view.settings.drinking ? 'Bu tur kimse içmiyor.' : 'Bu tur ceza yok.'}</p>
+            <TikSays text={tikLine('nobody', `${view.code}${g.turnNo}`)} drinking={view.settings.drinking} />
+          </>
+        )
       ) : (
         <ul className="flex flex-col gap-2" aria-label={view.settings.drinking ? 'İçenler' : 'Ceza alanlar'}>
           <li className="text-center font-gothic text-[30px] leading-none text-[var(--accent)]">{view.settings.drinking ? 'İçiyor!' : 'Ceza!'}</li>
@@ -146,6 +153,13 @@ export function ResolvePanel({ view }: { view: View }) {
             </motion.li>
           ))}
         </ul>
+      )}
+
+      {r.payments.length > 0 && (
+        <TikSays
+          text={tikLine(!view.settings.drinking ? 'sober' : r.payments.length >= 3 ? 'heavy' : 'drink', `${view.code}${g.turnNo}`)}
+          drinking={view.settings.drinking}
+        />
       )}
 
       {me && r.payments.some((p) => p.id === me) && view.phase === 'resolve' && <PowerReact view={view} />}

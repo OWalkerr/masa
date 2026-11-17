@@ -8,12 +8,13 @@ import { Home } from './screens/Home';
 import { NotFound } from './screens/NotFound';
 import { RoomScreen } from './screens/RoomScreen';
 import { Toasts } from './components/Toasts';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ParticleLayer } from './fx/ParticleLayer';
 
 export function App() {
   const route = matchRoute(usePath());
   return (
-    <>
+    <ErrorBoundary>
       {route.name === 'home' && <Home />}
       {route.name === 'room' && <RoomScreen code={route.code} />}
       <Suspense fallback={null}>
@@ -23,6 +24,6 @@ export function App() {
       {route.name === 'notFound' && <NotFound />}
       <ParticleLayer />
       <Toasts />
-    </>
+    </ErrorBoundary>
   );
 }

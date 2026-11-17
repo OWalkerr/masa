@@ -1,4 +1,5 @@
 // Perde geçişi (2,5 sn): siyah-beyaz çizgili tiyatro perdesi kapanır, iplerle sarkan kukla TIK ve perde adı, perde açılır.
+import { tikLine, type TikMoment } from '../../tik/lines';
 import { motion } from 'motion/react';
 import { Tik } from '../../components/Tik';
 import { useReducedMotion } from '../../fx/motionPref';
@@ -43,6 +44,7 @@ export function ActCurtain({ act, drinking }: { act: number; drinking: boolean }
           <Tik size={110} variant={drinking ? 'raki' : 'tea'} className="mx-auto" />
           <p className="font-gothic text-[52px] leading-none">Perde {act}</p>
           <p className="font-gothic text-[34px] text-accent">{ACT_NAMES[act]}</p>
+          <p className="mx-auto mt-2 max-w-[240px] text-[16px] italic text-bone-dim">“{tikLine(`act${act}` as TikMoment, `perde${act}`)}”</p>
         </div>
       </motion.div>
     </div>

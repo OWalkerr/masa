@@ -53,7 +53,7 @@ export const ClientMessage = z.discriminatedUnion('t', [
   }),
   z.object({ t: z.literal('decree'), text: z.string().max(200) }),
   z.object({ t: z.literal('pass') }),
-  z.object({ t: z.literal('advance') }),
+  z.object({ t: z.literal('advance'), at: z.string().max(80).optional() }),
   z.object({ t: z.literal('missionDone'), effectId: z.string().max(40) }),
   z.object({ t: z.literal('veto') }),
   z.object({ t: z.literal('leave') }),

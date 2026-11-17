@@ -29,14 +29,14 @@ export function TopBar({ view }: { view: View }) {
             <rect x="4" y={16 + progress * 22} width="10" height={24 - progress * 22} rx="1.5" fill="var(--bone-100)" />
           </svg>
           <div className="leading-tight">
-            <div className="font-gothic text-[20px]">Perde {g.act}</div>
+            <h1 className="font-gothic text-[20px] font-normal">Perde {g.act}</h1>
             <div className="text-[14px] text-bone-dim">
               {ACT_NAMES[g.act]} · {Math.min(g.actTurn + 1, g.actTurns)}/{g.actTurns}
             </div>
           </div>
         </div>
         {/* sıra şeridi */}
-        <ol className="flex flex-1 gap-1 overflow-x-auto py-1" aria-label="Sıra">
+        <ol className="flex flex-1 gap-1 overflow-x-auto py-1" aria-label="Sıra" tabIndex={0}>
           {order.map((p) => {
             const reader = p!.id === g.readerId;
             return (
