@@ -22,7 +22,7 @@ export function NowBar({ view }: { view: View }) {
       key={line.text}
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`ribbon mx-2 mb-2 py-2 text-center text-[17px] font-bold leading-snug ${line.mine ? 'ribbon-mine' : 'ribbon-idle'}`}
+      className={`ribbon mx-2 mb-2 py-2 text-center text-[17px] font-bold leading-snug land:mx-auto land:mb-1 land:w-full land:max-w-2xl land:py-1 land:text-[15px] ${line.mine ? 'ribbon-mine' : 'ribbon-idle'}`}
       role="status"
       aria-live="polite"
     >
@@ -32,14 +32,14 @@ export function NowBar({ view }: { view: View }) {
 }
 
 // Eylem ve sonuç fazlarında kart: görselsiz, okunaklı, kuralıyla birlikte
-export function CardCompact({ view, card }: { view: View; card: Card }) {
+export function CardCompact({ view, card, dense = false }: { view: View; card: Card; dense?: boolean }) {
   const g = view.game!;
   const names = useNames(view);
   const unit = view.you?.sober || !view.settings.drinking ? 'ceza' : 'yudum';
   const frame = card.rarity === 'legendary' ? 'var(--gold-400)' : card.rarity === 'rare' ? '#C9CED6' : 'transparent';
   return (
     <div
-      className="paper relative w-full max-w-sm rounded-[14px] p-4 pt-3"
+      className={`paper relative w-full max-w-sm rounded-[14px] ${dense ? 'p-3 pt-2' : 'p-4 pt-3'}`}
       style={{ outline: `2px solid ${frame}`, outlineOffset: 3 }}
       role="group"
       aria-label={`${cardLabel(card)} kartı`}
@@ -49,7 +49,7 @@ export function CardCompact({ view, card }: { view: View; card: Card }) {
       <Flourish className="right-1 top-1 -scale-x-100" />
       <Flourish className="bottom-1 left-1 -scale-y-100" />
       <Flourish className="bottom-1 right-1 -scale-100" />
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className={`flex items-center justify-between gap-2 ${dense ? 'mb-1' : 'mb-2'}`}>
         <span className="flex items-center gap-2 rounded-full bg-ink-950 py-1 pl-1 pr-3 text-[15px] text-bone-100">
           <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-parchment-200">
             <TypeIcon type={card.type} size={18} />
@@ -62,10 +62,10 @@ export function CardCompact({ view, card }: { view: View; card: Card }) {
           </span>
         )}
       </div>
-      <p className="text-center text-[21px] font-extrabold leading-[1.2]">
+      <p className={`text-center font-extrabold leading-[1.2] ${dense ? 'text-[18px]' : 'text-[21px]'}`}>
         <CardText text={card.text} tokens={g.tokens} names={names} sober={unit === 'ceza'} />
       </p>
-      <p className="mt-2 border-t border-[#0002] pt-2 text-center text-[15px] leading-snug text-[#3a2f2a]">{howTo(card, view)}</p>
+      {!dense && <p className="mt-2 border-t border-[#0002] pt-2 text-center text-[15px] leading-snug text-[#3a2f2a]">{howTo(card, view)}</p>}
     </div>
   );
 }
@@ -138,7 +138,7 @@ export function HostBar({ view }: { view: View }) {
       label = g.input === 'judge' ? 'Hükümsüz geç (kimse içmez)' : `Beklemeden geç (${g.waitingOn.length} kişi)`;
     if (!label) return null;
     return (
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md justify-center px-3 pb-3 safe-bottom">
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md justify-center px-3 pb-3 safe-bottom land:left-1/2 land:mx-0 land:max-w-none">
         <button type="button" onClick={() => send({ t: 'advance', at: g.stepKey })} className="min-h-[48px] rounded-full bg-ink-800 px-5 text-[16px] text-bone-dim shadow-[inset_0_0_0_1px_var(--ash-500)]">
           {label}
         </button>
@@ -149,9 +149,9 @@ export function HostBar({ view }: { view: View }) {
   const timed = view.settings.pace === 'timed';
   const label = view.phase === 'finale' ? 'Gecenin özetine geç' : 'Sonraki kart →';
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md bg-gradient-to-t from-ink-950 via-ink-950/95 to-transparent px-3 pb-3 pt-6 safe-bottom">
+    <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md bg-gradient-to-t from-ink-950 via-ink-950/95 to-transparent px-3 pb-3 pt-6 safe-bottom land:left-1/2 land:mx-0 land:max-w-none land:pb-2 land:pt-3">
       {canDrive ? (
-        <InkButton className="min-h-[62px] w-full text-[21px]" seed={77} onClick={() => send({ t: 'advance', at: g.stepKey })}>
+        <InkButton className="min-h-[62px] w-full text-[21px] land:min-h-[52px]" seed={77} onClick={() => send({ t: 'advance', at: g.stepKey })}>
           {label}
         </InkButton>
       ) : (

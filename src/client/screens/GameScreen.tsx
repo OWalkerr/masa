@@ -33,11 +33,11 @@ export function GameScreen({ view }: { view: View }) {
   const cardPhase = ['reveal', 'action', 'resolve', 'tableEvent', 'finale'].includes(view.phase);
 
   return (
-    <main className="mx-auto flex min-h-full max-w-md flex-col pb-44">
+    <main className="mx-auto flex min-h-full max-w-md flex-col pb-44 land:max-w-none land:pb-28">
       <TopBar view={view} />
       <NowBar view={view} />
       {view.phase === 'actIntro' && <ActCurtain key={g.act} act={g.act} drinking={drinking} />}
-      <section className="flex flex-1 flex-col items-center gap-4 px-3">
+      <section className="flex flex-1 flex-col items-center gap-4 px-3 land:px-5">
         {view.phase === 'actIntro' && (
           <div className="flex flex-col items-center gap-3 pt-10">
             <Tik size={120} className="tik-bob" variant={drinking ? 'raki' : 'tea'} />
@@ -65,12 +65,15 @@ function Played({ view }: { view: View }) {
   const full = view.phase === 'reveal' || view.phase === 'finale';
   const legendary = g.card!.rarity === 'legendary' && view.phase === 'reveal';
   const duel = g.card!.type === 'duel' && view.phase !== 'resolve';
+  const resolved = view.phase === 'resolve' || view.phase === 'tableEvent';
+  // Dikeyde alt alta; yatay telefonda kart solda (yapışkan), eylem/sonuç sağda
   return (
-    <>
+    <div className={`flex w-full flex-col items-center gap-4 ${g.sketch || g.gallery ? '' : 'land:grid land:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] land:items-start land:gap-6'}`}>
+    <div className="flex w-full flex-col items-center gap-3 land:sticky land:top-[76px]">
       {g.system ? (
         <p className="font-gothic text-[28px]">{view.phase === 'finale' ? 'Final' : 'Masa Olayı'}</p>
       ) : (
-        <div className="flex items-center gap-2 text-[16px] text-bone-dim">
+        !resolved && <div className={`flex items-center gap-2 text-[16px] text-bone-dim ${g.sketch || g.gallery ? 'land:hidden' : ''}`}>
           {reader && <Avatar index={reader.avatar} size={28} />}
           <span>{reader?.name} okuyor</span>
         </div>
@@ -80,12 +83,15 @@ function Played({ view }: { view: View }) {
       {full ? (
         <CardStage key={g.card!.id + g.turnNo} view={view} card={g.card!} width={big} />
       ) : g.sketch || g.gallery ? null : (
-        <CardCompact view={view} card={g.card!} />
+        <CardCompact view={view} card={g.card!} dense={resolved} />
       )}
+    </div>
+    <div className="flex w-full flex-col items-center gap-4 empty:hidden">
       {view.phase === 'action' && <ActionPanel view={view} />}
-      {(view.phase === 'resolve' || view.phase === 'tableEvent') && <ResolvePanel view={view} />}
+      {resolved && <ResolvePanel view={view} />}
       {view.phase === 'finale' && <Tik size={110} className="tik-bob" variant={view.settings.drinking && !view.you?.sober ? 'raki' : 'tea'} />}
-    </>
+    </div>
+    </div>
   );
 }
 

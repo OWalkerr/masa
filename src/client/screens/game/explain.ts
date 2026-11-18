@@ -106,7 +106,7 @@ export function nowLine(view: View): NowLine | null {
       return { text: 'Sonuç açılıyor…', mine: false };
     }
     case 'resolve':
-      return { text: 'Sonuç masada. Konuşun, gülün; hazır olunca devam.', mine: false };
+      return { text: 'Sonuç masada. Konuşun, gülün.', mine: false };
     case 'tableEvent':
       return { text: 'Masa olayı herkes için geçerli.', mine: false };
     case 'finale':

@@ -15,7 +15,12 @@ export function useRemaining(endsAt: number | null | undefined): number {
 }
 
 export function useCardWidth(frac = 0.82, max = 340, maxHFrac = 0.62): number {
-  const calc = () => Math.round(Math.min(window.innerWidth * frac, max, (window.innerHeight * maxHFrac) / 1.4));
+  const calc = () => {
+    const { innerWidth: W, innerHeight: H } = window;
+    // Yatay telefon: kart sol sütunda, üst çubuk ve şerit düşüldükten sonraki yüksekliğe sığar
+    if (W > H && H <= 560) return Math.round(Math.max(120, Math.min(W * 0.4, max, (H - 112) / 1.4)));
+    return Math.round(Math.min(W * frac, max, (H * maxHFrac) / 1.4));
+  };
   const [w, setW] = useState(calc);
   useEffect(() => {
     const on = () => setW(calc());
@@ -23,6 +28,18 @@ export function useCardWidth(frac = 0.82, max = 340, maxHFrac = 0.62): number {
     return () => window.removeEventListener('resize', on);
   });
   return w;
+}
+
+export function useLandscape(): boolean {
+  const q = '(orientation: landscape) and (max-height: 560px)';
+  const [on, setOn] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(q).matches);
+  useEffect(() => {
+    const m = matchMedia(q);
+    const f = () => setOn(m.matches);
+    m.addEventListener('change', f);
+    return () => m.removeEventListener('change', f);
+  }, []);
+  return on;
 }
 
 export function useNames(view: View): Record<string, string> {

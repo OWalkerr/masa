@@ -113,7 +113,7 @@ export function CatchButton({ view }: { view: View }) {
       <button
         type="button"
         onClick={() => setSheet(true)}
-        className="fixed bottom-[96px] right-3 z-30 flex h-[64px] w-[64px] flex-col items-center justify-center rounded-full bg-[#5A1218] text-[14px] text-bone-100 shadow-[0_0_0_2px_var(--bone-100),0_6px_18px_#000c]"
+        className="fixed bottom-[96px] right-3 z-30 flex h-[64px] w-[64px] flex-col items-center justify-center rounded-full bg-[#5A1218] text-[14px] text-bone-100 shadow-[0_0_0_2px_var(--bone-100),0_6px_18px_#000c] land:bottom-auto land:right-[256px] land:top-[8px] land:h-[46px] land:w-auto land:flex-row land:gap-2 land:px-4 land:text-[16px] land:font-bold"
         aria-label="Yakala! Kuralı bozanı bildir"
       >
         <svg width="22" height="26" viewBox="0 0 22 26" aria-hidden>
@@ -285,7 +285,7 @@ export function CatchResultToast({ view }: { view: View }) {
     <button
       type="button"
       onClick={() => setShownAt(null)}
-      className="fixed inset-x-3 bottom-[92px] z-40 mx-auto block max-w-sm rounded-[14px] bg-parchment-200 p-4 text-left text-ink-text shadow-[0_10px_30px_#000c]"
+      className="fixed inset-x-3 bottom-[92px] z-40 mx-auto block max-w-sm land:left-1/2 land:bottom-[76px] rounded-[14px] bg-parchment-200 p-4 text-left text-ink-text shadow-[0_10px_30px_#000c]"
       role="status"
       aria-label={`${title}. Kapatmak için dokun.`}
     >

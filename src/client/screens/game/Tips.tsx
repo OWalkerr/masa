@@ -98,7 +98,7 @@ export function Tips({ view }: { view: View }) {
       {tip && (
         <motion.aside
           key={tip.key}
-          className="paper fixed inset-x-3 top-[118px] z-40 mx-auto flex max-w-sm items-start gap-3 rounded-[14px] p-3 shadow-[0_14px_40px_#000c]"
+          className="paper fixed inset-x-3 top-[118px] z-40 mx-auto flex max-w-sm land:left-1/2 land:top-[70px] items-start gap-3 rounded-[14px] p-3 shadow-[0_14px_40px_#000c]"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -16 }}

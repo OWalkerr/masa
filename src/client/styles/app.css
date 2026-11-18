@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
+/* Yatay telefon: kısa ve geniş ekran (tablet ve TV değil) */
+@custom-variant land (@media (orientation: landscape) and (max-height: 560px));
+
 /* Fontlar: kendi sunucumuzdan, latin + latin-ext (Türkçe harfler için) */
 @import '@fontsource/grenze-gotisch/latin-700.css';
 @import '@fontsource/grenze-gotisch/latin-ext-700.css';
@@ -28,6 +31,8 @@
 /* Taban kurallar katmanda olmalı; yoksa Tailwind yardımcı sınıflarını ezer */
 @layer base {
 html, body, #root { height: 100%; }
+/* Yana taşan yelpaze kartları sayfayı yana kaydırmasın */
+html, body { overflow-x: clip; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;

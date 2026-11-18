@@ -55,7 +55,12 @@ function useCanvasSize(maxPx: number, fit = true) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const on = () => setSize(Math.round(Math.min(el.clientWidth, maxPx, fit ? window.innerHeight * 0.52 : Infinity)));
+    const on = () => {
+      const { innerWidth: W, innerHeight: H } = window;
+      // Yatay telefon: tuval sol sütunda, ekran yüksekliğine sığar (genişlikten bağımsız)
+      if (fit && W > H && H <= 560) return setSize(Math.round(Math.max(160, Math.min(maxPx, H - 122))));
+      setSize(Math.round(Math.min(el.clientWidth, maxPx, fit ? H * 0.52 : Infinity)));
+    };
     on();
     const ro = new ResizeObserver(on);
     ro.observe(el);
@@ -200,8 +205,8 @@ export function DrawPad({ sk }: { sk: Pick<SketchView, 'strokes' | 'blind' | 'si
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-2">
-      <div ref={ref} className="relative w-full">
+    <div className="flex w-full flex-col items-center gap-2 land:w-auto land:flex-row land:items-start land:gap-3">
+      <div ref={ref} className="relative w-full land:w-auto">
         <canvas
           ref={canvas}
           width={Math.round(size * dpr)}
@@ -222,7 +227,7 @@ export function DrawPad({ sk }: { sk: Pick<SketchView, 'strokes' | 'blind' | 'si
         )}
       </div>
       {!sk.singleLine && (
-        <div className="flex w-full max-w-[560px] gap-2">
+        <div className="flex w-full max-w-[560px] gap-2 land:w-[110px] land:flex-col">
           <button type="button" onClick={() => send({ t: 'drawUndo' })} className="min-h-[52px] flex-1 ink-tile text-[17px]">
             ↶ Geri al
           </button>
@@ -344,18 +349,20 @@ export function SketchPanel({ view }: { view: View }) {
   const drawer = me === sk.drawer;
   const solved = !!me && sk.correct.includes(me);
   return (
-    <div className="flex w-full flex-col items-center gap-3">
+    <div className="flex w-full flex-col items-center gap-3 land:grid land:grid-cols-[auto_minmax(0,1fr)] land:content-start land:items-start land:gap-x-6 land:gap-y-3">
+      <div className="order-3 w-full land:order-none land:col-start-1 land:row-span-6 land:row-start-1 land:w-auto">{drawer ? <DrawPad sk={sk} /> : <SketchBoard sk={sk} />}</div>
       {drawer && sk.word && (
-        <div className="w-full max-w-[560px] rounded-[14px] bg-[#3B2650] px-4 py-2 text-center shadow-[0_0_0_2px_#8E6CD8]">
+        <div className="w-full max-w-[560px] order-1 rounded-[14px] bg-[#3B2650] land:order-none land:col-start-2 px-4 py-2 text-center shadow-[0_0_0_2px_#8E6CD8]">
           <span className="block text-[14px] text-bone-dim">Çizeceğin (kimseye gösterme)</span>
           <span className="text-[26px] font-extrabold leading-tight">{sk.word}</span>
         </div>
       )}
-      <TimeBar sk={sk} />
-      {drawer ? <DrawPad sk={sk} /> : <SketchBoard sk={sk} />}
-      {!drawer && !solved && <GuessBox sk={sk} />}
-      {!drawer && solved && <p className="ink-panel w-full max-w-[560px] p-3 text-center text-[17px]">Bildin! {name(sk.drawer)} sana minnettar.</p>}
-      <GuessFeed view={view} sk={sk} />
+      <div className="order-2 flex w-full justify-center land:order-none land:col-start-2"><TimeBar sk={sk} /></div>
+      <div className="order-4 flex w-full flex-col items-center gap-3 land:order-none land:col-start-2">
+        {!drawer && !solved && <GuessBox sk={sk} />}
+        {!drawer && solved && <p className="ink-panel w-full max-w-[560px] p-3 text-center text-[17px]">Bildin! {name(sk.drawer)} sana minnettar.</p>}
+        <GuessFeed view={view} sk={sk} />
+      </div>
     </div>
   );
 }

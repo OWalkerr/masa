@@ -25,17 +25,17 @@ export function GalleryPanel({ view }: { view: View }) {
   const reduce = useReducedMotion();
   if (gl.stage === 'draw') {
     return (
-      <div className="flex w-full flex-col items-center gap-3">
-        <Prompt text={gl.prompt} />
-        <TimeBar sk={gl} />
+      <div className="flex w-full flex-col items-center gap-3 land:grid land:grid-cols-[auto_minmax(0,1fr)] land:content-start land:items-start land:gap-x-6">
+        <div className="w-full land:col-start-2"><Prompt text={gl.prompt} /></div>
+        <div className="flex w-full justify-center land:col-start-2"><TimeBar sk={gl} /></div>
         {gl.iDone ? (
-          <p className="ink-panel w-full max-w-[560px] p-4 text-center text-[18px]">
+          <p className="ink-panel w-full max-w-[560px] p-4 text-center text-[18px] land:col-span-2">
             Eserin teslim edildi. Diğer sanatçılar bekleniyor ({gl.doneCount}/{gl.artists}).
           </p>
         ) : (
           <>
-            <DrawPad sk={{ strokes: gl.myStrokes, blind: false, singleLine: false }} />
-            <InkButton className="w-full max-w-[560px]" seed={91} onClick={() => send({ t: 'galDone' })}>
+            <div className="w-full land:col-start-1 land:row-span-4 land:row-start-1 land:w-auto"><DrawPad sk={{ strokes: gl.myStrokes, blind: false, singleLine: false }} /></div>
+            <InkButton className="w-full max-w-[560px] land:col-start-2" seed={91} onClick={() => send({ t: 'galDone' })}>
               Eserimi teslim et
             </InkButton>
           </>
@@ -48,7 +48,7 @@ export function GalleryPanel({ view }: { view: View }) {
     <div className="flex w-full flex-col items-center gap-3">
       <Prompt text={gl.prompt} />
       <p className="text-center text-[17px]">{voted ? `Oyun gizli. ${gl.votedCount} oy toplandı.` : 'En kötü eser hangisi? Sanatçısı içecek.'}</p>
-      <ul className="grid w-full max-w-[560px] grid-cols-2 gap-3" aria-label="Galeri">
+      <ul className="grid w-full max-w-[560px] grid-cols-2 gap-3 land:max-w-none land:grid-cols-4" aria-label="Galeri">
         {gl.items.map((strokes, i) => {
           const mine = gl.myIndex === i;
           const chosen = gl.myVote === i;
@@ -85,21 +85,21 @@ export function GalleryResult({ view, r }: { view: View; r: NonNullable<TurnResu
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <p className="text-center text-[16px] text-bone-dim">Sergi: “{r.prompt}”</p>
-      <ul className="grid w-full max-w-[560px] grid-cols-2 gap-3">
-        {r.items.map((it, i) => {
+      <ul className={`grid w-full max-w-[560px] gap-2 ${r.items.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        {[...r.items].sort((a, b) => Number(r.worst.includes(b.author)) - Number(r.worst.includes(a.author))).map((it, i) => {
           const worst = r.worst.includes(it.author);
           return (
-            <li key={it.author} className={`relative flex flex-col items-center rounded-[14px] p-2 ${worst ? 'bg-[#3a1418] shadow-[0_0_0_2px_#D7263D,0_0_24px_#D7263D66]' : 'ink-panel'}`}>
+            <li key={it.author} className={`relative flex flex-col items-center rounded-[14px] p-1.5 pt-2 ${worst ? 'bg-[#3a1418] shadow-[0_0_0_2px_#D7263D,0_0_24px_#D7263D66]' : 'ink-panel'}`}>
               {worst && (
                 <span className="ribbon ribbon-mine absolute -top-3 z-[1] py-0.5 text-[13px] font-extrabold">Rezalet Ödülü</span>
               )}
               <SketchFinal
                 strokes={it.strokes}
                 word=""
-                size={130}
+                size={r.items.length > 2 ? 92 : 130}
                 caption={
-                  <span className="flex items-center justify-center gap-1 text-[15px] text-bone-100">
-                    <Avatar index={avatar(it.author)} size={22} />
+                  <span className="flex items-center justify-center gap-1 text-[13px] leading-tight text-bone-100">
+                    <Avatar index={avatar(it.author)} size={18} />
                     {name(it.author)} · {it.votes} oy
                   </span>
                 }

@@ -29,7 +29,7 @@ export function ActionPanel({ view }: { view: View }) {
 
   if (card.type === 'gallery' && g.gallery) {
     return (
-      <div className="flex w-full max-w-[560px] flex-col items-center gap-3">
+      <div className="flex w-full max-w-[560px] flex-col items-center gap-3 land:max-w-none">
         {passed ? <Info>Pas geçtin. Bu sergide eserin yok.</Info> : <GalleryPanel view={view} />}
         {g.gallery.stage === 'draw' && <PassVeto view={view} />}
       </div>
@@ -38,7 +38,7 @@ export function ActionPanel({ view }: { view: View }) {
 
   if (card.type === 'sketch' && g.sketch) {
     return (
-      <div className="flex w-full max-w-[560px] flex-col items-center gap-3">
+      <div className="flex w-full max-w-[560px] flex-col items-center gap-3 land:max-w-none">
         {passed ? <Info>Pas geçtin.</Info> : <SketchPanel view={view} />}
         <PassVeto view={view} />
       </div>

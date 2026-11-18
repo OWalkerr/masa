@@ -255,3 +255,17 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
     - Yeni örümcek tamamen siyah ve kıllı bir silüet: iri tüylü karın, eklemli ve dikenli uzun bacaklar, aşağı bakan zehir dişleri. Göz yok. Baş aşağı sarkıyor, ip karnın ucuna bağlı.
     - Koyu zeminde okunsun diye arkadan yalnızca hafif bir mum ışığı vuruyor (drop-shadow). Boyu biraz büyüdü, bulanıklığı azaldı.
     - Bacaklar çoğu zaman kıpırtısız; ara ara ani, tedirgin edici seğirmeler oluyor.
+91. **Telefon düzeni (2026-11-18): dikey kalıyor, yatay da destekleniyor.**
+    - **Neden dikey ana düzen:** Masada telefon tek elle tutuluyor. Yatayda klavye ekranın yarısından fazlasını kaplıyor. Kartlar dikey tasarlandı. iOS Safari ekranı yatay kilitlemeye izin vermiyor.
+    - **Dikey sıkılaştırma:** Hedef, 390×844 bir telefonda hiçbir ekranın kaydırma gerektirmemesi.
+      - Sonuçta kart kompakt (kural satırı yok) ve "X okuyor" satırı gizli.
+      - İçenler küçük rozetler; içen sensen büyük tek satır.
+      - Oy çubukları ince, TIK küçük, oylama tek satır, şerit metni kısa.
+      - Sergi sonucu 3 sütun ve "Rezalet Ödülü" önde.
+    - **Ölçülen sonuç:** Sonuç ekranı 1014 px'ten 844 px'e indi.
+    - **Hata düzeltmesi:** Yelpazenin yan kartları sayfayı yana kaydırıyordu (`overflow-x: clip`).
+    - **Yatay telefon:** Tailwind `land:` varyantı = yatay ve yükseklik ≤ 560 px. Zorlanmaz, telefonu çevirene açılır.
+      - Kart solda (yapışkan), eylem ve sonuç sağda. Alttaki çubuklar sağ yarıda.
+      - Elde yelpaze solda; yönerge ve "Oyna" sağda. Hedef seçimi ve bekleme ekranı da yan yana.
+      - Karakalem ve Sergi'de tuval ekran yüksekliğine sığar ve solda durur, araçlar yanında. Galeri 4 sütun.
+      - "Yakala!" üst çubuğa taşındı.

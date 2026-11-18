@@ -14,7 +14,7 @@ import { useReducedMotion } from '../../fx/motionPref';
 import { preloadCards } from '../../art/manifest';
 import { useRoom } from '../../store/room';
 import { CandleTimer } from './CandleTimer';
-import { useCardWidth, useNames } from './hooks';
+import { useCardWidth, useLandscape, useNames } from './hooks';
 
 const SPRING = { type: 'spring', stiffness: 260, damping: 22 } as const;
 
@@ -48,14 +48,15 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
     preloadCards(hand.filter((c): c is Card => !('hidden' in c)));
   }, [hand]);
   return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-center text-[18px]" aria-live="polite">
+    // Yatay telefonda: yelpaze solda, yönerge ve "Oyna" sağda
+    <div className="flex w-full flex-col items-center gap-3 land:grid land:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] land:content-center land:items-center land:gap-x-6 land:gap-y-3">
+      <p className="text-center text-[18px] land:col-start-2 land:row-start-1 land:self-end land:text-[20px]" aria-live="polite">
         {g.blind ? 'Hayalet Saati: kartlar kapalı. Körlemesine seç.' : 'Sıra sende. Bir kart seç, yüksek sesle oku.'}
       </p>
-      <div className="w-full max-w-[360px] px-2">
+      <div className="w-full max-w-[360px] px-2 land:col-start-2 land:row-start-2 land:justify-self-center empty:hidden">
         {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={DUR.choose + DUR.deal} label="Seçim süresi" beat />}
       </div>
-      <div className="relative w-full" style={{ height: w * 1.4 + 30 }}>
+      <div className="relative w-full land:col-start-1 land:row-span-5 land:row-start-1" style={{ height: w * 1.4 + 30 }}>
         {hand.map((c, i) => (
           <FanCard
             key={c.id + (g.turnNo ?? 0)}
@@ -74,17 +75,17 @@ function Hand({ view, hand }: { view: View; hand: HandItem[] }) {
           />
         ))}
       </div>
-      <p className="text-[14px] text-bone-dim">Yana dokun: diğer kart · Yukarı kaydır: oyna</p>
+      <p className="text-[14px] text-bone-dim land:col-start-2 land:row-start-3 land:text-center">Yana dokun: diğer kart · Yukarı kaydır: oyna</p>
       {view.you?.powers.includes('swap') && !played && !g.blind && (
         <button
           type="button"
           onClick={() => send({ t: 'usePower', power: 'swap' })}
-          className="min-h-[48px] rounded-[12px] bg-ink-800 px-4 text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)]"
+          className="min-h-[48px] rounded-[12px] bg-ink-800 px-4 text-[16px] shadow-[inset_0_0_0_1px_var(--ash-500)] land:col-start-2 land:row-start-4 land:justify-self-center"
         >
           Takas kullan: eli yeniden çek
         </button>
       )}
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-4 safe-bottom">
+      <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-4 safe-bottom land:static land:col-start-2 land:row-start-5 land:w-full land:bg-none land:p-0">
         <InkButton className="mx-auto w-full max-w-sm" disabled={!!played} onClick={() => play(focused.id)} seed={51}>
           Oyna
         </InkButton>
@@ -175,8 +176,8 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
   const toggle = (id: string) =>
     setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : need === 1 ? [id] : s.length < need ? [...s, id] : s));
   return (
-    <div className="flex flex-col items-center gap-4 pb-28">
-      <GameCard card={card} width={w} names={names} sober={!!view.you?.sober} />
+    <div className="flex flex-col items-center gap-4 pb-28 land:grid land:grid-cols-[auto_minmax(0,1fr)] land:items-center land:gap-x-8 land:gap-y-3 land:pb-4">
+      <div className="land:row-span-4"><GameCard card={card} width={w} names={names} sober={!!view.you?.sober} /></div>
       <p className="text-center text-[20px]">{need === 2 ? 'Kartı oynayacak iki kişiyi seç' : 'Kart kime gidiyor?'}</p>
       <div className="w-full max-w-[360px] px-2">
         {g.phaseEndsAt && <CandleTimer endsAt={g.phaseEndsAt} total={DUR.target} label="Hedef seçme süresi" />}
@@ -191,7 +192,7 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
               type="button"
               aria-pressed={on}
               onClick={() => toggle(id)}
-              className={`flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-[14px] ${on ? 'bg-parchment-200 text-ink-text' : 'ink-tile'}`}
+              className={`flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-[14px] land:min-h-[76px] ${on ? 'bg-parchment-200 text-ink-text' : 'ink-tile'}`}
             >
               <Avatar index={p.avatar} size={48} />
               <span className="max-w-full truncate px-1 text-[15px]">{on ? '✓ ' : ''}{p.name}</span>
@@ -199,7 +200,7 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
           );
         })}
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-4 safe-bottom">
+      <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-ink-950 to-transparent px-4 pt-4 safe-bottom land:static land:w-full land:bg-none land:p-0">
         <InkButton className="mx-auto w-full max-w-sm" disabled={sel.length !== need} onClick={() => send({ t: 'pickTarget', playerIds: sel })} seed={52}>
           Seç
         </InkButton>
@@ -210,11 +211,12 @@ function TargetPicker({ view, card }: { view: View; card: Card }) {
 
 function Waiting({ view, readerName, readerAvatar }: { view: View; readerName: string; readerAvatar: number }) {
   const g = view.game!;
-  const w = useCardWidth(0.34, 140, 0.24);
+  const land = useLandscape();
+  const w = useCardWidth(0.34, land ? 100 : 140, 0.24);
   const reduce = useReducedMotion();
   return (
-    <div className="flex flex-col items-center gap-5 pt-6">
-      <div className="relative" style={{ height: w * 1.4 + 20, width: w * 2.4 }}>
+    <div className="flex flex-col items-center gap-5 pt-6 land:grid land:grid-cols-2 land:items-center land:gap-x-8 land:gap-y-3 land:pt-2">
+      <div className="relative land:row-span-3 land:justify-self-center" style={{ height: w * 1.4 + 20, width: w * 2.4 }}>
         {[0, 1, 2].slice(0, g.handCount || 3).map((i) => (
           <motion.div
             key={i}
