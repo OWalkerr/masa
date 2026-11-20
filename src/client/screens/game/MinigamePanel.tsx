@@ -6,20 +6,30 @@ import { Avatar } from '../../components/Avatar';
 import { Tik } from '../../components/Tik';
 import { useReducedMotion } from '../../fx/motionPref';
 import { useRoom } from '../../store/room';
+import { keyItem, useManifest } from '../../art/manifest';
 import { buzz, useRemaining } from './hooks';
 
 export function MinigamePanel({ view }: { view: View }) {
   const g = view.game!;
   const mg = g.mg!;
   const left = useRemaining(mg.startAt);
+  const art = keyItem(useManifest(), `mg-${mg.kind}`);
   if (mg.stage === 'wait') {
     const n = Math.max(1, Math.ceil(left / 1000));
     return (
-      <div className="flex flex-col items-center gap-2 py-4" role="status">
-        <p className="text-[20px]">{intro(mg.kind)}</p>
-        <motion.p key={n} className="font-gothic text-[96px] leading-none text-accent" initial={{ scale: 1.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          {n}
-        </motion.p>
+      <div className="flex flex-col items-center gap-2 py-2" role="status">
+        <p className="text-center text-[20px]">{intro(mg.kind)}</p>
+        <div className="relative flex items-center justify-center">
+          {art && <img src={art.w400} alt="" width={220} height={220} className="h-[220px] w-[220px] rounded-[20px] object-cover shadow-[0_0_0_2px_#2a211b,0_14px_30px_#000b] land:h-[180px] land:w-[180px]" />}
+          <motion.p
+            key={n}
+            className={`font-gothic leading-none text-accent ${art ? 'absolute -bottom-3 -right-3 flex h-[84px] w-[84px] items-center justify-center rounded-full bg-ink-950/95 text-[60px] shadow-[0_0_0_2px_var(--bone-100)]' : 'text-[96px]'}`}
+            initial={{ scale: 1.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            {n}
+          </motion.p>
+        </div>
       </div>
     );
   }

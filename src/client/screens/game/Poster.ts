@@ -1,6 +1,7 @@
 // Gecenin Afişi: özet ekranından tek bir PNG (1080×1350). Fotoğraf yok; yalnızca takma adlar, ödüller ve çizimler.
 import type { View } from '../../../engine/viewFor';
 import { modeById } from '../../../engine/modes';
+import { keyItem, loadManifest } from '../../art/manifest';
 
 export interface PosterAward {
   title: string;
@@ -57,6 +58,20 @@ function drawArt(ctx: CanvasRenderingContext2D, strokes: number[][], x: number, 
   ctx.restore();
 }
 
+async function posterFrame(): Promise<HTMLImageElement | null> {
+  try {
+    const m = await loadManifest();
+    const it = keyItem(m, 'poster-bg');
+    if (!it) return null;
+    const img = new Image();
+    img.src = it.w1600 ?? it.w800;
+    await img.decode();
+    return img;
+  } catch {
+    return null; // görsel yüklenemezse düz zemin
+  }
+}
+
 export async function renderPoster(view: View, awards: PosterAward[]): Promise<Blob> {
   try {
     await Promise.all([document.fonts.load(`700 80px ${GOTH}`), document.fonts.load(`800 40px ${BODY}`), document.fonts.load(`italic 700 30px ${BODY}`)]);
@@ -75,7 +90,21 @@ export async function renderPoster(view: View, awards: PosterAward[]): Promise<B
   bg.addColorStop(1, '#0d0b10');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
+  // Çizilmiş tiyatro çerçevesi varsa onu zemine koy (ortası karartılır, yazılar okunsun)
+  const frame = await posterFrame();
+  if (frame) {
+    const r = Math.max(W / frame.width, H / frame.height);
+    const fw = frame.width * r, fh = frame.height * r;
+    ctx.drawImage(frame, (W - fw) / 2, (H - fh) / 2, fw, fh);
+    const shade = ctx.createRadialGradient(W / 2, H * 0.48, 120, W / 2, H * 0.48, W * 0.62);
+    shade.addColorStop(0, '#0d0b10e6');
+    shade.addColorStop(0.75, '#0d0b10b3');
+    shade.addColorStop(1, '#0d0b1000');
+    ctx.fillStyle = shade;
+    ctx.fillRect(0, 0, W, H);
+  }
   ctx.save();
+  if (!frame)
   for (let i = -H; i < W + H; i += 28) {
     ctx.fillStyle = BONE;
     ctx.beginPath();

@@ -248,3 +248,8 @@ button, input { font: inherit; color: inherit; }
   animation: drink-flash 1.2s ease-out forwards;
 }
 @keyframes drink-flash { 0% { opacity: 0; } 15% { opacity: 1; } 35% { opacity: 0.5; } 50% { opacity: 0.9; } 100% { opacity: 0; } }
+
+/* Sahne görseli değişince (perde açılışı, özet) yumuşakça belirir */
+.nightscene-img { animation: nightscene-in 0.9s ease-out both; }
+@keyframes nightscene-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .nightscene-img { animation: none; } }

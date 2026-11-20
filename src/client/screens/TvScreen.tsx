@@ -50,7 +50,7 @@ export function TvScreen({ code }: { code: string }) {
   if (status === 'missing') return <NotFound title="Masa kalkmış" text={`${code} kodlu masa bulunamadı.`} />;
   return (
     <div className="relative min-h-full overflow-hidden">
-      <NightScene seed={21} tv />
+      <NightScene seed={21} tv art={view?.phase === 'actIntro' && view.game ? `act-${view.game.act}` : undefined} />
       <TvStage>{!view ? <TvLoading /> : view.phase === 'lobby' ? <TvLobby view={view} /> : <TvGame view={view} />}</TvStage>
     </div>
   );

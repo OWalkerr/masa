@@ -58,7 +58,7 @@ export function RoomScreen({ code }: { code: string }) {
 
   return (
     <div className="relative min-h-full">
-      <NightScene seed={code.charCodeAt(0) + code.charCodeAt(3)} lobby={!view || view.phase === 'lobby' || !view.you} />
+      <NightScene seed={code.charCodeAt(0) + code.charCodeAt(3)} lobby={!view || view.phase === 'lobby' || !view.you} art={sceneArt(view)} />
       {(!online || ((status === 'reconnecting' || status === 'connecting') && view)) && <ConnBanner online={online} />}
       {status === 'closed' && <NotFound title="Masa kapandı" text="Bu masa uzun süre boş kaldığı için kaldırıldı." />}
       {/* içerik partikül katmanının (z-1) üstünde: efektler kart metnine binmez */}
@@ -110,4 +110,12 @@ function ConnBanner({ online }: { online: boolean }) {
       )}
     </div>
   );
+}
+
+// Perde açılışında o perdenin sahnesi, gece sonunda mezarlık
+function sceneArt(view: { phase: string; game?: { act: number } | null } | null | undefined): string | undefined {
+  if (!view) return undefined;
+  if (view.phase === 'actIntro' && view.game) return `act-${view.game.act}`;
+  if (view.phase === 'summary') return 'bg-summary';
+  return undefined;
 }

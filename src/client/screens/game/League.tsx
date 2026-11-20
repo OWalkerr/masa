@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import type { View } from '../../../engine/viewFor';
 import { Avatar } from '../../components/Avatar';
 import { useReducedMotion } from '../../fx/motionPref';
+import { keyItem, useManifest } from '../../art/manifest';
 
 export interface LeagueRow {
   id: string;
@@ -97,6 +98,7 @@ export function Champion({ view }: { view: View }) {
   const reduce = useReducedMotion();
   const rows = leagueRows(view);
   const leader = leagueLeader(rows, view);
+  const art = keyItem(useManifest(), 'champion');
   if (!rows.some((r) => r.played > 0)) return null;
   return (
     <motion.section
@@ -108,8 +110,17 @@ export function Champion({ view }: { view: View }) {
     >
       {leader ? (
         <>
-          <Crown size={56} />
-          <Avatar index={leader.avatar} size={84} />
+          {art ? (
+            <div className="relative">
+              <img src={art.w400} alt="" width={180} height={180} className="h-[180px] w-[180px] rounded-full object-cover shadow-[0_0_0_3px_#E8C26A,0_0_40px_#E8B04A55]" />
+              <span className="absolute -bottom-2 -right-2 rounded-full shadow-[0_0_0_3px_#2a1f30]"><Avatar index={leader.avatar} size={64} /></span>
+            </div>
+          ) : (
+            <>
+              <Crown size={56} />
+              <Avatar index={leader.avatar} size={84} />
+            </>
+          )}
           <p className="font-gothic text-[34px] leading-none text-[#E8C26A]">Gecenin Şampiyonu</p>
           <p className="text-[22px] font-extrabold">{leader.name}</p>
           <p className="text-[15px] text-bone-dim">

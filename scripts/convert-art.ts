@@ -9,7 +9,10 @@ const SRC = 'assets-raw';
 const OUT = 'public/art';
 const MAX_BYTES = 120 * 1024;
 
-interface Item { w800: string; w400: string; width: number; height: number; bytes: number }
+interface Item { w800: string; w400: string; w1600?: string; width: number; height: number; bytes: number }
+// Tam ekran kullanılan görseller (TV, perde açılışı, afiş) ayrıca 1600 px üretilir
+const BIG = /^(act-|bg-|poster-bg)/;
+const MAX_BIG = 380 * 1024;
 const manifest = {
   version: Date.now(),
   items: {} as Record<string, Item>,
@@ -22,11 +25,11 @@ mkdirSync(OUT, { recursive: true });
 // style-* dosyaları yalnızca stil referansıdır, oyuna girmez
 const files = existsSync(SRC) ? readdirSync(SRC).filter((f) => /\.(png|jpe?g|webp)$/i.test(f) && !/^style-/i.test(f)).sort() : [];
 
-async function encode(input: string, width: number, out: string): Promise<number> {
+async function encode(input: string, width: number, out: string, max = MAX_BYTES): Promise<number> {
   // Hedef boyutun altına inene kadar kaliteyi düşür
   for (const quality of [80, 72, 64, 56, 48, 40]) {
     const buf = await sharp(input).resize({ width, withoutEnlargement: true }).webp({ quality, effort: 5 }).toBuffer();
-    if (buf.byteLength <= MAX_BYTES || quality === 40) {
+    if (buf.byteLength <= max || quality === 40) {
       writeFileSync(out, buf);
       return buf.byteLength;
     }
@@ -48,6 +51,11 @@ for (const f of files) {
   }
   const meta = await sharp(o800).metadata();
   manifest.items[key] = { w800: `/art/${key}-800.webp`, w400: `/art/${key}-400.webp`, width: meta.width ?? 800, height: meta.height ?? 600, bytes };
+  if (BIG.test(key)) {
+    const o1600 = join(OUT, `${key}-1600.webp`);
+    if (!(existsSync(o1600) && statSync(o1600).mtimeMs > statSync(input).mtimeMs)) await encode(input, 1600, o1600, MAX_BIG);
+    manifest.items[key]!.w1600 = `/art/${key}-1600.webp`;
+  }
   let m = key.match(/^type-([a-z]+)-\d+$/i);
   if (m) {
     const type = m[1]!.replace(/(likely|have|event)$/, (x) => x[0]!.toUpperCase() + x.slice(1));

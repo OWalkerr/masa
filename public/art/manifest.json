@@ -1,6 +1,30 @@
 {
-  "version": 1794935765070,
+  "version": 1795168300425,
   "items": {
+    "act-1": {
+      "w800": "/art/act-1-800.webp",
+      "w400": "/art/act-1-400.webp",
+      "width": 800,
+      "height": 446,
+      "bytes": 49400,
+      "w1600": "/art/act-1-1600.webp"
+    },
+    "act-2": {
+      "w800": "/art/act-2-800.webp",
+      "w400": "/art/act-2-400.webp",
+      "width": 800,
+      "height": 446,
+      "bytes": 56526,
+      "w1600": "/art/act-2-1600.webp"
+    },
+    "act-3": {
+      "w800": "/art/act-3-800.webp",
+      "w400": "/art/act-3-400.webp",
+      "width": 800,
+      "height": 446,
+      "bytes": 55970,
+      "w1600": "/art/act-3-1600.webp"
+    },
     "avatar-01": {
       "w800": "/art/avatar-01-800.webp",
       "w400": "/art/avatar-01-400.webp",
@@ -90,21 +114,32 @@
       "w400": "/art/bg-lobby-400.webp",
       "width": 800,
       "height": 1433,
-      "bytes": 121326
+      "bytes": 121326,
+      "w1600": "/art/bg-lobby-1600.webp"
     },
     "bg-phone": {
       "w800": "/art/bg-phone-800.webp",
       "w400": "/art/bg-phone-400.webp",
       "width": 800,
       "height": 1433,
-      "bytes": 81704
+      "bytes": 81704,
+      "w1600": "/art/bg-phone-1600.webp"
+    },
+    "bg-summary": {
+      "w800": "/art/bg-summary-800.webp",
+      "w400": "/art/bg-summary-400.webp",
+      "width": 800,
+      "height": 1433,
+      "bytes": 86112,
+      "w1600": "/art/bg-summary-1600.webp"
     },
     "bg-tv": {
       "w800": "/art/bg-tv-800.webp",
       "w400": "/art/bg-tv-400.webp",
       "width": 800,
       "height": 446,
-      "bytes": 53018
+      "bytes": 53018,
+      "w1600": "/art/bg-tv-1600.webp"
     },
     "card-back": {
       "w800": "/art/card-back-800.webp",
@@ -112,6 +147,13 @@
       "width": 800,
       "height": 1072,
       "bytes": 118406
+    },
+    "champion": {
+      "w800": "/art/champion-800.webp",
+      "w400": "/art/champion-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 116370
     },
     "deck-chaos": {
       "w800": "/art/deck-chaos-800.webp",
@@ -140,6 +182,13 @@
       "width": 800,
       "height": 597,
       "bytes": 71696
+    },
+    "deck-duel": {
+      "w800": "/art/deck-duel-800.webp",
+      "w400": "/art/deck-duel-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 70382
     },
     "deck-homeland": {
       "w800": "/art/deck-homeland-800.webp",
@@ -175,6 +224,28 @@
       "width": 800,
       "height": 800,
       "bytes": 109014
+    },
+    "mg-bomb": {
+      "w800": "/art/mg-bomb-800.webp",
+      "w400": "/art/mg-bomb-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 96500
+    },
+    "mg-reflex": {
+      "w800": "/art/mg-reflex-800.webp",
+      "w400": "/art/mg-reflex-400.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 80796
+    },
+    "poster-bg": {
+      "w800": "/art/poster-bg-800.webp",
+      "w400": "/art/poster-bg-400.webp",
+      "width": 800,
+      "height": 993,
+      "bytes": 88694,
+      "w1600": "/art/poster-bg-1600.webp"
     },
     "type-confession-01": {
       "w800": "/art/type-confession-01-800.webp",
@@ -259,6 +330,13 @@
       "width": 800,
       "height": 597,
       "bytes": 68392
+    },
+    "type-house-01": {
+      "w800": "/art/type-house-01-800.webp",
+      "w400": "/art/type-house-01-400.webp",
+      "width": 800,
+      "height": 597,
+      "bytes": 74626
     },
     "type-minigame-01": {
       "w800": "/art/type-minigame-01-800.webp",
@@ -482,6 +560,9 @@
       "type-golden-01",
       "type-golden-02"
     ],
+    "house": [
+      "type-house-01"
+    ],
     "minigame": [
       "type-minigame-01",
       "type-minigame-02"
@@ -524,6 +605,7 @@
     "classic": "deck-classic",
     "clean": "deck-clean",
     "confess": "deck-confess",
+    "duel": "deck-duel",
     "homeland": "deck-homeland",
     "sketch": "deck-sketch",
     "spicy": "deck-spicy",

@@ -269,3 +269,12 @@ Tarih biçimi: YYYY-AA-GG. Her karar kısa gerekçesiyle.
       - Elde yelpaze solda; yönerge ve "Oyna" sağda. Hedef seçimi ve bekleme ekranı da yan yana.
       - Karakalem ve Sergi'de tuval ekran yüksekliğine sığar ve solda durur, araçlar yanında. Galeri 4 sütun.
       - "Yakala!" üst çubuğa taşındı.
+92. **2. görsel paketinin ilk 10 görseli (2026-11-20):**
+    - **Kapak ve kart görselleri:** `deck-duel` Düello Ligi'nin lobi kapağı oldu. `type-house-01` Ev Kartları'nın kendi görseli; `artFor`, `ev` etiketli kartlara bunu verir.
+    - **Perde açılışları:** `act-1/2/3` perde açılışında telefonun ve TV'nin arka planı olur. NightScene `art` ile sahne görseli alır, daha az karartılır ve yumuşak geçişle belirir.
+    - **Özet zemini:** `bg-summary` (mezarlık) gecenin özetinin arka planı.
+    - **Afiş:** `poster-bg` Gecenin Afişi'nin zemini. Ortası karartılır, yazılar okunur. Görsel yüklenemezse düz zemine dönülür.
+    - **Şampiyon:** `champion` (taçlı TIK) Düello Ligi şampiyon kartında; şampiyonun avatarı köşede.
+    - **Mini oyunlar:** `mg-bomb` ve `mg-reflex` hazırlık ekranında, geri sayım köşedeki rozette.
+    - **Büyük sürüm:** Tam ekran görseller (`act-`, `bg-`, `poster-bg`) 1600 px olarak da üretilir (`w1600`). TV'de ve afişte bu sürüm kullanılır.
+    - **Bekleyenler:** `mg-countdown`, `sys-water`, `sys-final` ve `empty-table` kod tarafında hazır, görselleri bekleniyor. `empty-table` henüz hiçbir ekrana bağlanmadı.
